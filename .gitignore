@@ -1,0 +1,19 @@
+node_modules
+dist
+.output
+*.local
+.vite
+.vinxi
+
+# Generated
+**/routeTree.gen.ts
+
+# Editor
+.idea
+.DS_Store
+*.sw?
+
+# Env
+.env
+.env.*
+!.env.example

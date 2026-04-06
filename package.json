@@ -1,0 +1,26 @@
+{
+  "name": "ryanyogan.com",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter @repo/web dev",
+    "build": "pnpm --filter @repo/web build",
+    "preview": "pnpm --filter @repo/web preview",
+    "deploy": "pnpm --filter @repo/web deploy",
+    "lint": "oxlint --deny-warnings .",
+    "fmt": "oxfmt --write .",
+    "fmt:check": "oxfmt --check .",
+    "check": "pnpm fmt:check && pnpm lint",
+    "ready": "pnpm fmt && pnpm lint && pnpm build"
+  },
+  "devDependencies": {
+    "oxfmt": "latest",
+    "oxlint": "latest",
+    "typescript": "^5.8.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "packageManager": "pnpm@9.15.9"
+}
