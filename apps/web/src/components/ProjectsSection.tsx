@@ -1,12 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { projectDetails } from "@repo/shared";
+import { projectDetails } from "~/lib/content";
 
 export function ProjectsSection() {
   const featured = projectDetails.filter((p) => p.featured).slice(0, 4);
 
   return (
-    <section className="mb-32" id="projects">
-      <header className="mb-12 flex items-baseline justify-between border-b border-outline-variant/10 pb-4">
+    <section className="mb-16 md:mb-32" id="projects">
+      <header className="mb-8 md:mb-12 flex items-baseline justify-between border-b border-outline-variant/10 pb-4">
         <h2 className="font-sans font-bold text-2xl uppercase tracking-tighter">Key Projects</h2>
         <Link
           to="/projects"
@@ -16,7 +16,7 @@ export function ProjectsSection() {
         </Link>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
         {featured.map((project) => (
           <Link
             key={project.slug}

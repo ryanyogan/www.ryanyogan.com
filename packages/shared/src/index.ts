@@ -7,10 +7,8 @@ export type {
   NavLink,
   Project,
   ProjectCategory,
-  ProjectDetail,
   WorkRole,
   WorkSection,
-  WritingPost,
 } from "./types";
 export {
   articles,
@@ -24,5 +22,3 @@ export {
   workSections,
   writingArchive,
 } from "./content";
-export { writingPosts } from "./writings";
-export { projectDetails } from "./project-details";

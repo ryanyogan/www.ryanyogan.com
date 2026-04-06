@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { projectDetails } from "@repo/shared";
+import { projectDetails } from "~/lib/content";
 import { Prose } from "~/components/Prose";
 
 export const Route = createFileRoute("/projects/$slug")({
@@ -24,7 +24,7 @@ function ProjectDetailPage() {
   const project = Route.useLoaderData();
 
   return (
-    <main className="pt-40 pb-24 px-8 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-0">
+    <main className="pt-28 md:pt-40 pb-16 md:pb-24 px-5 sm:px-6 md:px-8 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-0">
       <aside className="hidden md:block md:col-span-3">
         <div className="sticky top-40 space-y-8">
           <Link
@@ -68,20 +68,20 @@ function ProjectDetailPage() {
         </div>
       </aside>
       <article className="md:col-span-9">
-        <header className="mb-16">
+        <header className="mb-10 md:mb-16">
           <Link
             to="/projects"
             className="md:hidden font-sans text-[10px] tracking-widest uppercase text-neutral-400 hover:text-primary mb-8 block"
           >
             &larr; Projects
           </Link>
-          <h1 className="font-sans text-4xl md:text-6xl font-extrabold tracking-tighter text-primary leading-[0.95] mb-4">
+          <h1 className="font-sans text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter text-primary leading-[0.95] mb-4">
             {project.title}
           </h1>
           <p className="font-serif text-xl text-on-surface-variant italic mb-4">
             {project.tagline}
           </p>
-          <div className="flex flex-wrap gap-2 mb-6">
+          <div className="flex flex-wrap gap-1.5 md:gap-2 mb-4 md:mb-6">
             {project.tech.map((t) => (
               <span
                 key={t}

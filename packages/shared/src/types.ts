@@ -52,28 +52,6 @@ export interface ProjectCategory {
   experiments?: ExperimentProject[];
 }
 
-export interface WritingPost {
-  slug: string;
-  title: string;
-  date: string;
-  year: string;
-  author: string;
-  excerpt: string;
-  content: string;
-}
-
-export interface ProjectDetail {
-  slug: string;
-  title: string;
-  tagline: string;
-  tech: string[];
-  github?: string;
-  live?: string;
-  year: string;
-  featured?: boolean;
-  content: string;
-}
-
 export interface WorkRole {
   company: string;
   title: string;

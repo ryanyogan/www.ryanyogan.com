@@ -1,5 +1,5 @@
 import { createAPIFileRoute } from "@tanstack/react-start/api";
-import { writingPosts } from "@repo/shared";
+import { writingPosts } from "~/lib/content";
 
 export const APIRoute = createAPIFileRoute("/api/rss")({
   GET: () => {

@@ -63,8 +63,8 @@ function RootComponent() {
 
 function NotFound() {
   return (
-    <main className="pt-40 pb-24 px-8 max-w-7xl mx-auto">
-      <h1 className="font-sans text-6xl md:text-8xl font-extrabold tracking-tighter text-primary leading-[0.9] mb-8">
+    <main className="pt-28 md:pt-40 pb-16 md:pb-24 px-5 sm:px-6 md:px-8 max-w-7xl mx-auto">
+      <h1 className="font-sans text-4xl sm:text-6xl md:text-8xl font-extrabold tracking-tighter text-primary leading-[0.9] mb-8">
         404
       </h1>
       <p className="font-serif text-xl text-on-surface-variant mb-12">This page doesn't exist.</p>

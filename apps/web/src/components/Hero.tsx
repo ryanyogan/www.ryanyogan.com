@@ -1,11 +1,11 @@
 export function Hero() {
   return (
-    <section className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-32">
+    <section className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 mb-16 md:mb-32">
       <div className="md:col-span-8">
-        <h1 className="font-sans font-extrabold text-5xl md:text-7xl lg:text-8xl tracking-tight leading-none text-primary mb-12">
+        <h1 className="font-sans font-extrabold text-3xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-8xl tracking-tight leading-none text-primary mb-6 md:mb-12">
           Engineering leader, occasional writer, and full-time builder.
         </h1>
-        <p className="font-serif text-xl md:text-2xl leading-relaxed text-on-surface-variant max-w-2xl">
+        <p className="font-serif text-lg md:text-xl lg:text-2xl leading-relaxed text-on-surface-variant max-w-2xl">
           I specialize in building high-performance distributed systems and refining the developer
           experience. Currently focused on{" "}
           <a
@@ -38,7 +38,7 @@ function InfoBlock({
   className?: string;
 }) {
   return (
-    <div className={`border-l border-outline-variant/20 pl-6 py-2 ${className}`}>
+    <div className={`border-l border-outline-variant/20 pl-4 md:pl-6 py-2 ${className}`}>
       <span className="block font-sans text-[10px] tracking-widest uppercase text-neutral-500 mb-2">
         {label}
       </span>

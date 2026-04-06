@@ -25,7 +25,7 @@ export const Route = createFileRoute("/work")({
 
 function WorkPage() {
   return (
-    <main className="pt-40 pb-24 px-8 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-0">
+    <main className="pt-28 md:pt-40 pb-16 md:pb-24 px-5 sm:px-6 md:px-8 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-0">
       <aside className="hidden md:block md:col-span-3">
         <div className="sticky top-40 space-y-8">
           <div className="space-y-1">
@@ -42,14 +42,14 @@ function WorkPage() {
       </aside>
 
       <section className="md:col-span-9">
-        <header className="mb-24">
-          <h1 className="font-sans text-6xl md:text-8xl font-extrabold tracking-tighter text-primary leading-[0.9] mb-8">
+        <header className="mb-12 md:mb-24">
+          <h1 className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-extrabold tracking-tighter text-primary leading-[0.9] mb-8">
             The Career.
           </h1>
           <div className="h-px w-full bg-outline-variant opacity-20" />
         </header>
 
-        <div className="mb-32">
+        <div className="mb-16 md:mb-32">
           <p className="text-lg text-on-surface-variant leading-relaxed max-w-2xl opacity-80">
             {workBio}
           </p>
@@ -79,15 +79,15 @@ function WorkPage() {
 
 function SectionGroup({ label, roles }: WorkSection) {
   return (
-    <div className="mb-32">
-      <div className="flex items-baseline gap-4 mb-12">
+    <div className="mb-16 md:mb-32">
+      <div className="flex items-baseline gap-4 mb-8 md:mb-12">
         <h2 className="font-sans text-xs font-bold tracking-[0.3em] uppercase text-on-surface-variant">
           {label}
         </h2>
         <div className="h-px flex-grow bg-outline-variant opacity-10" />
       </div>
 
-      <div className="space-y-16">
+      <div className="space-y-10 md:space-y-16">
         {roles.map((role) => (
           <RoleEntry key={`${role.company}-${role.title}`} {...role} />
         ))}
@@ -111,7 +111,9 @@ function RoleEntry({ company, title, dates, location, description, highlights, t
         <span className="block font-sans text-[10px] tracking-widest uppercase text-neutral-400 mb-2">
           {company}
         </span>
-        <h3 className="font-sans text-2xl md:text-3xl font-bold tracking-tight mb-4">{title}</h3>
+        <h3 className="font-sans text-xl sm:text-2xl md:text-3xl font-bold tracking-tight mb-4">
+          {title}
+        </h3>
         <p className="text-lg text-on-surface-variant leading-relaxed max-w-2xl opacity-80 mb-6">
           {description}
         </p>
