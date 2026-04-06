@@ -18,7 +18,12 @@ export function MetadataGutter() {
         <GutterSection label="Connect">
           {socialLinks.map((link) => (
             <li key={link.label}>
-              <a className="hover:text-primary transition-colors" href={link.href}>
+              <a
+                className="hover:text-primary transition-colors"
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 {link.label}
               </a>
             </li>

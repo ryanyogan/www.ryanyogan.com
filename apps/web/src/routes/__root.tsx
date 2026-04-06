@@ -11,19 +11,37 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Ryan Yogan" },
+      { title: "Ryan Yogan — Engineering Leader & Builder" },
+      {
+        name: "description",
+        content:
+          "Engineering leader with 20 years of experience building teams and products. Writing about distributed systems, Elixir, AI, and the craft of engineering.",
+      },
+      { property: "og:site_name", content: "Ryan Yogan" },
+      { property: "og:type", content: "website" },
+      { property: "og:title", content: "Ryan Yogan — Engineering Leader & Builder" },
+      {
+        property: "og:description",
+        content:
+          "Engineering leader with 20 years of experience building teams and products. Writing about distributed systems, Elixir, AI, and the craft of engineering.",
+      },
+      { property: "og:url", content: "https://ryanyogan.com" },
+      { property: "og:image", content: "https://ryanyogan.com/og-default.svg" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:site", content: "@ryanyogan" },
+      { name: "twitter:creator", content: "@ryanyogan" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "canonical", href: "https://ryanyogan.com" },
       {
-        rel: "preconnect",
-        href: "https://fonts.googleapis.com",
+        rel: "alternate",
+        type: "application/rss+xml",
+        title: "Ryan Yogan — Writing",
+        href: "https://ryanyogan.com/api/rss",
       },
-      {
-        rel: "preconnect",
-        href: "https://fonts.gstatic.com",
-        crossOrigin: "anonymous",
-      },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=STIX+Two+Text:ital,wght@0,400;0,700;1,400&display=swap",

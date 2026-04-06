@@ -3,6 +3,23 @@ import { workBio, workSections } from "@repo/shared";
 import type { WorkRole, WorkSection } from "@repo/shared";
 
 export const Route = createFileRoute("/work")({
+  head: () => ({
+    meta: [
+      { title: "Work — Ryan Yogan" },
+      {
+        name: "description",
+        content:
+          "20 years building teams, shipping products, and scaling organizations from startup to IPO.",
+      },
+      { property: "og:title", content: "Work — Ryan Yogan" },
+      {
+        property: "og:description",
+        content:
+          "20 years building teams, shipping products, and scaling organizations from startup to IPO.",
+      },
+      { property: "og:url", content: "https://ryanyogan.com/work" },
+    ],
+  }),
   component: WorkPage,
 });
 
@@ -49,6 +66,8 @@ function WorkPage() {
           <a
             className="font-sans text-xs font-bold tracking-widest uppercase text-primary underline underline-offset-8 hover:decoration-2 transition-all"
             href="https://yogan.dev"
+            target="_blank"
+            rel="noopener noreferrer"
           >
             Hire Me
           </a>

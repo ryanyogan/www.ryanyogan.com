@@ -9,6 +9,32 @@ export const Route = createFileRoute("/writing/$slug")({
     if (!post) throw notFound();
     return post;
   },
+  head: ({ loaderData }) => ({
+    meta: [
+      { title: `${loaderData.title} — Ryan Yogan` },
+      { name: "description", content: loaderData.excerpt },
+      { property: "og:title", content: loaderData.title },
+      { property: "og:description", content: loaderData.excerpt },
+      { property: "og:url", content: `https://ryanyogan.com/writing/${loaderData.slug}` },
+      { property: "og:type", content: "article" },
+      { property: "article:author", content: "Ryan Yogan" },
+      { property: "article:published_time", content: loaderData.date },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Article",
+          headline: loaderData.title,
+          description: loaderData.excerpt,
+          author: { "@type": "Person", name: "Ryan Yogan", url: "https://ryanyogan.com" },
+          publisher: { "@type": "Person", name: "Ryan Yogan" },
+          datePublished: loaderData.date,
+        }),
+      },
+    ],
+  }),
 });
 
 function WritingDetail() {

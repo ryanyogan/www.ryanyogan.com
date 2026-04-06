@@ -14,6 +14,8 @@ export function Footer() {
               key={link.label}
               className="font-sans text-[10px] tracking-widest uppercase text-neutral-500 hover:text-primary underline underline-offset-4"
               href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
             >
               {link.label}
             </a>

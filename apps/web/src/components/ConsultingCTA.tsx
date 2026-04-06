@@ -11,6 +11,8 @@ export function ConsultingCTA() {
       <a
         className="inline-block bg-primary text-white px-8 py-4 font-sans text-sm tracking-widest uppercase font-bold hover:bg-neutral-800 transition-colors"
         href="https://yogan.dev"
+        target="_blank"
+        rel="noopener noreferrer"
       >
         Inquire at yogan.dev
       </a>

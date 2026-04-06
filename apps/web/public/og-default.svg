@@ -1,0 +1,7 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#1e1e1e"/>
+  <text x="100" y="280" font-family="Inter, system-ui, sans-serif" font-size="72" font-weight="800" fill="#e5e2e1" letter-spacing="-2">Ryan Yogan</text>
+  <text x="100" y="360" font-family="Inter, system-ui, sans-serif" font-size="28" fill="#c6c6c6" letter-spacing="4" text-transform="uppercase">ENGINEERING LEADER &amp; BUILDER</text>
+  <line x1="100" y1="400" x2="400" y2="400" stroke="#444" stroke-width="1"/>
+  <text x="100" y="450" font-family="Inter, system-ui, sans-serif" font-size="18" fill="#777">ryanyogan.com</text>
+</svg>

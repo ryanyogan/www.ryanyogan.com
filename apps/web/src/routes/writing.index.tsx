@@ -3,6 +3,23 @@ import { writingPosts } from "@repo/shared";
 import type { WritingPost } from "@repo/shared";
 
 export const Route = createFileRoute("/writing/")({
+  head: () => ({
+    meta: [
+      { title: "Writing — Ryan Yogan" },
+      {
+        name: "description",
+        content:
+          "Thoughts on engineering, leadership, distributed systems, Elixir, AI, and building things.",
+      },
+      { property: "og:title", content: "Writing — Ryan Yogan" },
+      {
+        property: "og:description",
+        content:
+          "Thoughts on engineering, leadership, distributed systems, Elixir, AI, and building things.",
+      },
+      { property: "og:url", content: "https://ryanyogan.com/writing" },
+    ],
+  }),
   component: WritingPage,
 });
 

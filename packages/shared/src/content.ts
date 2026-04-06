@@ -349,12 +349,12 @@ export const sidebarNav: NavLink[] = [
 ];
 
 export const socialLinks: NavLink[] = [
-  { label: "Twitter", href: "#" },
-  { label: "GitHub", href: "#" },
+  { label: "Twitter", href: "https://twitter.com/ryanyogan" },
+  { label: "GitHub", href: "https://github.com/ryanyogan" },
 ];
 
 export const footerLinks: NavLink[] = [
-  { label: "GitHub", href: "#" },
-  { label: "LinkedIn", href: "#" },
-  { label: "Twitter", href: "#" },
+  { label: "GitHub", href: "https://github.com/ryanyogan" },
+  { label: "LinkedIn", href: "https://linkedin.com/in/ryanyogan" },
+  { label: "Twitter", href: "https://twitter.com/ryanyogan" },
 ];

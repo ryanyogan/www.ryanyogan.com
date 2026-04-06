@@ -9,6 +9,15 @@ export const Route = createFileRoute("/projects/$slug")({
     if (!project) throw notFound();
     return project;
   },
+  head: ({ loaderData }) => ({
+    meta: [
+      { title: `${loaderData.title} — Ryan Yogan` },
+      { name: "description", content: loaderData.tagline },
+      { property: "og:title", content: loaderData.title },
+      { property: "og:description", content: loaderData.tagline },
+      { property: "og:url", content: `https://ryanyogan.com/projects/${loaderData.slug}` },
+    ],
+  }),
 });
 
 function ProjectDetailPage() {
@@ -39,6 +48,8 @@ function ProjectDetailPage() {
               <a
                 href={project.github}
                 className="block font-sans text-[10px] tracking-widest uppercase text-neutral-400 hover:text-primary"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 GitHub &#8599;
               </a>
@@ -47,6 +58,8 @@ function ProjectDetailPage() {
               <a
                 href={project.live}
                 className="block font-sans text-[10px] tracking-widest uppercase text-neutral-400 hover:text-primary"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 Live Site &#8599;
               </a>
@@ -83,6 +96,8 @@ function ProjectDetailPage() {
               <a
                 href={project.github}
                 className="font-sans text-xs tracking-widest uppercase text-neutral-400 hover:text-primary"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 GitHub &#8599;
               </a>
@@ -91,6 +106,8 @@ function ProjectDetailPage() {
               <a
                 href={project.live}
                 className="font-sans text-xs tracking-widest uppercase text-neutral-400 hover:text-primary"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 Live Site &#8599;
               </a>

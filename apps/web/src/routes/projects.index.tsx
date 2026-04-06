@@ -3,6 +3,23 @@ import { projectDetails } from "@repo/shared";
 import type { ProjectDetail } from "@repo/shared";
 
 export const Route = createFileRoute("/projects/")({
+  head: () => ({
+    meta: [
+      { title: "Projects — Ryan Yogan" },
+      {
+        name: "description",
+        content:
+          "Open source work, side projects, and experiments in TypeScript, Elixir, Rust, and AI.",
+      },
+      { property: "og:title", content: "Projects — Ryan Yogan" },
+      {
+        property: "og:description",
+        content:
+          "Open source work, side projects, and experiments in TypeScript, Elixir, Rust, and AI.",
+      },
+      { property: "og:url", content: "https://ryanyogan.com/projects" },
+    ],
+  }),
   component: ProjectsPage,
 });
 
@@ -67,6 +84,8 @@ function ProjectsPage() {
           <a
             className="font-sans text-xs font-bold tracking-widest uppercase text-primary underline underline-offset-8 hover:decoration-2 transition-all"
             href="https://yogan.dev"
+            target="_blank"
+            rel="noopener noreferrer"
           >
             Inquire
           </a>

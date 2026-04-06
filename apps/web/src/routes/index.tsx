@@ -6,6 +6,23 @@ import { ProjectsSection } from "~/components/ProjectsSection";
 import { ConsultingCTA } from "~/components/ConsultingCTA";
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Ryan Yogan — Engineering Leader & Builder" },
+      {
+        name: "description",
+        content:
+          "Engineering leader with 20 years of experience. Building teams, shipping products, and writing about the craft.",
+      },
+      { property: "og:title", content: "Ryan Yogan — Engineering Leader & Builder" },
+      {
+        property: "og:description",
+        content:
+          "Engineering leader with 20 years of experience. Building teams, shipping products, and writing about the craft.",
+      },
+      { property: "og:url", content: "https://ryanyogan.com" },
+    ],
+  }),
   component: HomePage,
 });
 

@@ -7,7 +7,7 @@
     "dev": "pnpm --filter @repo/web dev",
     "build": "pnpm --filter @repo/web build",
     "preview": "pnpm --filter @repo/web preview",
-    "deploy": "pnpm --filter @repo/web deploy",
+    "deploy": "pnpm --filter @repo/web run deploy",
     "lint": "oxlint --deny-warnings .",
     "fmt": "oxfmt --write .",
     "fmt:check": "oxfmt --check .",

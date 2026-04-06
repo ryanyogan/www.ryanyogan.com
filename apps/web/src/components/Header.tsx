@@ -37,6 +37,8 @@ export function Header() {
           <a
             className="bg-primary text-on-primary px-6 py-2 text-sm font-sans tracking-widest uppercase hover:opacity-90 transition-all duration-200"
             href="https://yogan.dev"
+            target="_blank"
+            rel="noopener noreferrer"
           >
             Hire Me
           </a>
@@ -83,6 +85,8 @@ export function Header() {
           <a
             className="block font-sans text-sm tracking-widest uppercase px-6 py-2 bg-primary text-on-primary w-fit"
             href="https://yogan.dev"
+            target="_blank"
+            rel="noopener noreferrer"
           >
             Hire Me
           </a>

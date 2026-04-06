@@ -11,6 +11,8 @@ export function Hero() {
           <a
             className="text-primary underline underline-offset-4 decoration-1 hover:decoration-2 transition-all"
             href="https://yogan.dev"
+            target="_blank"
+            rel="noopener noreferrer"
           >
             architectural consulting
           </a>{" "}
