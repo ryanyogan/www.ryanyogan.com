@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Hero } from "~/components/Hero";
-import { MetadataGutter } from "~/components/MetadataGutter";
 import { WritingSection } from "~/components/WritingSection";
 import { ProjectsSection } from "~/components/ProjectsSection";
 import { ConsultingCTA } from "~/components/ConsultingCTA";
@@ -31,10 +30,9 @@ function HomePage() {
     <main className="pt-24 md:pt-32 pb-16 md:pb-24 max-w-7xl mx-auto px-5 sm:px-6 md:px-8">
       <Hero />
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-16 lg:gap-24">
-        <MetadataGutter />
-
-        <div className="md:col-span-10 lg:col-span-8">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-0">
+        <div className="hidden md:block md:col-span-3" />
+        <div className="md:col-span-9">
           <WritingSection />
           <ProjectsSection />
           <ConsultingCTA />

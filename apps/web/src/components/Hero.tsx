@@ -1,13 +1,13 @@
 export function Hero() {
   return (
-    <section className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 mb-16 md:mb-32">
-      <div className="md:col-span-8">
-        <h1 className="font-sans font-extrabold text-3xl sm:text-4xl md:text-5xl lg:text-7xl xl:text-8xl tracking-tight leading-none text-primary mb-6 md:mb-12">
+    <section className="mb-16 md:mb-32 grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-16 items-end">
+      <div className="md:col-span-3">
+        <h1 className="font-sans font-extrabold text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl tracking-tight leading-[1.05] sm:leading-none text-primary mb-6 md:mb-10">
           Engineering leader, occasional writer, and full-time builder.
         </h1>
-        <p className="font-serif text-lg md:text-xl lg:text-2xl leading-relaxed text-on-surface-variant max-w-2xl">
-          I specialize in building high-performance distributed systems and refining the developer
-          experience. Currently focused on{" "}
+        <p className="font-serif text-lg sm:text-xl md:text-xl leading-relaxed text-on-surface-variant">
+          I specialize in building high-performance distributed systems and
+          refining the developer experience. Currently focused on{" "}
           <a
             className="text-primary underline underline-offset-4 decoration-1 hover:decoration-2 transition-all"
             href="https://yogan.dev"
@@ -20,29 +20,54 @@ export function Hero() {
         </p>
       </div>
 
-      <div className="md:col-span-4 flex flex-col justify-end">
-        <InfoBlock label="Location" value="Chicago, IL" />
-        <InfoBlock label="Availability" value="Accepting New Clients" className="mt-6" />
+      <div className="hidden md:flex flex-col items-end">
+        <span className="font-sans text-[10px] tracking-[0.3em] uppercase text-on-surface-variant/40 mb-6">
+          Elsewhere
+        </span>
+        <div className="flex flex-col space-y-4">
+          <SocialLink
+            href="https://github.com/ryanyogan"
+            label="GitHub"
+            handle="ryanyogan"
+          />
+          <SocialLink
+            href="https://linkedin.com/in/ryanyogan"
+            label="LinkedIn"
+            handle="in/ryanyogan"
+          />
+          <SocialLink
+            href="https://twitter.com/ryanyogan"
+            label="Twitter"
+            handle="@ryanyogan"
+          />
+        </div>
       </div>
     </section>
   );
 }
 
-function InfoBlock({
+function SocialLink({
+  href,
   label,
-  value,
-  className = "",
+  handle,
 }: {
+  href: string;
   label: string;
-  value: string;
-  className?: string;
+  handle: string;
 }) {
   return (
-    <div className={`border-l border-outline-variant/20 pl-4 md:pl-6 py-2 ${className}`}>
-      <span className="block font-sans text-[10px] tracking-widest uppercase text-neutral-500 mb-2">
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group flex items-baseline gap-3 md:flex-row-reverse"
+    >
+      <span className="font-sans text-[10px] tracking-[0.2em] uppercase text-on-surface-variant/40 group-hover:text-on-surface-variant/60 transition-colors">
         {label}
       </span>
-      <span className="block font-sans font-bold text-sm">{value}</span>
-    </div>
+      <span className="font-sans text-sm sm:text-base font-semibold text-primary group-hover:text-on-surface-variant transition-colors">
+        {handle}
+      </span>
+    </a>
   );
 }

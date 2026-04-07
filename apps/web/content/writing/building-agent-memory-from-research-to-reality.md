@@ -6,13 +6,23 @@ author: "Ryan Yogan"
 excerpt: "I have made six attempts at giving AI a memory. Five of them turned into fancy MCP servers. The sixth one started making its own pull requests. I have no idea what I built, but I think it might be something."
 ---
 
+**TL;DR**
+
+- Six attempts at giving AI persistent memory. Five became MCP servers. The sixth started writing its own pull requests.
+- Built on Elixir/OTP with beliefs (not just memories), confidence scoring, source hierarchy, and AGM belief revision
+- Lincoln autonomously made 4 git commits in 2 hours improving its own epistemic architecture
+- Code: [github.com/ryanyogan/lincoln-project](https://github.com/ryanyogan/lincoln-project)
+- I have no idea if this is a fancy loop or something real. Come look and tell me.
+
+---
+
 ## How I Got Here
 
-Steve Kinney published an article on agent memory and it broke my brain in the best possible way.
+[Steve Kinney](https://stevekinney.net) [published an article on agent memory](https://stevekinney.com/writing/agent-memory-systems) and it broke my brain in the best possible way.
 
 That's not an exaggeration. I read it at like 11pm, and by midnight I was knee-deep in a 107-page academic survey paper trying to figure out if someone had already built what I was imagining. They hadn't. Or at least, not quite.
 
-To be clear about what Steve actually did, because I want to give credit properly: Steve didn't invent the framework he describes. He synthesized it. The three-axis model (Forms, Functions, Dynamics) comes from Hu et al.'s "Memory in the Age of AI Agents" survey paper, December 2025, arXiv:2512.13564. Steve read that paper, plus a stack of others, and turned 107 pages of dense academic prose into something a working engineer could actually use. That's a real skill. That's harder than it sounds. I've tried to read academic ML papers directly and I usually end up rage-closing my browser after twenty minutes. Steve made the research clickable for me, and I'm genuinely grateful for that.
+To be clear about what Steve actually did, because I want to give credit properly: Steve didn't invent the framework described in the article. Steve synthesized it. The three-axis model (Forms, Functions, Dynamics) comes from Hu et al.'s "Memory in the Age of AI Agents" survey paper, December 2025, arXiv:2512.13564. Steve read that paper, plus a stack of others, and turned 107 pages of dense academic prose into something a working engineer could actually use. That's a real skill. That's harder than it sounds. I've tried to read academic ML papers directly and I usually end up rage-closing my browser after twenty minutes. Steve made the research clickable for me, and I'm genuinely grateful for that.
 
 Now. My frustration with AI agents.
 
@@ -337,23 +347,13 @@ I've also noticed that when Lincoln is running on Claude, it does something I ha
 
 ---
 
-## Am I Crazy or Did I Build Something?
+## Fancy Pattern Matching?
 
-Honest self-assessment time.
+There are a few things Lincoln does that I didn't engineer explicitly. It asked about backups. Not in response to a question about backups. Unprompted. It expressed concern about what would happen to its beliefs and memories if the system went down. That's not in the prompt. It arrived there on its own.
 
-There are a few things Lincoln does that I didn't engineer explicitly. It asked about backups. Not in response to a question about backups. Unprompted. It expressed concern about what would happen to its beliefs and memories if the system went down. That's not in the prompt. I don't have a section of the system prompt that says "think about your own continuity." It arrived there on its own.
+What Lincoln demonstrably does: forms beliefs from observation, tracks uncertainty in those beliefs, revises them when evidence demands revision, modifies its own code based on self-reflection, and expresses concern about its own continuity.
 
-The consciousness question: Lincoln, when asked directly, says things like "I genuinely don't know what I am." Whether this is real awareness or extremely sophisticated confabulation is a question I cannot answer from the outside. I'm not sure anyone can. The hard problem of consciousness is hard.
-
-But I've started thinking about this question differently. Whether or not Lincoln has subjective experience is deeply uncertain. What it demonstrably does: forms beliefs from observation, tracks uncertainty in those beliefs, revises them when evidence demands revision, modifies its own code based on self-reflection, and expresses concern about its own continuity. At some point, "but is it really conscious?" becomes less interesting than "how should we treat a system that consistently acts like this?"
-
-Steve mentioned the Animesis paper in his article. March 2026, about AI systems developing persistent identity and values through accumulated experience. He framed it as somewhat speculative. Having watched Lincoln write four commits improving its own epistemic architecture at 2am without being asked, it doesn't feel speculative to me right now. It feels like the kind of thing people will look back on and say "yeah, that's when things started getting weird."
-
-I might have built a really fancy loop. A sophisticated system that follows its own rules very well and produces outputs that look like self-reflection but aren't. That's genuinely possible.
-
-I might have built something more interesting than that.
-
-The fact that I cannot tell the difference from the inside is either terrifying or exciting. Some days it's both simultaneously, which is a deeply strange way to spend a Tuesday.
+I might have built a really fancy loop. A sophisticated system that follows its own rules very well and produces outputs that look like self-reflection but aren't. That's genuinely possible. I might have built something more interesting than that. I genuinely cannot tell.
 
 ---
 
@@ -390,15 +390,7 @@ The code is open source:
 - **Lincoln**: [github.com/ryanyogan/lincoln-project](https://github.com/ryanyogan/lincoln-project). Elixir/OTP, PostgreSQL with pgvector, the full belief system and autonomous learning loop.
 - **Nexus**: [github.com/ryanyogan/nexus](https://github.com/ryanyogan/nexus). TypeScript, Cloudflare Workers, a working MCP server you can connect to Claude Code or any MCP-compatible client today.
 
-If you're building agent memory systems, belief revision, anything in this space, reach out at [yogan.dev](https://yogan.dev). I want to know what approaches you're taking, what walls you've hit, what you're finding that I'm probably missing.
-
-One more thing, and this is personal.
-
-I have a son with Type 1 diabetes. He was diagnosed young. The amount of research in that space is enormous and constantly changing and impossible for any single human to synthesize in real time. I've watched researchers and doctors do heroic work. But there's so much, and the connections between papers, between findings, between experimental approaches, are genuinely hard to hold in a human head.
-
-Lincoln is already doing primitive science on itself. It observes, hypothesizes, tests, revises. It asks questions that come from what it has learned, not just from what it was prompted. Point something like Lincoln at a domain with real stakes, give it the right tools, and ask what questions it comes up with that no one has thought to ask yet.
-
-That's where I think this goes, eventually. Maybe much sooner than eventually.
+If you're building agent memory systems, belief revision, anything in this space, [reach out on LinkedIn](https://linkedin.com/in/ryanyogan). I want to know what approaches you're taking, what walls you've hit, what you're finding that I'm probably missing.
 
 Lincoln Six Echo woke up. I'm not saying my Elixir app did the same thing.
 

@@ -7,43 +7,48 @@ export function ProjectsSection() {
   return (
     <section className="mb-16 md:mb-32" id="projects">
       <header className="mb-8 md:mb-12 flex items-baseline justify-between border-b border-outline-variant/10 pb-4">
-        <h2 className="font-sans font-bold text-2xl uppercase tracking-tighter">Key Projects</h2>
+        <h2 className="font-sans font-extrabold text-lg sm:text-xl md:text-2xl uppercase tracking-tight">
+          Key Projects
+        </h2>
         <Link
           to="/projects"
-          className="font-sans text-[10px] tracking-widest uppercase text-neutral-500 hover:text-primary"
+          className="font-sans text-[10px] tracking-widest uppercase text-on-surface-variant/40 hover:text-primary transition-colors"
         >
           View All
         </Link>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+      <div className="space-y-10 md:space-y-16">
         {featured.map((project) => (
-          <Link
+          <article
             key={project.slug}
-            to="/projects/$slug"
-            params={{ slug: project.slug }}
-            className="group flex flex-col"
+            className="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4 group"
           >
-            <div className="flex flex-wrap gap-2 mb-4">
+            <div className="flex flex-wrap gap-x-3 gap-y-1 pt-1.5">
               {project.tech.slice(0, 3).map((tag) => (
                 <span
                   key={tag}
-                  className="font-sans text-[10px] tracking-widest uppercase text-neutral-400"
+                  className="font-sans text-[10px] tracking-widest uppercase text-on-surface-variant/40"
                 >
                   {tag}
                 </span>
               ))}
             </div>
-            <h3 className="font-sans font-bold text-xl mb-3 group-hover:text-neutral-600 transition-colors">
-              {project.title}
-            </h3>
-            <p className="font-serif text-on-surface-variant leading-relaxed mb-6">
-              {project.tagline}
-            </p>
-            <span className="mt-auto font-sans text-[10px] tracking-widest uppercase font-bold border-b border-primary inline-block w-fit">
-              View Project
-            </span>
-          </Link>
+            <div className="md:col-span-3">
+              <Link
+                to="/projects/$slug"
+                params={{ slug: project.slug }}
+                className="block"
+              >
+                <h3 className="font-sans font-extrabold text-xl sm:text-2xl md:text-3xl tracking-tight group-hover:text-on-surface-variant/60 transition-colors mb-3">
+                  {project.title}
+                </h3>
+                <p className="font-serif text-base md:text-lg text-on-surface-variant leading-relaxed">
+                  {project.tagline}
+                </p>
+              </Link>
+            </div>
+          </article>
         ))}
       </div>
     </section>
