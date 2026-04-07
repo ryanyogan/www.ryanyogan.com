@@ -58,20 +58,6 @@ function WorkPage() {
         {workSections.map((section) => (
           <SectionGroup key={section.label} {...section} />
         ))}
-
-        <div className="pt-12 flex justify-between items-center border-t border-outline-variant/10">
-          <span className="font-sans text-[10px] tracking-widest uppercase text-neutral-400">
-            20 years of building
-          </span>
-          <a
-            className="font-sans text-xs font-bold tracking-widest uppercase text-primary underline underline-offset-8 hover:decoration-2 transition-all"
-            href="https://yogan.dev"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Hire Me
-          </a>
-        </div>
       </section>
     </main>
   );

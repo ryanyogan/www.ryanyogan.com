@@ -45,14 +45,6 @@ export function Header() {
 
         <div className="hidden md:flex items-center space-x-8">
           <ThemeToggle />
-          <a
-            className="font-sans text-xs tracking-[0.2em] uppercase text-on-surface-variant/60 hover:text-primary transition-colors"
-            href="https://yogan.dev"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Hire Me
-          </a>
         </div>
 
         <button
@@ -122,15 +114,6 @@ export function Header() {
           <div className="w-16 h-px bg-outline-variant/30 my-8" />
 
           <ThemeToggle />
-
-          <a
-            className="mt-8 inline-block bg-primary text-on-primary px-8 py-3 font-sans text-sm tracking-widest uppercase font-bold hover:opacity-90 transition-all"
-            href="https://yogan.dev"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Hire Me
-          </a>
         </div>
       </div>
     </header>

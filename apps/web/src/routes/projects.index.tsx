@@ -61,35 +61,6 @@ function ProjectsPage() {
         {years.map((year) => (
           <YearCollection key={year} year={year} projects={grouped[year]} />
         ))}
-
-        <div className="bg-surface-container-low p-6 sm:p-8 md:p-12 lg:p-16 mb-16 md:mb-32">
-          <h4 className="font-sans font-bold text-2xl tracking-tight mb-2">
-            Looking for a technical partner?
-          </h4>
-          <p className="font-serif text-lg text-on-surface-variant mb-8">
-            I help teams build durable infrastructure and polished user interfaces.
-          </p>
-          <a
-            className="inline-block bg-primary text-on-primary px-8 py-4 font-sans text-sm tracking-widest uppercase font-bold hover:bg-neutral-800 transition-all"
-            href="mailto:ryan@example.com"
-          >
-            Get in touch
-          </a>
-        </div>
-
-        <div className="pt-12 flex justify-between items-center border-t border-outline-variant/10">
-          <span className="font-sans text-[10px] tracking-widest uppercase text-neutral-400">
-            Available for select projects
-          </span>
-          <a
-            className="font-sans text-xs font-bold tracking-widest uppercase text-primary underline underline-offset-8 hover:decoration-2 transition-all"
-            href="https://yogan.dev"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Inquire
-          </a>
-        </div>
       </section>
     </main>
   );

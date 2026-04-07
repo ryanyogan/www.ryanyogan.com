@@ -357,4 +357,5 @@ export const footerLinks: NavLink[] = [
   { label: "GitHub", href: "https://github.com/ryanyogan" },
   { label: "LinkedIn", href: "https://linkedin.com/in/ryanyogan" },
   { label: "Twitter", href: "https://twitter.com/ryanyogan" },
+  { label: "Hire Me", href: "https://yogan.dev" },
 ];
