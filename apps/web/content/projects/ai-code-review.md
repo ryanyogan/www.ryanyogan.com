@@ -1,6 +1,6 @@
 ---
 title: "AI Code Review Bot"
-tagline: "LLM-powered PR reviews"
+tagline: "A GitHub Action that reviews your pull requests with OpenAI. Code quality feedback, security checks, and suggestions posted directly as PR comments so you can argue with a robot."
 tech:
   - TypeScript
   - OpenAI

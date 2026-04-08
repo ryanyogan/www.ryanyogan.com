@@ -1,6 +1,6 @@
 ---
 title: "Ice Yeti Training"
-tagline: "Connect skaters with trainers"
+tagline: "A platform connecting ice skaters with local trainers, built on Phoenix LiveView. Real-time scheduling, session tracking, and progress analytics with PubSub-driven updates."
 tech:
   - Elixir
   - Phoenix LiveView

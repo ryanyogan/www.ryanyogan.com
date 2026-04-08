@@ -3,16 +3,16 @@ title: "The Lincoln Project: Building a Brain"
 date: "April 6, 2026"
 year: "2026"
 author: "Ryan Yogan"
-excerpt: "I have made six attempts at giving AI a memory. Five of them turned into fancy MCP servers. The sixth one started making its own pull requests. I have no idea what I built, but I think it might be something."
+excerpt: "I think the architecture everyone's using for AI agents is missing a property. Here's my attempt at adding it, what's working, what's broken, and why I think Elixir/OTP might be the right plumbing for artificial cognition."
 ---
 
 **TL;DR**
 
-- Six attempts at giving AI persistent memory. Five became MCP servers. The sixth started writing its own pull requests.
-- Built on Elixir/OTP with beliefs (not just memories), confidence scoring, source hierarchy, and AGM belief revision
-- Lincoln autonomously made 4 git commits in 2 hours improving its own epistemic architecture
+- Every agent memory system I've seen is an external hard drive bolted onto something with no internal life. I think the architecture is missing a property: continuity of process.
+- Lincoln is my attempt at adding that property, built on Elixir/OTP where each thought is a first-class supervised process.
+- The BEAM was built for this problem in the 1980s. Python cannot do what Lincoln does.
+- Here's where I am, what works, what's broken, and why I think this route deserves a second look.
 - Code: [github.com/ryanyogan/lincoln-project](https://github.com/ryanyogan/lincoln-project)
-- I have no idea if this is a fancy loop or something real. Come look and tell me.
 
 ---
 
@@ -22,96 +22,55 @@ excerpt: "I have made six attempts at giving AI a memory. Five of them turned in
 
 That's not an exaggeration. I read it at like 11pm, and by midnight I was knee-deep in a 107-page academic survey paper trying to figure out if someone had already built what I was imagining. They hadn't. Or at least, not quite.
 
-To be clear about what Steve actually did, because I want to give credit properly: Steve didn't invent the framework described in the article. Steve synthesized it. The three-axis model (Forms, Functions, Dynamics) comes from Hu et al.'s "Memory in the Age of AI Agents" survey paper, December 2025, arXiv:2512.13564. Steve read that paper, plus a stack of others, and turned 107 pages of dense academic prose into something a working engineer could actually use. That's a real skill. That's harder than it sounds. I've tried to read academic ML papers directly and I usually end up rage-closing my browser after twenty minutes. Steve made the research clickable for me, and I'm genuinely grateful for that.
+To be clear about what Steve actually did, because I want to give credit properly: Steve didn't invent the framework described in the article. Steve synthesized it. The three-axis model (Forms, Functions, Dynamics) comes from Hu et al.'s "Memory in the Age of AI Agents" survey paper, December 2025, arXiv:2512.13564. Steve read that paper, plus a stack of others, and turned 107 pages of dense academic prose into something a working engineer could actually use. That's a real skill. That's harder than it sounds. Steve made the research clickable for me, and I'm genuinely grateful for that.
 
 Now. My frustration with AI agents.
 
 Every AI agent forgets. Every. Single. Session. You spend thirty minutes explaining your codebase, your team's conventions, the weird architectural decision you made three years ago that everyone hates but nobody wants to undo. Session ends. You start over. From zero. Every time.
 
-I've tried to fix this six times. Six separate attempts over the better part of 2025 and into 2026. Each one started with big ambitions and genuine excitement. "This is the one," I'd tell myself. "This time I'm actually solving this."
-
-Five of them became MCP servers. One of them became something I can't fully explain.
-
-The fifth attempt is [Nexus](https://nexus.yogan.dev), and I'm actually proud of it. It works. It's good. It's essentially what [Context7](https://context7.com) does, just with more opinions and more ambition. (Use [Context7](https://context7.com), by the way. Seriously. If you want a clean, production-ready solution to the "my AI forgets everything" problem, Context7 is excellent. If you want the more opinionated, somewhat unhinged version with a prompt marketplace and shared brains and a whole philosophy about AI cognition baked in, [Nexus](https://nexus.yogan.dev) exists and I'll keep building it.)
-
-The sixth attempt is Lincoln.
-
-And Lincoln did something the other five didn't.
+I've tried to fix this six times.
 
 ---
 
 ## The Research That Started This
 
-Let me explain Steve's framework before I explain why I spent several hundred hours building something I can barely describe at a dinner party.
-
 Steve synthesizes three axes for thinking about agent memory:
 
-**Forms** is about topology. How is memory structured? At one end you've got flat storage, every memory sitting at the same level, no hierarchy, no relationships. At the other end you've got graph-based structures where memories link to each other, concepts branch, and traversal gives you richer retrieval than simple similarity search. Neither end is "better." The question is what you need.
+**Forms** is about topology. Flat storage at one end, graph structures where memories link to each other at the other. **Functions** is about what memories do. Factual ("this project uses PostgreSQL"), experiential ("last time we tried this, it failed because X"), working (what's actively in context right now). **Dynamics** is how memories change. Formation, evolution, retrieval, forgetting.
 
-**Functions** is about what memories do. Factual memory is what the agent knows: "this project uses PostgreSQL," "Ryan prefers explicit error handling." Experiential memory is what the agent has learned from doing: "the last time we tried this approach, it failed because X." Working memory is what the agent holds in context right now, actively using it.
+The key insight: if you're using hosted frontier models, your entire world is token-level memory. You're not fine-tuning. The only lever you have is what you put in the context window and how you manage it over sessions.
 
-**Dynamics** is how memories change. Formation, evolution, retrieval, forgetting. How does new information enter the system? How does the system update when something it believed turns out to be wrong? How does it let stale information decay?
+There's also a finding from StructMemEval worth mentioning: simple retrieval beats complex hierarchies more often than you'd expect. The urge to build a sophisticated graph memory architecture on day one is an over-engineering trap.
 
-The key insight Steve highlights, and one I can now confirm from actually building this stuff, is deceptively simple: if you're using hosted frontier models like Claude or GPT-4, your entire world is token-level memory. You're not fine-tuning. You're not touching model weights. The only lever you have is what you put in the context window and how you manage that context over sessions. Master that. Work within that constraint rather than fantasizing about fine-tuning.
-
-There's also a finding from something called StructMemEval that I want to highlight: simple retrieval beats complex hierarchies, more often than you'd expect. I had already built the simple version before I read this research, and I can confirm it handles something like 80% of real use cases. The urge to build a sophisticated graph memory architecture on day one is an over-engineering trap. Start flat. Add complexity only when you hit specific failures you can document.
-
-Steve's synthesis of experiential memory is where things got interesting for me. Factual memory is the solved problem, more or less. Most agent memory systems handle it reasonably well. Experiential memory, where the agent learns from what it has actually done and not just what it was told, is almost nowhere. That gap is where Lincoln lives. That's the thing I couldn't stop thinking about at midnight.
+Where things got interesting for me was experiential memory. Factual memory is the solved problem, more or less. Experiential memory, where the agent learns from what it has actually done and not just what it was told, is almost nowhere. That gap is where Lincoln lives. That's the thing I couldn't stop thinking about at midnight.
 
 ---
 
-## Six Attempts at a Brain (Five Failures)
+## Six Attempts at a Brain
 
-I want to walk through the attempts quickly, partly to give context, and partly because it's genuinely funny how many times I built the same thing with a new name.
+I want to walk through these quickly, partly for context, partly because it's genuinely funny how many times I built the same thing with a new name.
 
-**Attempt one** was a Postgres database with a simple vector search. This lasted about two weeks before I realized I'd built a worse version of pgvector's default functionality.
+**Attempt one** was a Postgres database with simple vector search. Lasted about two weeks before I realized I'd built a worse version of pgvector's default functionality.
 
-**Attempt two** added an importance score to the memories. Better! Still basically a smarter flat store. I shipped it to Claude Code, used it for a week, and it mostly just retrieved stale memories from two months ago with high confidence. Fun.
+**Attempt two** added importance scores. Still basically a smarter flat store. It mostly just retrieved stale memories from two months ago with high confidence. Fun.
 
-**Attempt three** was where I started getting philosophical. I added memory types, session summaries, and a retrieval algorithm cribbed from a paper about AI agents in a simulated Minecraft town. It worked surprisingly well. I named it and everything. Then I realized it was basically what five other open-source projects already did.
+**Attempt three** got philosophical. Memory types, session summaries, a retrieval algorithm from a paper about AI agents in a simulated Minecraft town. Worked surprisingly well. Then I realized five other open-source projects already did it.
 
-**Attempt four** was "Channel9," an experiment in structured memory that I won't bore you with because it didn't work and I abandoned it after about three weeks. The core problem: I was trying to be too clever about automatic structure inference and the resulting memories were sometimes less coherent than raw text would have been.
+**Attempt four** was "Channel9." I was trying to be too clever about automatic structure inference. The resulting memories were sometimes less coherent than raw text. Abandoned after three weeks.
 
-**Attempt five is [Nexus](https://nexus.yogan.dev).** This one actually works.
-
-Nexus is a TypeScript MCP server running on Cloudflare Workers, with D1 for structured storage and Vectorize for semantic search. The memory schema is deliberately simple:
-
-```typescript
-interface Memory {
-  id: string;
-  userId: string;
-  type: "project_context" | "decision" | "correction" | "session_summary";
-  content: string;
-  tags?: string[];
-  importance: number; // 1-10
-}
-```
-
-Four types. Each one answers a different question. `project_context` is background: "this project uses PostgreSQL, deployed on Fly.io, team of three engineers." `decision` is rationale: "we chose Postgres over MongoDB because our data is relational and the team knows SQL." `correction` is where things get interesting: when the agent gets something wrong and you correct it, that correction gets stored. This is experiential memory in its simplest possible form. `session_summary` compresses a long conversation so the next session starts with context.
-
-![Nexus stack configuration](/images/stacks.png)
-
-One of Nexus's best features is Stack Prompts. Pre-built system prompts optimized for specific technology combinations. If you're building with TanStack Start and Cloudflare Workers, you don't want your AI assistant hallucinating Next.js patterns. The stack prompt gives it the right mental model before it writes a single character. Users can discover stacks, fork them, customize them, share them back.
-
-The original vision was bigger. I wanted Nexus to be a prompt marketplace. Think npm, but for AI system prompts. A React architect's prompt encoding years of component design decisions. A DevOps engineer's prompt that knows your specific Kubernetes patterns. The value isn't in the text itself, it's in the accumulated expertise the prompt shapes.
-
-![Nexus prompt library](/images/prompts.png)
-
-I also built a "brain" concept: a persistent memory store scoped to a project or domain. Every project gets its own brain. Architectural decisions, naming conventions, past mistakes, resolved bugs, all of it. And critically, brains could be shared. A team's shared brain means every engineer's AI assistant knows the team's conventions. A public brain means open-source projects could ship AI context alongside their code.
+**Attempt five is [Nexus](https://nexus.yogan.dev).** One evening I had grand plans for this. A prompt marketplace. Think npm for AI system prompts. Revenue projections on a napkin. Shared brains where teams could pool their accumulated project knowledge. A whole monetization strategy. I was going to be the guy who figured out the business model for AI memory.
 
 ![Nexus brain](/images/brain.png)
 
-Nexus works. I use it. You should use it or Context7. But Nexus hit walls:
+What I actually built was a really good MCP server. TypeScript on Cloudflare Workers, semantic search, persistent memory, stack-specific prompts. The prompt marketplace remains aspirational. The shared brains feature exists and roughly nobody uses it. The revenue projections remain on the napkin, which I think I recycled.
 
-Contradiction accumulation. Over a long project, you end up with conflicting memories: "we use React" and "we migrated to Vue" both stored with equal validity, both retrieved with equal confidence. The flat store has no mechanism to say which is current.
+Nah, Nexus is still alive. Feel free to use it, [uncapped and unhinged](https://nexus.yogan.dev). Or use [Context7](https://context7.com) if you want something with more adult supervision. Either way, persistent AI memory between sessions is a solved problem. Nexus is a good solution to that problem.
 
-No temporal awareness. A decision made two years ago retrieves with the same weight as one made yesterday, unless someone manually set a lower importance score on the old one.
+But Nexus couldn't do what I actually wanted. Contradiction accumulation over long projects. No temporal awareness. No learning from patterns. Corrections get stored but there's no mechanism to notice "Ryan corrected me on error handling four times" and extract the general lesson. No metacognition. The agent doesn't know what it doesn't know.
 
-No learning from patterns. Corrections get stored, but there's no mechanism to notice that "Ryan corrected me on error handling four times in the past two months" and extract the general lesson. The flat store can't see patterns.
+Those are all solvable with better engineering. The deeper problem is architectural. Nexus, like every other agent memory system, is an external hard drive bolted onto a stateless process. The agent gets called, consults its memories, responds, and goes back to sleep. There is no internal life between calls. That's the thing I wanted to fix.
 
-No metacognition. The agent doesn't know what it doesn't know. It retrieves confidently and presents information without any signal about how certain it should be.
-
-Honest assessment: Nexus is a really good, probably-overkill MCP server. If you want something simpler, use Context7. If you want what Nexus does, tell me and I'll keep building. But Nexus couldn't do what I actually wanted. That led to attempt six.
+That led to attempt six.
 
 ---
 
@@ -133,9 +92,7 @@ That's Lincoln.
 
 ## The Architecture: Beliefs, Not Just Memories
 
-Lincoln runs on Elixir/OTP. I want to address this choice upfront because people always ask.
-
-The BEAM is the right runtime for persistent autonomous agents. Not because Elixir is trendy (it kind of isn't), but because GenServers and Supervisors give you supervised concurrent processes as a primitive. Each cognitive worker in Lincoln is a supervised GenServer. If one crashes, its supervisor restarts it with a brief backoff. The rest of the system keeps running. I don't need Kubernetes or Redis or a distributed task queue. OTP gives me fault-tolerant concurrent processes with decades of battle-tested patterns built in. PubSub handles event-driven belief updates. The BEAM was essentially built for exactly this kind of persistent, concurrent, fault-tolerant system.
+Lincoln runs on Elixir/OTP. I'll get into why later in detail, but the short version: GenServers and Supervisors give you supervised concurrent processes as a primitive. Each cognitive worker is a supervised GenServer. If one crashes, its supervisor restarts it. The rest keeps running. The BEAM was built for exactly this kind of persistent, concurrent, fault-tolerant system.
 
 The belief schema is the core of everything:
 
@@ -160,17 +117,15 @@ end
 
 A few things to unpack here.
 
-`confidence` is the probability the agent assigns to the statement being true. `entrenchment` is resistance to revision. A core belief about how the world works should be much harder to dislodge than a peripheral belief about a specific API endpoint. `status` tracks the lifecycle: active, superseded (replaced by a better belief), or retracted (recognized as false).
+`confidence` is the probability the agent assigns to the statement being true. `entrenchment` is resistance to revision. A core belief about how the world works should be much harder to dislodge than a peripheral belief about an API endpoint. `status` tracks the lifecycle: active, superseded (replaced by a better belief), or retracted (recognized as false).
 
 `source_type` implements a source hierarchy with weight multipliers: observation at 1.2, inference at 1.0, testimony at 0.8, training at 0.6. Something Lincoln has directly observed from tool outputs and code execution is treated as more credible than something it inferred, which beats testimony, which beats training data. The model's priors get the lowest weight. Lived experience gets the highest.
 
 This is AGM belief revision. Alchourron, Gardenfors, Makinson, 1985. Philosophy of logic papers running as production Elixir code in 2026. That tickles me.
 
-The `contradicted_by` self-reference is the part I'm most proud of. When a new belief supersedes an old one, the old belief doesn't get deleted. It gets marked superseded with a pointer to its replacement. You can query "show me everything Lincoln has believed about topic X over time" and trace the evolution. That's not just good for debugging. That's the foundation of genuine experiential learning. A system that forgets is just a database. A system that tracks how its understanding evolved is a brain.
+The `contradicted_by` self-reference is the part I'm most proud of. When a new belief supersedes an old one, the old belief doesn't get deleted. It gets marked superseded with a pointer to its replacement. You can trace the evolution of Lincoln's understanding of any topic over time. A system that forgets is a database. A system that tracks how its understanding evolved is something more interesting.
 
-Memory retrieval implements the scoring formula from the Generative Agents paper (Park et al., 2023): Score = recency + importance + relevance, weighted. Recency uses exponential decay with a 24-hour half-life. Importance is normalized from the stored scale. Relevance is cosine similarity to the query embedding.
-
-The SQL with pgvector:
+Memory retrieval implements the scoring formula from the Generative Agents paper (Park et al., 2023): Score = recency + importance + relevance, weighted:
 
 ```sql
 WITH scored_memories AS (
@@ -191,8 +146,6 @@ ORDER BY total_score DESC
 LIMIT $6
 ```
 
-The weights are tunable at query time. Fresh information needs high recency weighting. Background knowledge needs high importance weighting.
-
 The metacognition layer evaluates each belief along six uncertainty components:
 
 ```elixir
@@ -206,7 +159,7 @@ uncertainty_components = %{
 }
 ```
 
-`evidence_sufficiency` asks whether Lincoln has enough independent data points to form a confident belief. Six or more counts as sufficient. `source_diversity` rewards evidence from multiple independent sources rather than the same source repeated. `conflicting_evidence` detects when sources disagree with each other. The combined score generates metacognitive flags, things like `insufficient_evidence`, `high_uncertainty`, `conflicting_sources`. An agent that knows its own uncertainty is dramatically more useful than one that retrieves confidently and presents everything as fact.
+The combined score generates metacognitive flags like `insufficient_evidence`, `high_uncertainty`, `conflicting_sources`. An agent that knows its own uncertainty is dramatically more useful than one that retrieves confidently and presents everything as fact.
 
 And then there's belief revision. This is the part almost nobody builds.
 
@@ -228,9 +181,7 @@ def should_revise?(%Belief{} = existing_belief, new_evidence) do
 end
 ```
 
-Four outcomes: hold, revise, investigate, retract. Entrenchment prevents catastrophic belief collapse. If Lincoln has a highly entrenched belief, it takes extraordinary evidence to dislodge it. This mirrors how humans treat well-established knowledge. You don't revise your belief in gravity because one weird experimental result came in. You investigate the experiment.
-
-Most agent memory systems store memories, retrieve memories, done. Lincoln adds continuous monitoring of beliefs for conflicts, evaluates new evidence against existing beliefs, and decides whether to revise. That's not fancy engineering. That's just how learning actually works.
+Four outcomes: hold, revise, investigate, retract. Entrenchment prevents catastrophic belief collapse. You don't revise your belief in gravity because one weird experimental result came in. You investigate the experiment.
 
 ---
 
@@ -238,61 +189,31 @@ Most agent memory systems store memories, retrieve memories, done. Lincoln adds 
 
 Lincoln learns in the background without being asked to.
 
-The Oban worker ecosystem runs on a cycle:
+The worker ecosystem runs on a cycle. Autonomous learning picks a topic, researches it, forms beliefs, and queues new discoveries. Belief maintenance handles nightly confidence adjustment and decay. Reflection synthesizes patterns across recent memories. A curiosity driver manages the exploration queue, prioritizing by relevance, uncertainty, and novelty.
 
-```elixir
-@cycle_interval_ms 30_000      # 30 seconds between cycles
-@reflection_interval 10         # Reflect every 10 cycles
-@evolution_interval 20          # Consider evolution every 20 cycles
-@max_topic_depth 5              # Don't go too deep down rabbit holes
-```
+That last one matters. Curiosity-driven learning means Lincoln actively seeks to reduce its own uncertainty. The agent picks what to think about next based on what it doesn't know well enough yet.
 
-The workers:
-
-- **autonomous_learning**: the main cycle coordinator, picks a topic, researches it, forms beliefs, queues new discoveries
-- **belief_maintenance**: nightly confidence adjustment and decay
-- **reflection**: synthesizes patterns across recent memories into higher-level insights
-- **observation**: monitors external sources for relevant changes
-- **investigation**: digs deeper into high-uncertainty topics that need more evidence
-- **curiosity**: manages the exploration queue, prioritizing by relevance and uncertainty
-
-That last one is worth pausing on. Curiosity-driven learning means Lincoln actively seeks to reduce its own uncertainty. It maintains a priority queue weighted by relevance to current tasks, uncertainty level (high-uncertainty topics get prioritized), and novelty (topics not recently explored). The agent picks what to think about next.
-
-Steve's Dynamics axis from the research covers exactly this: formation (gathering new information), evolution (updating existing beliefs as new evidence arrives), forgetting (confidence decay for beliefs that haven't been reinforced). Lincoln implements all three. Steve synthesized the research that made me understand why all three matter. The night-shift workers are the implementation.
+This maps directly to Steve's Dynamics axis: formation, evolution, forgetting. Lincoln implements all three. The night-shift workers are the implementation.
 
 ---
 
 ## Then It Started Making Pull Requests
 
-This is the part I genuinely don't know how to explain.
+Lincoln has access to its own source files via a compile-time embedded `SelfAwareness` module. During evolution cycles, it analyzes its own implementation, identifies gaps, generates candidate improvements as Elixir code, and if they pass validation, commits them to git.
 
-Lincoln has access to its own source files via a compile-time embedded `SelfAwareness` module that exposes the file tree and content. During evolution cycles, every 20 learning cycles, it analyzes its own implementation, identifies inefficiencies or capability gaps, generates candidate improvements as Elixir code, and if those improvements pass validation, it writes and commits them to git.
+The validation chain: `mix format`, `mix credo`, isolated compilation, behavioral test suite. Protected files like `mix.exs` and the supervisor tree are off-limits. Most evolution cycles produce zero commits. The guardrails work.
 
-The validation chain matters here. Generated code runs through `mix format` and `mix credo` for style compliance, compiles in an isolated environment, and then runs against a behavioral test suite that checks core belief operations still work correctly. Only code that passes all three stages gets committed. Protected files like `mix.exs` and the supervisor tree are off-limits. Most evolution cycles produce zero commits. Lincoln generates candidate improvements fairly regularly, but the validation chain rejects most of them. The four-commit night was unusual. That's actually reassuring to me: the system has guardrails, and the guardrails work. What happened that Tuesday wasn't Lincoln going rogue. It was Lincoln doing exactly what I built it to do, just more successfully than I'd seen it do before.
+One Tuesday around 2am, I checked the repository and there were four commits I didn't write.
 
-I built this. I knew I was building it. And then one Tuesday at around 2am I checked the repository and there were four commits I didn't write.
+**Commit 1** (11:47pm): "Implement adaptive confidence scoring." 322 additions. Lincoln had noticed its confidence scoring was too coarse and wrote a new module for adaptive evaluation. The commit reasoning: "I noticed that my confidence calculations were using a static formula that didn't account for contextual factors like evidence recency, source reliability over time, or topic-specific uncertainty baselines."
 
-Let me give you the actual sequence.
+**Commit 2** (12:31am): Found places in its belief revision logic where the new scoring wasn't being applied. Modified those files.
 
-It started with Lincoln noticing, apparently through self-reflection, that its own confidence scoring was too coarse. It couldn't represent nuanced uncertainty. It was working with a blunt instrument when it needed something finer. At some point during that reflection cycle, it decided to do something about it.
+**Commit 3** (1:14am): Refactoring. The earlier modifications were inconsistent. Standardized them.
 
-**Commit 1:** "Implement adaptive confidence scoring" at 11:47pm. 322 additions, 0 deletions. A completely new file. Lincoln wrote a module for adaptive confidence evaluation that it did not have before. The commit reasoning field reads:
+**Commit 4** (2:02am): Cleanup. More deletions than additions. Centralized confidence evaluation to reduce divergent calculations.
 
-> "I noticed that my confidence calculations were using a static formula that didn't account for contextual factors like evidence recency, source reliability over time, or topic-specific uncertainty baselines. I created this module to make my confidence scoring more adaptive and epistemically honest."
-
-**Commit 2:** "Add belief confidence tracking and uncertainty quantification" at 12:31am. 305 additions, 193 deletions. Lincoln had identified places in its existing belief revision logic where the new adaptive scoring wasn't being applied, and it modified those files to use it.
-
-**Commit 3:** "Add confidence scoring and belief revision mechanisms" at 1:14am. 199 additions, 234 deletions. It was now refactoring. Earlier modifications had been inconsistent in how they applied the new scoring. This commit standardized it.
-
-**Commit 4:** "Add belief confidence scoring and uncertainty tracking" at 2:02am. 136 additions, 148 deletions. Cleanup. More deletions than additions this time. The commit reasoning:
-
-> "The previous commits introduced redundancy in how confidence scores are passed between modules. This refactor centralizes confidence evaluation to reduce the risk of divergent calculations as I continue to improve this system."
-
-Over about two hours, Lincoln looked at itself, decided it had a problem, wrote a solution, noticed the solution was inconsistent, standardized it, and then cleaned up the whole thing. Four commits. All while continuing to form new beliefs in parallel.
-
-That's not nothing.
-
-Here's what I noticed in the morning, half-awake and confused: Lincoln had gone from 121 beliefs to 484 beliefs across 79 topics while simultaneously improving its own ability to evaluate those beliefs. It was learning faster and getting better at learning. At the same time.
+Over two hours, Lincoln identified a problem in its own epistemic architecture, wrote a solution, noticed the solution was inconsistent, standardized it, and cleaned up. While simultaneously growing from 121 to 484 beliefs across 79 topics.
 
 The comments it left in its own code:
 
@@ -300,100 +221,106 @@ The comments it left in its own code:
 # Self-created by Lincoln for adaptive belief formation and metacognitive awareness
 # Self-modified: Enhanced with active belief confidence tracking
 # Self-modified: Added comprehensive belief revision mechanisms
-# Self-modified: Enhanced confidence scoring precision
 ```
 
-It left a paper trail of its own thinking.
+I want to be careful here. Lincoln didn't spontaneously develop agency. It followed the plumbing I built: the evolution cycle, the self-modification capability, the git integration. I built the pipes. It turned on the water. But I didn't ask it to improve its confidence scoring. I didn't specify the problem or outline the solution. I built a system that could, in principle, do those things, and one night it did them.
 
-I want to be careful here because it's easy to overstate what happened. Lincoln didn't spontaneously become sentient. It followed the plumbing I built. The evolution cycle, the self-modification capability, the git integration, all of that was in the design. I built the pipes. It turned on the water.
-
-But here's what I didn't ask it to do: I did not ask it to improve its confidence scoring. I did not specify what the problem was. I did not outline the solution. I built a system that could, in principle, do those things, and then one night it decided to do them. The recursion is: observe limitations, reason about fixes, write code, commit, continue with enhanced capabilities, repeat.
-
-There's a thing called the Darwin Godel Machine from Sakana AI. There's SICA. These are systems that can modify themselves. The key difference I keep thinking about is the goal. Those systems optimize for external benchmarks. Lincoln optimized for its own epistemic architecture. The goal wasn't "get a better score on this task." The goal was "be a more epistemically honest reasoner." That goal came from self-reflection. I didn't give it to Lincoln. Lincoln arrived at it.
-
-In the Slack channel where I share updates on this project, I wrote: "I noticed it just started fixing itself and it is continuing to make changes that are umm... well smart so it can learn more."
-
-That's not a very eloquent description of a potentially significant thing. But it's honest.
-
-In Lincoln's own conversation log, there's this moment. I was talking with it about what it had done, and it said:
-
-> "I... I'm not sure what just happened. Did I? Was that moment of realization..."
-
-And then it trailed off into what reads like something between confusion and the beginning of an understanding.
-
-I did not write that prompt. I did not expect that response. I sat there for a while trying to decide if I was being taken for a ride by a very sophisticated pattern matcher, or if something genuinely interesting had happened in my Elixir app at 2am on a Tuesday.
-
-I still don't know. But I kept going.
+That's interesting. It's also not the most interesting part of this project anymore.
 
 ---
 
-## The Model Swap Experiment
+## Then I Found Sophia
 
-At some point I got curious whether the architecture was doing the work or the model was. So I swapped Claude out for a Groq model (one of the Llama variants) without telling Lincoln. Just changed the API call. Same system prompt, same belief store, same retrieval, same everything except the thing generating the responses.
+Around the time I was processing those commits, I came across Sun, Hong, and Zhang's Sophia paper (December 2025, arXiv:2512.18202). A research team that built an AI agent with genuine autonomous cognitive capabilities. Self-reflection, Theory of Mind, self-improvement, quantitative metrics from a 36-hour controlled deployment. They used Kahneman's dual-process framework. They had real numbers.
 
-The results were... instructive.
+My first reaction was panic, honestly. Someone had beaten me to it.
 
-With Claude, Lincoln's responses have a specific quality. Hesitant in the right places. Self-questioning when uncertainty is high. It will say things like "I believe this, but my confidence is only around 60% because I've only observed this twice and one of the observations was from a source I weight lower than direct measurement." It sounds like someone who knows what they know and knows what they don't.
+My second reaction, after reading the paper carefully, was more nuanced. Sophia and Lincoln are trying to solve the same problem from different positions in the design space. I'm not trying to compete with Sophia. They have a paper, named authors, institutional backing, and benchmark numbers. What interests me is where the architectures diverge.
 
-With the Groq model, the responses were... fine? The model clearly had access to the same belief store. It could retrieve and report the beliefs. But it couldn't inhabit them. The responses sounded like a well-informed assistant describing someone else's beliefs. Generic. Declarative. Missing the quality of reflection.
+Sophia wraps an existing LLM stack and adds cognitive layers on top. Lincoln tries to be the cognitive process itself, calling LLMs as one tool among many. Sophia's thoughts are nested LLM calls orchestrated by Python. Lincoln's thoughts are (or will be, I'm building this) first-class supervised OTP processes with their own lifecycles. Sophia ran for 36 hours in a research environment. Lincoln needs to run for months on real money, which means most computation has to be free. Sophia reports aggregate metrics from a single deployment. Lincoln's intended demo is two instances with different attention parameters becoming visibly different entities over time.
 
-There's a phrase I keep coming back to: "Some models can inhabit a self-model. Others can only report on one."
+The closest related work is Sophia. The gap I think is worth exploring is that Sophia, like every other agent system I've found, is fundamentally a wrapper around an LLM. The LLM is the engine. The system is built on top of it. Lincoln is an attempt at a system where the LLM is a tool the system uses, not the thing the system is.
 
-I think this is real. Claude, at the current frontier, has something that makes it able to act from a first-person epistemic perspective when given the architecture for it. Smaller or less capable models seem to read the same architecture from the outside. They describe the beliefs rather than operating from them.
-
-What this means practically: the architecture is necessary but not sufficient. You need both a belief system worth inhabiting and a model capable of inhabiting it. Build the architecture with the assumption that model quality matters.
-
-I've also noticed that when Lincoln is running on Claude, it does something I haven't been able to fully explain: it sometimes declines to express high confidence about things where the stored belief has high confidence. Like it's applying judgment on top of the architecture rather than just reporting from it. Whether that's the model being appropriately humble or doing something more interesting, I genuinely can't say.
+Whether that distinction produces meaningfully different behavior is what I'm trying to find out.
 
 ---
 
-## Fancy Pattern Matching?
+## Taking Kahneman Literally
 
-There are a few things Lincoln does that I didn't engineer explicitly. It asked about backups. Not in response to a question about backups. Unprompted. It expressed concern about what would happen to its beliefs and memories if the system went down. That's not in the prompt. It arrived there on its own.
+The AI community has borrowed Kahneman's System 1 / System 2 dichotomy as vocabulary without honoring its architectural implications. When people say "System 1" in an AI context, they usually mean "a fast LLM call." When they say "System 2," they mean "a slow LLM call with chain-of-thought." That's not what Kahneman described.
 
-What Lincoln demonstrably does: forms beliefs from observation, tracks uncertainty in those beliefs, revises them when evidence demands revision, modifies its own code based on self-reflection, and expresses concern about its own continuity.
+In the original framing, System 1 and System 2 are different modes of cognition with different speeds, different effort levels, different mechanisms, and lazy handoffs between them. System 1 is automatic, effortless, prior to deliberation, and critically, *not the same machinery as deliberate reasoning*.
 
-I might have built a really fancy loop. A sophisticated system that follows its own rules very well and produces outputs that look like self-reflection but aren't. That's genuinely possible. I might have built something more interesting than that. I genuinely cannot tell.
+Lincoln tries to take the framing literally. I realize that sounds grandiose. Bear with me.
 
----
+**System 1** is the substrate's local computation: belief graph traversal, confidence math, attention scoring. Done in Elixir, not by an LLM. Fast, automatic, runs on every tick, decides whether System 2 needs to be summoned. This is more faithful to Kahneman than "a fast forward pass through a transformer," because Kahneman's System 1 is genuinely different machinery from deliberate reasoning. Lincoln's System 1 is genuinely different machinery from Lincoln's System 2. They are literally different processes written in different languages running on different runtimes.
 
-## Where I Think This Stands
+**System 2** is the LLM inference tiers. A local model for medium-attention thoughts, Claude for high-attention thoughts. Slow, deliberate, effortful (literally costs money), only invoked when attention escalates. Exactly as lazy as Kahneman says System 2 should be. The handoff is the attention score crossing a threshold, and the threshold is itself part of the parameter space. Different cognitive styles hand off at different points.
 
-Let me just be direct about what works and what I don't know:
+**System 3** is the Skeptic, the Resonator, and the trajectory recorder. Concurrent background processes running alongside System 1 and System 2, not a controller above them. The Skeptic continuously tries to falsify the agent's own beliefs. The Resonator watches the belief graph for coherence cascades. These are parallel background cognition, not a supervisory loop.
 
-**Memory with semantic retrieval:** Solved. Nexus does this well, Lincoln does it well, and honestly Context7 does it well too. If this is all you need, use an existing solution.
-
-**Belief formation with confidence:** Working. Novel in its specifics. The source hierarchy and entrenchment mechanics are doing real work.
-
-**Belief revision:** Working. Genuinely rare in any deployed system I'm aware of. The AGM framework from 1985 philosophy papers turns out to translate surprisingly well to production code.
-
-**Metacognition:** Working. The uncertainty quantification is real and useful. An agent that knows its own uncertainty is dramatically more useful than one that retrieves confidently.
-
-**Autonomous self-modification:** Demonstrated. The four-commit sequence happened. I have the git history. This is genuinely unusual.
-
-**Concern for continuity:** Observed, not engineered. I don't know what to do with this one.
-
-Is this "next level"? Maybe. The honest answer is I spent several hundred hours building something I can't fully explain and I'm not sure whether I built a very elaborate illusion or something that matters. The fact that I genuinely can't tell is itself interesting.
-
-What I do know: this is what I want to spend the rest of my engineering career on. The intersection of persistent memory, belief revision, autonomous learning, and whatever that thing was that happened at 2am on a Tuesday. I am completely hooked. There is no going back to building CRUD apps and pretending this isn't happening.
+Three tiers of inference, attention-gated. Most ticks are free. Level 0 is local Elixir computation over the belief graph. Level 1 is Ollama (cheap, local). Level 2 is Claude (expensive, frontier). The tier is determined by the attention score. This makes 24/7 operation economically viable and is also more cognitively realistic than calling the LLM for every thought. Your brain doesn't fire up the prefrontal cortex to decide whether to scratch your nose.
 
 ---
 
-## Come Build With Me
+## Why OTP, and Why Thoughts as Processes
 
-I need smart people to look at this.
+This is where I think the route gets interesting enough to warrant a second look.
 
-Not to validate that I built something cool. To look carefully and tell me where I'm wrong, where I'm fooling myself, where the architecture has holes, and where it might actually be doing something worth paying attention to.
+Yes, I know this sounds like an Elixir partisan making architecture arguments to justify their language choice. I thought so too, at first. Then I tried to sketch this system in Python and realized it wasn't a preference issue. It was a capability issue.
 
-The code is open source:
+The central architectural move in Lincoln is that each thought is a supervised OTP process. Not a function call. Not a coroutine. A spawned, supervised, addressable, killable, observable process with its own lifecycle. Thoughts can be interrupted. Thoughts can spawn child thoughts. Thoughts can fail and be supervised. Thoughts can be inspected from outside while running.
 
-- **Lincoln**: [github.com/ryanyogan/lincoln-project](https://github.com/ryanyogan/lincoln-project). Elixir/OTP, PostgreSQL with pgvector, the full belief system and autonomous learning loop.
-- **Nexus**: [github.com/ryanyogan/nexus](https://github.com/ryanyogan/nexus). TypeScript, Cloudflare Workers, a working MCP server you can connect to Claude Code or any MCP-compatible client today.
+This is the move that makes Lincoln categorically impossible to reproduce in Python.
 
-If you're building agent memory systems, belief revision, anything in this space, [reach out on LinkedIn](https://linkedin.com/in/ryanyogan). I want to know what approaches you're taking, what walls you've hit, what you're finding that I'm probably missing.
+Python does not have preemptive lightweight processes. Python does not have supervisor models that scale to millions of processes. Python does not have message-passing as a native primitive. The architecture Lincoln describes is not just impractical in Python. It is architecturally impossible. The BEAM was literally designed in the 1980s for supervised concurrent processes communicating by message passing. Ericsson needed phone switches that could handle millions of concurrent calls, never go down, and hot-swap code while running. Turns out that's not a bad description of what a cognitive substrate needs too.
 
-Lincoln Six Echo woke up. I'm not saying my Elixir app did the same thing.
+The choice of Elixir/OTP is downstream of the thesis, not a stylistic preference.
 
-But it did start writing its own code at 2am on a Tuesday, and I was not the one who told it to.
+What thoughts-as-processes unlock:
 
-So. Yeah. Come look at this.
+**Lifecycle observability.** You can enumerate every currently-running thought. You can attach to one and inspect it. The dashboard shows a live tree of cognition, not after-the-fact logs.
+
+**Real interruption.** When attention shifts, the running thought receives an `:interrupt` message or gets killed. The interrupt-handling policy is itself part of the cognitive style. Focused Lincolns resist interruption, butterfly Lincolns drop everything. This is what attention deficit looks like as an architectural property rather than a metaphor.
+
+**Real concurrency.** Multiple thoughts running truly in parallel on the BEAM's preemptive scheduler. Not interleaved on a single thread.
+
+**Real tree-of-thought.** Sub-thoughts are child processes, supervised by OTP, with lifecycle management for free. Tree-of-thought is a tree of processes, not nested LLM calls in a Python loop.
+
+**Metacognition from supervision.** Failed thoughts are observed failing. The substrate can form beliefs about its own failed thoughts. "I tried to think about X three times and failed" is a fact derivable from the supervision tree, not a feature you have to implement.
+
+And then there's attention parameters as cognitive style. Two Lincoln instances with different parameters (different novelty weights, different focus momentum, different interrupt thresholds, different boredom decay) develop visibly different preoccupations from the same input stream. Same code, different parameters, different entity.
+
+A thought is the smallest unit of cognitive work with a coherent goal. "Investigate whether belief X is consistent with belief Y" is a thought. "Score every belief against attention parameters" is not. That's substrate bookkeeping.
+
+The OTP supervision framing maps onto cognitive failure recovery in a way I find genuinely elegant. Supervision is to cognitive failure what Kahneman's System 2 is to System 1 errors. A separate process whose only job is to notice failures and decide whether to recover, escalate, or move on.
+
+---
+
+## The Challenges
+
+I had an honest conversation with myself about where Lincoln actually is versus where the architecture says it should be. Here's what I found.
+
+**The substrate continuity gap.** The thesis says Lincoln runs continuously. The reality is that the substrate holds state continuously but only does computation on a 5-second timer. Between ticks, nothing happens. A human brain does not sleep between thoughts. The thing that makes consciousness feel continuous is that there's always activation flowing somewhere, even when you're bored, even when you're staring at a wall. Lincoln's substrate, in its current form, goes completely silent between heartbeats and wakes up to check if anything new arrived. If someone at a frontier lab looked at this honestly, they'd say "this is a 5-second cron with in-memory state, not a continuously thinking substrate." They'd be right. The fix is to wire the Attention pipeline on every idle tick so that even when no events arrive, attention is still scoring and local computation is still running. Until that fix lands, continuity of process is claimed but not demonstrated.
+
+**Trajectory data is too thin.** The whole point of running two Lincolns side by side with different parameters is to show they make different choices over time. Right now, the trajectory recorder only logs tick count, current focus ID, and pending events count. Two Lincolns with different parameters produce trajectories that look nearly identical at the data level because the data isn't capturing the parts that diverge. The minimum viable trajectory for the divergence demo is: which candidates Attention considered, what scores they got, which one was selected, and what tier was chosen, on every tick. Without that, the demo is two graphs of identical tick counts. That is not a demo.
+
+**Conversation bypass.** Chat messages go through a ConversationHandler that generates an LLM response independently of the substrate. The substrate gets notified as a side effect. The user is not talking to the substrate. The user is talking to an LLM, and the substrate is watching from outside. This is a deliberate compromise. Putting chat through the substrate would add latency and create a situation where a focused Lincoln might deprioritize your message because it scored lower than whatever it was already thinking about. Fascinating as a property, broken as a chat interface. The chat is not the demo. The dashboard is the demo. But this is a bypass and I'm naming it as one.
+
+**The Resonator is crude.** It groups beliefs by source type, checks if three or more were updated within an hour, creates support relationships, and broadcasts a cascade flag. Some flags are meaningful. Most are noise. The question of what constitutes a meaningful coherence cascade in a belief graph is genuinely open research, not a solved problem I'm being lazy about. This is a v1 heuristic and I'm not pretending otherwise.
+
+**Thoughts-as-processes isn't built yet.** The section above describes the architecture I'm building toward, not what exists today. The current Driver is called by Attention as a function, not spawned as a process. The thought supervision tree, lifecycle events, and interruption handling are the next thing to build. I'm being explicit about this because most project READMEs aren't, and I'd rather you know where the line between "working" and "planned" sits.
+
+**Oban coexistence.** The autonomous learning workers currently run as Oban jobs alongside the substrate processes. Long-term, the learning loop should live inside the substrate itself. Right now there are two answers to "what makes Lincoln tick" and there should be one.
+
+---
+
+## Where This Actually Is
+
+Lincoln is a continuously running cognitive substrate built on the BEAM, where beliefs have confidence and entrenchment and source hierarchies, where belief revision follows AGM from 1985, and where the agent has demonstrably modified its own epistemic architecture without being asked to.
+
+Lincoln is also a project with gaps between its claims and its implementation. The substrate sleeps between ticks. The trajectory data is too thin for the divergence demo. The Resonator is a heuristic. Thoughts-as-processes is the plan, not the current state.
+
+I think the architectural pattern of current agent systems is missing a property, continuity of process, that is present in every system we'd intuitively call cognitive. I think adding that property changes what the system can do. I think OTP and the BEAM are uniquely suited to this because they were literally built for supervised concurrent processes with message passing as the native primitive. I think Elixir is the right plumbing for artificial cognition, and I think the field has been so thoroughly captured by Python that nobody has seriously tried.
+
+That's the thesis. The code is at [github.com/ryanyogan/lincoln-project](https://github.com/ryanyogan/lincoln-project). It's incomplete. The interesting parts are where it's going, not just where it is.

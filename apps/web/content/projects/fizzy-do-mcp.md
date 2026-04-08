@@ -1,6 +1,6 @@
 ---
 title: "Fizzy Do MCP"
-tagline: "AI-native task management via MCP"
+tagline: "70+ MCP tools turning your AI assistant into a full project manager. Boards, cards, comments, workflows, standup summaries, and sprint reporting, all wired into Fizzy."
 tech:
   - TypeScript
   - MCP

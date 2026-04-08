@@ -1,6 +1,6 @@
 ---
 title: "Puck Pro"
-tagline: "AI hockey training with pose detection"
+tagline: "Browser-based pose detection at 30fps analyzes hockey shots, Claude Vision reviews the footage, and a gamification layer keeps kids coming back. Born from refusing to pay $150/hour for a shooting coach."
 tech:
   - Elixir
   - Phoenix LiveView

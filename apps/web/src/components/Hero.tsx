@@ -2,21 +2,22 @@ export function Hero() {
   return (
     <section className="mb-16 md:mb-32 grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-16 items-end">
       <div className="md:col-span-3">
-        <h1 className="font-sans font-extrabold text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl tracking-tight leading-[1.05] sm:leading-none text-primary mb-6 md:mb-10">
-          Engineering leader, occasional writer, and full-time builder.
+        <h1 className="font-sans font-extrabold text-[clamp(1.75rem,5vw,6rem)] tracking-tight leading-[1.1] mb-6 md:mb-10">
+          <span className="block whitespace-nowrap text-primary">Engineering Leader,</span>
+          <span className="block whitespace-nowrap text-primary">Builder/Tinkerer,</span>
+          <span className="block whitespace-nowrap text-primary">A.I. Nerd.</span>
         </h1>
         <p className="font-serif text-lg sm:text-xl md:text-xl leading-relaxed text-on-surface-variant">
-          I specialize in building high-performance distributed systems and
-          refining the developer experience. Currently focused on{" "}
+          I enjoy building full stack software in many different languages, weird AI shit,{" "}
           <a
             className="text-primary underline underline-offset-4 decoration-1 hover:decoration-2 transition-all"
             href="https://yogan.dev"
             target="_blank"
             rel="noopener noreferrer"
           >
-            architectural consulting
-          </a>{" "}
-          for early-stage engineering teams.
+            consulting
+          </a>
+          , and being a hockey dad.
         </p>
       </div>
 

@@ -22,7 +22,7 @@ export function Header() {
       <nav className="flex justify-between items-center max-w-7xl mx-auto px-5 sm:px-6 md:px-8 py-4 md:py-6">
         <Link
           to="/"
-          className="font-sans text-sm tracking-[0.2em] uppercase text-primary font-semibold"
+          className="font-sans text-base tracking-[0.12em] text-primary font-semibold"
         >
           Ryan Yogan
         </Link>
@@ -32,10 +32,10 @@ export function Header() {
             <Link
               key={link.label}
               to={link.href}
-              className="font-sans text-xs tracking-[0.2em] uppercase text-on-surface-variant/60 hover:text-primary transition-colors"
+              className="font-sans text-xs tracking-[0.2em] uppercase text-on-surface-variant hover:text-primary transition-colors border-b border-transparent hover:border-on-surface-variant/20 pb-0.5"
               activeProps={{
                 className:
-                  "font-sans text-xs tracking-[0.2em] uppercase text-primary font-semibold",
+                  "font-sans text-xs tracking-[0.2em] uppercase text-primary font-semibold border-b border-primary/30 pb-0.5",
               }}
             >
               {link.label}

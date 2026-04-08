@@ -345,7 +345,7 @@ export const navLinks: NavLink[] = [
 export const sidebarNav: NavLink[] = [
   { label: "Writing", href: "#writing" },
   { label: "Projects", href: "#projects" },
-  { label: "Contact", href: "#contact" },
+
 ];
 
 export const socialLinks: NavLink[] = [

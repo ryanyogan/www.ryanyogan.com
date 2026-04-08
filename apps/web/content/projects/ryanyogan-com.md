@@ -1,6 +1,6 @@
 ---
 title: "ryanyogan.com"
-tagline: "This site, TanStack Start on Cloudflare"
+tagline: "The most over-engineered personal site you'll encounter. TanStack Start on Cloudflare with D1, Vectorize for semantic search, and Claude generating blog posts via Durable Execution workflows."
 tech:
   - TanStack Start
   - Cloudflare Workers

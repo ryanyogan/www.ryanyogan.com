@@ -9,13 +9,13 @@ export const Route = createFileRoute("/projects/")({
       {
         name: "description",
         content:
-          "Open source work, side projects, and experiments in TypeScript, Elixir, Rust, and AI.",
+          "AI systems, developer experience tools, and open source experiments in Elixir, TypeScript, and whatever else gets the job done.",
       },
       { property: "og:title", content: "Projects — Ryan Yogan" },
       {
         property: "og:description",
         content:
-          "Open source work, side projects, and experiments in TypeScript, Elixir, Rust, and AI.",
+          "AI systems, developer experience tools, and open source experiments in Elixir, TypeScript, and whatever else gets the job done.",
       },
       { property: "og:url", content: "https://ryanyogan.com/projects" },
     ],
@@ -31,6 +31,7 @@ function ProjectsPage() {
   }, {});
 
   const years = Object.keys(grouped).sort((a, b) => Number(b) - Number(a));
+  const totalProjects = projectDetails.length;
 
   return (
     <main className="pt-28 md:pt-40 pb-16 md:pb-24 px-5 sm:px-6 md:px-8 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-0">
@@ -61,6 +62,12 @@ function ProjectsPage() {
         {years.map((year) => (
           <YearCollection key={year} year={year} projects={grouped[year]} />
         ))}
+
+        <div className="pt-12 flex justify-between items-center border-t border-outline-variant/10">
+          <span className="font-sans text-[10px] tracking-widest uppercase text-neutral-400">
+            {totalProjects} projects
+          </span>
+        </div>
       </section>
     </main>
   );
@@ -90,25 +97,40 @@ function YearCollection({ year, projects }: { year: string; projects: ProjectDet
               ))}
             </div>
             <div className="md:col-span-3">
-              <div className="flex justify-between items-baseline mb-4">
-                <Link
-                  to="/projects/$slug"
-                  params={{ slug: project.slug }}
-                  className="block font-sans text-xl sm:text-2xl md:text-3xl font-bold tracking-tight hover:text-neutral-500 transition-colors duration-300"
-                >
-                  {project.title}
-                </Link>
-                <Link
-                  to="/projects/$slug"
-                  params={{ slug: project.slug }}
-                  className="flex items-center gap-1 font-sans text-[10px] tracking-widest uppercase text-neutral-400 hover:text-primary transition-colors"
-                >
-                  View <span className="text-sm">&#8599;</span>
-                </Link>
-              </div>
-              <p className="text-lg text-on-surface-variant leading-relaxed max-w-2xl opacity-80">
+              <Link
+                to="/projects/$slug"
+                params={{ slug: project.slug }}
+                className="block font-sans text-xl sm:text-2xl md:text-3xl font-bold tracking-tight hover:text-neutral-500 transition-colors duration-300"
+              >
+                {project.title}
+              </Link>
+              <p className="mt-4 text-lg text-on-surface-variant leading-relaxed max-w-2xl opacity-80">
                 {project.tagline}
               </p>
+              {(project.github || project.live) && (
+                <div className="mt-3 flex items-center gap-4">
+                  {project.github && (
+                    <a
+                      href={project.github}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-sans text-[10px] tracking-widest uppercase text-neutral-400 hover:text-primary transition-colors"
+                    >
+                      GitHub
+                    </a>
+                  )}
+                  {project.live && (
+                    <a
+                      href={project.live}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-sans text-[10px] tracking-widest uppercase text-neutral-400 hover:text-primary transition-colors"
+                    >
+                      Live
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           </article>
         ))}

@@ -9,13 +9,13 @@ export const Route = createFileRoute("/writing/")({
       {
         name: "description",
         content:
-          "Thoughts on engineering, leadership, distributed systems, Elixir, AI, and building things.",
+          "Thoughts on AI systems, developer experience, team building, Elixir, and the craft of shipping software.",
       },
       { property: "og:title", content: "Writing — Ryan Yogan" },
       {
         property: "og:description",
         content:
-          "Thoughts on engineering, leadership, distributed systems, Elixir, AI, and building things.",
+          "Thoughts on AI systems, developer experience, team building, Elixir, and the craft of shipping software.",
       },
       { property: "og:url", content: "https://ryanyogan.com/writing" },
     ],

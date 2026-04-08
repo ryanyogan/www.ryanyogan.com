@@ -1,0 +1,31 @@
+{
+  "active_plan": "/home/ryan/personal/ryanyogan.com/.sisyphus/plans/tone-down-upsell.md",
+  "started_at": "2026-04-07T23:24:06.370Z",
+  "session_ids": [
+    "ses_295d33100ffeoTQMT9EFPreJ8l"
+  ],
+  "session_origins": {
+    "ses_295d33100ffeoTQMT9EFPreJ8l": "direct"
+  },
+  "plan_name": "tone-down-upsell",
+  "agent": "atlas",
+  "task_sessions": {
+    "todo:1": {
+      "task_key": "todo:1",
+      "task_label": "1",
+      "task_title": "Remove \"Hire Me\" from Header (desktop + mobile)",
+      "session_id": "ses_295bb6c5fffeTsiY571FY9gPII",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-04-07T23:26:35.673Z"
+    },
+    "final-wave:f1": {
+      "task_key": "final-wave:f1",
+      "task_label": "F1",
+      "task_title": "**Plan Compliance Audit** — `oracle`",
+      "session_id": "ses_295b94258ffeyNBY6p95GCCYUf",
+      "agent": "oracle",
+      "updated_at": "2026-04-07T23:30:55.933Z"
+    }
+  }
+}

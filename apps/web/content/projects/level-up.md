@@ -1,6 +1,6 @@
 ---
 title: "Level Up"
-tagline: "AI-powered job application assistant"
+tagline: "AI job application assistant with scam detection, resume tailoring, and interview prep. Built by someone who has conducted 700+ interviews and knows what makes hiring managers immediately reject an application."
 tech:
   - TanStack Start
   - Cloudflare Workers

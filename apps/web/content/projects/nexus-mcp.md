@@ -1,6 +1,6 @@
 ---
 title: "Nexus MCP"
-tagline: "AI documentation hub and memory system"
+tagline: "MCP server giving AI assistants persistent memory, real-time library documentation, and stack-specific prompts. Your AI stops hallucinating API signatures and starts remembering your project conventions."
 tech:
   - TypeScript
   - MCP

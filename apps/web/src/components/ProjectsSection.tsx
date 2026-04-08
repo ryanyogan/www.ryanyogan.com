@@ -47,6 +47,30 @@ export function ProjectsSection() {
                   {project.tagline}
                 </p>
               </Link>
+              {(project.github || project.live) && (
+                <div className="mt-3 flex items-center gap-4">
+                  {project.github && (
+                    <a
+                      href={project.github}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-sans text-[10px] tracking-widest uppercase text-on-surface-variant/40 hover:text-primary transition-colors"
+                    >
+                      GitHub
+                    </a>
+                  )}
+                  {project.live && (
+                    <a
+                      href={project.live}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-sans text-[10px] tracking-widest uppercase text-on-surface-variant/40 hover:text-primary transition-colors"
+                    >
+                      Live
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           </article>
         ))}

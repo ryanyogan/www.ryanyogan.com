@@ -1,6 +1,6 @@
 ---
 title: "Dotfiles"
-tagline: "Neovim, tmux, zsh config"
+tagline: "Personal development environment honed over too many late nights. Neovim with full LSP, tmux with custom keybindings, and zsh with enough aliases to make my coworkers uncomfortable."
 tech:
   - Lua
   - Nix

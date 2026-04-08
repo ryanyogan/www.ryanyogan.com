@@ -1,6 +1,6 @@
 ---
 title: "Yogan Hockey"
-tagline: "Real-time NHL stats with Phoenix LiveView"
+tagline: "Every hockey season my family gathers around screens. I got tired of slow, ad-infested sports apps, so I built a real-time NHL dashboard with AI predictions running on a $5/month server."
 tech:
   - Elixir
   - Phoenix LiveView

@@ -2,22 +2,21 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Hero } from "~/components/Hero";
 import { WritingSection } from "~/components/WritingSection";
 import { ProjectsSection } from "~/components/ProjectsSection";
-import { ConsultingCTA } from "~/components/ConsultingCTA";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Ryan Yogan — Engineering Leader & Builder" },
+      { title: "Ryan Yogan — AI Systems, Dev Ex, Teams" },
       {
         name: "description",
         content:
-          "Engineering leader with 20 years of experience. Building teams, shipping products, and writing about the craft.",
+          "Building AI systems that run autonomously, developer tools that get out of the way, and engineering teams that ship.",
       },
-      { property: "og:title", content: "Ryan Yogan — Engineering Leader & Builder" },
+      { property: "og:title", content: "Ryan Yogan — AI Systems, Dev Ex, Teams" },
       {
         property: "og:description",
         content:
-          "Engineering leader with 20 years of experience. Building teams, shipping products, and writing about the craft.",
+          "Building AI systems that run autonomously, developer tools that get out of the way, and engineering teams that ship.",
       },
       { property: "og:url", content: "https://ryanyogan.com" },
     ],
@@ -35,7 +34,6 @@ function HomePage() {
         <div className="md:col-span-9">
           <WritingSection />
           <ProjectsSection />
-          <ConsultingCTA />
         </div>
       </div>
     </main>
