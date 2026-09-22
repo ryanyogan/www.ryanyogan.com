@@ -26,7 +26,7 @@ A cognitive substrate built on the BEAM where beliefs replace flat memories, eac
 
 **Kahneman taken literally.** System 1 is local Elixir computation (fast, automatic, not an LLM). System 2 is LLM inference (slow, deliberate, costs money, only invoked when attention escalates). System 3 is the Skeptic and Resonator running as parallel background processes.
 
-**Thoughts as supervised OTP processes.** Each thought is a spawned, supervised, addressable, killable, observable process with its own lifecycle. Thoughts can be interrupted, spawn child thoughts, fail and be supervised. This is architecturally impossible in Python.
+**Thoughts as supervised OTP processes.** Each thought is a spawned, supervised, addressable, killable, observable process with its own lifecycle. Thoughts can be interrupted, spawn child thoughts, fail and be supervised. The BEAM makes this a native primitive rather than something bolted on; it is not unreproducible elsewhere. See [the six-month follow-up](/writing/lincoln-six-months-later) for what changed.
 
 **Attention parameters as personality.** Two Lincoln instances with different parameters develop visibly different preoccupations from the same input stream. Same code, different parameters, different entity.
 
