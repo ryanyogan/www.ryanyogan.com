@@ -42,13 +42,13 @@ I also said some things with more confidence than I had earned. That is fine. Th
 
 I rebuilt the feedback loop so reflection no longer moves confidence at all. Reflection can produce a hypothesis or a research question. Only new evidence with a different source can move the number. A probe of 100 repeated self-confirmations used to push a belief from 0.6 to 1.0. Now it stays at 0.6 and generates one deduplicated question.
 
-Then in May, Zhang and colleagues published "Useful Memories Become Faulty When Continuously Updated by LLMs." They found that consolidated memory utility rises, then degrades, then falls below the no-memory baseline. GPT-5.4 lost 54 percent of previously solved ARC-AGI problems after consolidating from its own correct solutions. Their recommendation: treat raw episodes as first-class evidence and gate consolidation explicitly. I had found the same failure in a hobby project with a 7B model. It was oddly comforting.
+Then in May, Zhang and colleagues published "Useful Memories Become Faulty When Continuously Updated by LLMs." They found that consolidated memory utility rises, then degrades, then falls below the no-memory baseline. GPT-5.4 lost 54 percent of previously solved ARC-AGI problems after consolidating from ground-truth solutions, not even its own guesses. Their recommendation: treat raw episodes as first-class evidence and gate consolidation explicitly. I had found the same failure in a hobby project with a 7B model. It was oddly comforting.
 
 **Similarity is not logic.** The Skeptic used embedding similarity to write "contradicts" edges. The Resonator used it to write "supports" edges. Similar sentences can contradict. Different sources can agree. Both now write "related" edges and ask for investigation. A candidate is not a verdict.
 
 **A label is not a mechanism.** Reading a file is an observation that a file says something. It is not an observation that the thing is true. Lincoln was tagging extracted claims as "observation" and giving them the highest credibility weight. That is the exact confusion the project was named after, happening inside the project. Fixed, and humbling.
 
-**Self-modification moved to the back of the room.** In April, Lincoln committing code to its own repo at 2am was the headline. It is now opt-in and off by default. Passing format, lint, and tests establishes that code compiles. It does not establish that cognition improved. I still think it is a neat research instrument. It is not the point.
+**Self-modification moved to the back of the room.** In April, Lincoln committing code to its own repo at 2am was the headline. It is now opt-in and off by default. Passing format, lint, isolated compilation, and the behavioral test suite establishes that the code compiles and the tests pass. It does not establish that cognition improved. I still think it is a neat research instrument. It is not the point.
 
 **The purpose narrowed and got more human.** Lincoln now has a family journal, a commitments page, and a plain "Talk" interface. The aim is a locally owned system that remembers what the people in a household actually said, in their own words, with attribution, and carries their intentions forward. Not a general assistant. Not a productivity tool. Something closer to a keepsake that can hold a conversation. I like it more than any version before it.
 
@@ -68,7 +68,7 @@ In April I argued that the industry had borrowed System 1 and System 2 as vocabu
 
 Jev is what Lincoln's System 1 wanted to grow up to be. Nearly every tier-zero decision in Lincoln is a Jev question shape. "Is this belief worth escalating?" is a Score. "Do these two beliefs conflict?" is a Noul. "Which of these five candidates should get attention?" is a Choice. The Skeptic, the attention scorer, and the evidence gate could all become calibrated learned judgments instead of thresholds I tuned by staring at a dashboard at midnight.
 
-Where we differ is the thing I still care most about. Jev is a function. State in, decision out, nothing retained. It is a superb organ. Lincoln was an attempt at an organism: the process that stays running and owns the state, with the models as tools it picks up and puts down. Those are complementary, not competing. A fast calibrated judge plus a slow deliberate model plus an explicit, governed belief store is now a thing one person can run at hobby cost. That combination was not available in April.
+Where we differ is the thing I still care most about. Jev is a function. State in, decision out, no durable cognitive state carried from one call to the next. It is a superb organ. Lincoln was an attempt at an organism: the process that stays running and owns the state, with the models as tools it picks up and puts down. Those are complementary, not competing. A fast calibrated judge plus a slow deliberate model plus an explicit, governed belief store is now a thing one person can run at hobby cost. That combination was not available in April.
 
 Caveats, because they matter. TypeSafe's benchmarks are self-tested and they say so. There is no paper. Maximum cardinality is 255 choices. The architecture is undisclosed beyond "transformer-based, synthetic data." And they named it after the Jevons paradox, which is either a promise or a threat depending on your electricity bill.
 
@@ -128,6 +128,7 @@ I learned a lot. I would like to learn the next part with other people.
 11. Hu et al., "Memory in the Age of AI Agents," December 2025. [arXiv:2512.13564](https://arxiv.org/abs/2512.13564)
 12. Park et al., "Generative Agents: Interactive Simulacra of Human Behavior," April 2023. [arXiv:2304.03442](https://arxiv.org/abs/2304.03442)
 13. Soar cognitive architecture, episodic memory. [soar.eecs.umich.edu](https://soar.eecs.umich.edu/)
-14. Alchourrón, Gärdenfors, Makinson, "On the Logic of Theory Change," 1985. Formal treatment: [arXiv:1604.07183](https://arxiv.org/abs/1604.07183)
-15. Zylos Research, "Rust-Native AI Agent Frameworks: Architecture, Performance, and the Emerging Ecosystem in 2026," April 2026. [zylos.ai](https://zylos.ai/research/2026-04-01-rust-native-ai-agent-frameworks-ecosystem-2026/)
-16. Python `asyncio` task cancellation and introspection. [docs.python.org](https://docs.python.org/3/library/asyncio-task.html)
+14. Alchourrón, Gärdenfors, Makinson, "On the Logic of Theory Change: Partial Meet Contraction and Revision Functions," Journal of Symbolic Logic 50(2), 1985. [doi:10.2307/2274239](https://doi.org/10.2307/2274239)
+15. van Zee and Doder, "AGM-Style Revision of Beliefs and Intentions from a Database Perspective," 2016. A modern formal treatment, cited for the postulates Lincoln does not demonstrate. [arXiv:1604.07183](https://arxiv.org/abs/1604.07183)
+16. Zylos Research, "Rust-Native AI Agent Frameworks: Architecture, Performance, and the Emerging Ecosystem in 2026," April 2026. [zylos.ai](https://zylos.ai/research/2026-04-01-rust-native-ai-agent-frameworks-ecosystem-2026/)
+17. Python `asyncio` task cancellation and introspection. [docs.python.org](https://docs.python.org/3/library/asyncio-task.html)
