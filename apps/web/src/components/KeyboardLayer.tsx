@@ -297,7 +297,7 @@ function Palette({ onClose }: { onClose: () => void }) {
           spellCheck={false}
           enterKeyHint="go"
           placeholder="Search pages, projects and writing"
-          className="min-w-0 flex-1 bg-transparent py-1 text-[1.1rem] text-ink outline-none placeholder:text-muted"
+          className="min-h-11 min-w-0 flex-1 bg-transparent py-1 text-[1.1rem] text-ink outline-none placeholder:text-muted"
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);
@@ -306,9 +306,16 @@ function Palette({ onClose }: { onClose: () => void }) {
           }}
           onKeyDown={onKeyDown}
         />
-        <button type="button" className="kbd cursor-pointer" onClick={onClose}>
+        {/* The button is the 44px target; the key cap inside it is only the picture. */}
+        <button
+          type="button"
+          className="-mr-2 inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center"
+          onClick={onClose}
+        >
           <span className="sr-only">Close search</span>
-          <span aria-hidden="true">Esc</span>
+          <span aria-hidden="true" className="kbd">
+            Esc
+          </span>
         </button>
       </div>
 

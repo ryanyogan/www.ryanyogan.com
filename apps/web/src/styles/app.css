@@ -79,6 +79,30 @@
   }
 }
 
+/* Phones. Sections sit closer, and the muted ink is a step darker: it carries 14px text
+   there and is read outdoors (5.9:1 on paper, 6.4:1 in the dark theme; 5.0 and 5.3 above). */
+@media (max-width: 640px) {
+  :root {
+    --muted: #5c6060;
+  }
+
+  .dark {
+    --muted: #a0a29e;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    html:not(.light) {
+      --muted: #a0a29e;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --space-section: 72px;
+  }
+}
+
 @theme inline {
   --color-paper: var(--paper);
   --color-ink: var(--ink);
@@ -708,8 +732,8 @@
   .kb-dialog {
     width: min(640px, calc(100vw - 24px));
     max-width: none;
-    max-height: calc(100dvh - min(12vh, 110px) - 16px);
-    margin: min(12vh, 110px) auto auto;
+    max-height: calc(100dvh - min(12dvh, 110px) - 16px - env(safe-area-inset-bottom));
+    margin: min(12dvh, 110px) auto auto;
     padding: 0;
     overflow: hidden;
     border: 1px solid var(--rule);
@@ -1862,6 +1886,119 @@
   .prose p,
   .prose li {
     hyphens: auto;
-    hyphenate-limit-chars: 7 3 3;
+    /* Words of eight letters or more, at least four on each side of the break (the -webkit
+       pair is Safari's spelling): fewer chopped lines in a 30-character column. */
+    hyphenate-limit-chars: 8 4 4;
+    -webkit-hyphenate-limit-before: 4;
+    -webkit-hyphenate-limit-after: 4;
+  }
+}
+
+/*
+ * Small screens and touch. Unlayered, so these win over the component layer above.
+ */
+
+/* viewport-fit=cover lets the page run under a notch; the header starts below it. */
+body > header {
+  padding-top: env(safe-area-inset-top);
+}
+
+button,
+a,
+summary {
+  touch-action: manipulation;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Anything pressed with a finger is 44px both ways: short words get the width, and a
+   one-line writing title the height. Desktop keeps its tighter text controls. */
+@media (max-width: 1024px) {
+  .pick button,
+  footer .quiet {
+    min-width: 44px;
+    justify-content: center;
+  }
+
+  .wr-count a {
+    min-width: 44px;
+  }
+
+  .wr-list a {
+    padding-bottom: 8px;
+  }
+
+  /* 16px or iOS zooms the page when the field takes focus. */
+  .adm-input.adm-code {
+    font-size: 1rem;
+  }
+}
+
+/* Nothing a phone shows is under 14px. */
+@media (max-width: 640px) {
+  .st,
+  .nums dd,
+  .wlist time,
+  .open li::before,
+  .tl .d,
+  .arc .when,
+  .tech,
+  .pd-nav span,
+  .wr-list time,
+  .post-nav span {
+    font-size: 0.875rem;
+  }
+
+  .plist .sum {
+    font-size: 0.9375rem;
+  }
+
+  /* With the reader's text enlarged (WCAG 1.4.4) a long word must not push the page wide:
+     the status drops under a title that has less than nine characters of room left, and
+     the email address may break. At the default size neither rule changes anything. */
+  .proj header,
+  .pd-title {
+    flex-wrap: wrap;
+    row-gap: 0;
+  }
+
+  .proj header > h3 {
+    flex: 1 1 0;
+    min-width: 9ch;
+  }
+
+  .mail {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  /* Likewise: a figure such as "150 → 2,300" may break at its arrow, and on a Home row the
+     status drops under the title once the title's longest word no longer fits beside it. */
+  .nums dt,
+  .figs dt {
+    white-space: normal;
+  }
+
+  .plist li {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 16px;
+  }
+
+  .plist a {
+    flex: 1 1 0;
+  }
+
+  .plist .sum {
+    flex: 0 0 100%;
   }
 }

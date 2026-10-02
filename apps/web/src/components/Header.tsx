@@ -20,14 +20,33 @@ export function Header() {
     setOpen(false);
   }, [pathname]);
 
-  // While open: focus moves into the menu, Escape closes it and hands focus
-  // back to the button, and a press outside the header closes it.
+  // While open: focus moves into the menu and stays in the header, Escape closes it and hands
+  // focus back to the button, and a press outside the header closes it.
   useEffect(() => {
     if (!open) return;
 
     navRef.current?.querySelector("a")?.focus();
 
     function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Tab") {
+        // The open menu holds focus inside the header: Tab wraps from the last control to
+        // the first (and back), so a keyboard never wanders into the page under the menu.
+        const header = headerRef.current;
+        if (!header) return;
+        const stops = [...header.querySelectorAll<HTMLElement>("a[href], button")].filter(
+          (element) => element.getClientRects().length > 0,
+        );
+        const first = stops[0];
+        const last = stops[stops.length - 1];
+        if (!first || !last) return;
+        const current = document.activeElement;
+        const inside = current instanceof Node && header.contains(current);
+        if (event.shiftKey ? !inside || current === first : !inside || current === last) {
+          event.preventDefault();
+          (event.shiftKey ? last : first).focus();
+        }
+        return;
+      }
       if (event.key !== "Escape") return;
       setOpen(false);
       buttonRef.current?.focus();
@@ -47,7 +66,7 @@ export function Header() {
 
   return (
     <header ref={headerRef} className="font-sans">
-      <div className="wrap flex flex-wrap items-center gap-x-2 pt-2.5 pb-1.5 md:gap-x-7 md:py-6">
+      <div className="wrap flex flex-wrap items-center gap-x-1 pt-2.5 min-[400px]:gap-x-2 pb-1.5 md:gap-x-7 md:py-6">
         <Link
           to="/"
           aria-label="Ryan Yogan, home"
@@ -91,7 +110,7 @@ export function Header() {
         <button
           ref={buttonRef}
           type="button"
-          className="quiet px-2 text-[0.875rem] md:hidden"
+          className="quiet -mr-2 px-2 text-[0.875rem] md:hidden"
           aria-expanded={open}
           aria-controls={NAV_ID}
           onClick={() => setOpen((value) => !value)}
