@@ -34,7 +34,8 @@ export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
   forbidOnly: CI,
-  retries: CI ? 1 : 0,
+  // No retries, in CI either: a retry hid a real hydration error (React #418) for weeks.
+  retries: 0,
   // e2e-results.json feeds scripts/e2e-summary.mjs (`pnpm test:e2e` prints it, CI posts it).
   reporter: [
     CI ? ["github"] : ["list"],
@@ -44,11 +45,15 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${PORT}`,
     colorScheme: "light",
-    // Locally there are no retries, so keep the trace of any failure; in CI, of the retry.
-    trace: CI ? "on-first-retry" : "retain-on-failure",
+    // There are no retries, so keep the trace of any failure.
+    trace: "retain-on-failure",
   },
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] }, testIgnore: /mobile\.spec\.ts$/ },
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+      testIgnore: /mobile\.spec\.ts$/,
+    },
     // The public smoke tests again at phone size, plus the mobile menu.
     {
       name: "mobile",

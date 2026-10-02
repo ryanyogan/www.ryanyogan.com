@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import type { BrowserContext, Page } from "@playwright/test";
 import { fileURLToPath } from "node:url";
 import {
   BROKEN_ORIGIN,
@@ -61,10 +62,89 @@ test("the chosen theme persists across client and full navigation", async ({ pag
 
 // --- SEO --------------------------------------------------------------------------------
 
-test("every public route has its own title and description, Open Graph tags and canonical", async ({
+/**
+ * A fresh tab on `route`, as a visitor arrives, with its console errors collected into `errors`.
+ * One tab driven through every route in turn keeps the previous pages' pending preloads, and
+ * Chromium now and then fails a request there with ERR_INSUFFICIENT_RESOURCES.
+ */
+async function openTab(context: BrowserContext, errors: string[], route: string): Promise<Page> {
+  const tab = await context.newPage();
+  tab.on("console", (message) => {
+    if (message.type() === "error") errors.push(`${tab.url()}: ${message.text()}`);
+  });
+  tab.on("pageerror", (error) => errors.push(`${tab.url()}: ${String(error)}`));
+  await tab.goto(route);
+  return tab;
+}
+
+// A hydration mismatch (React #418) throws away the server HTML and renders the page again.
+// It only shows once React has hydrated, so a test that navigates on straight away sees it
+// some of the time. This one waits for hydration on every route, and first checks the cause
+// that needs no timing at all: markup the HTML parser has to repair (a <figure> inside a <p>).
+test("every public route is valid HTML and hydrates without a mismatch", async ({
   page,
+  context,
+  request,
 }) => {
-  const seen = { title: new Map<string, string>(), description: new Map<string, string>() };
+  const all = [
+    ...new Set([
+      ...routes,
+      ...projectSlugs.map((slug) => `/projects/${slug}`),
+      ...postSlugs.map((slug) => `/writing/${slug}`),
+    ]),
+  ];
+  await page.goto("/work");
+  for (const route of all) {
+    const html = await (await request.get(route)).text();
+    // Every tag the server wrote must survive parsing as exactly one element.
+    const repaired = await page.evaluate((source) => {
+      const body = source.slice(source.indexOf("<body")).replace(/<script[\s\S]*?<\/script>/g, "");
+      const written = new Map<string, number>();
+      for (const [, tag] of body.matchAll(/<([a-zA-Z][a-zA-Z0-9]*)/g)) {
+        const name = tag.toLowerCase();
+        if (name !== "body") written.set(name, (written.get(name) ?? 0) + 1);
+      }
+      const parsed = new Map<string, number>();
+      const doc = new DOMParser().parseFromString(source, "text/html");
+      for (const element of doc.body.querySelectorAll("*")) {
+        const name = element.tagName.toLowerCase();
+        if (name !== "script") parsed.set(name, (parsed.get(name) ?? 0) + 1);
+      }
+      return [...new Set([...written.keys(), ...parsed.keys()])]
+        .filter((name) => written.get(name) !== parsed.get(name))
+        .map(
+          (name) => `<${name}>: ${written.get(name) ?? 0} written, ${parsed.get(name) ?? 0} parsed`,
+        );
+    }, html);
+    expect(repaired, `${route}: tags the browser had to repair`).toEqual([]);
+
+    const errors: string[] = [];
+    const tab = await openTab(context, errors, route);
+    // React has attached to the first and the last element it renders.
+    await tab.waitForFunction(() => {
+      const attached = (element: Element | null | undefined) =>
+        Boolean(element && Object.keys(element).some((key) => key.startsWith("__reactFiber$")));
+      return (
+        attached(document.querySelector("#main")) && attached(document.querySelector("footer"))
+      );
+    });
+    // Recoverable errors are reported after the commit.
+    await tab.evaluate(
+      () => new Promise((done) => requestAnimationFrame(() => setTimeout(done, 50))),
+    );
+    expect(errors, `${route}: console errors after hydration`).toEqual([]);
+    await tab.close();
+  }
+});
+
+test("every public route has its own title and description, Open Graph tags and canonical", async ({
+  context,
+  consoleErrors,
+}) => {
+  const seen = {
+    title: new Map<string, string>(),
+    description: new Map<string, string>(),
+  };
   const all = [
     ...new Set([
       ...routes,
@@ -73,8 +153,8 @@ test("every public route has its own title and description, Open Graph tags and 
     ]),
   ];
   for (const route of all) {
-    await page.goto(route);
-    const meta = await page.evaluate(() => {
+    const tab = await openTab(context, consoleErrors, route);
+    const meta = await tab.evaluate(() => {
       const one = (selector: string) => {
         const found = document.head.querySelectorAll(selector);
         return found.length === 1
@@ -111,6 +191,7 @@ test("every public route has its own title and description, Open Graph tags and 
       expect(other, `${route} shares its ${key} with ${other}: ${meta[key]}`).toBeUndefined();
       seen[key].set(meta[key], route);
     }
+    await tab.close();
   }
 });
 

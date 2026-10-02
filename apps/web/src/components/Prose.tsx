@@ -18,9 +18,23 @@ export function Prose({ content }: { content: string }) {
         h4: ({ children }) => (
           <h4 className="mt-6 mb-2 font-sans text-[1.1rem] font-semibold text-ink">{children}</h4>
         ),
-        p: ({ children }) => (
-          <p className="mb-6 text-[1.125rem] leading-relaxed text-ink-soft">{children}</p>
-        ),
+        // An image alone in its paragraph is a figure, and a <figure> may not sit inside a <p>:
+        // the browser closes the <p> early, and the repaired DOM no longer matches what React
+        // renders, so hydration fails. Such a paragraph is rendered as the figure itself.
+        p: ({ node, children }) => {
+          const only = node?.children.length === 1 ? node.children[0] : undefined;
+          if (only?.type === "element" && only.tagName === "img") {
+            const src = typeof only.properties.src === "string" ? only.properties.src : undefined;
+            const alt = typeof only.properties.alt === "string" ? only.properties.alt : "";
+            return (
+              <figure className="my-10">
+                <img src={src} alt={alt} className="w-full rounded-card" loading="lazy" />
+                {alt && <figcaption className="mt-3 text-[0.9rem] text-muted">{alt}</figcaption>}
+              </figure>
+            );
+          }
+          return <p className="mb-6 text-[1.125rem] leading-relaxed text-ink-soft">{children}</p>;
+        },
         ul: ({ children }) => <ul className="mb-6 list-none space-y-2 p-0">{children}</ul>,
         ol: ({ children }) => (
           <ol className="mb-6 list-decimal space-y-2 pl-6 text-[1.125rem] text-ink-soft marker:text-muted">
@@ -79,11 +93,9 @@ export function Prose({ content }: { content: string }) {
         tr: ({ children }) => <tr className="border-b border-rule">{children}</tr>,
         th: ({ children }) => <th className="label px-4 py-3 text-left font-medium">{children}</th>,
         td: ({ children }) => <td className="px-4 py-3 text-ink-soft">{children}</td>,
+        // An image inside other content (text, a link, a list item) stays phrasing content.
         img: ({ src, alt }) => (
-          <figure className="my-10">
-            <img src={src} alt={alt || ""} className="w-full rounded-card" loading="lazy" />
-            {alt && <figcaption className="mt-3 text-[0.9rem] text-muted">{alt}</figcaption>}
-          </figure>
+          <img src={src} alt={alt || ""} className="max-w-full rounded-card" loading="lazy" />
         ),
       }}
     >
