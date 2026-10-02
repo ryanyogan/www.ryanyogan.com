@@ -126,6 +126,7 @@ describe("purgeKeysFor", () => {
     expect(purgeKeysFor(ORIGIN, ["old", "new", "old", ""])).toEqual([
       `${ORIGIN}/`,
       `${ORIGIN}/projects`,
+      `${ORIGIN}/sitemap.xml`,
       `${ORIGIN}/projects/old`,
       `${ORIGIN}/projects/new`,
     ]);

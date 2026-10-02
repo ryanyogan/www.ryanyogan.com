@@ -275,6 +275,58 @@ test.describe("signed in (local bypass, test-only database)", () => {
     expect(await detail.text()).toContain(widget.renamed);
   });
 
+  test("a title with </script> cannot break out of the JSON-LD block", async ({
+    page,
+    request,
+  }) => {
+    const hostile = `Zephyr </script><script>window.__pwned = 1</script><!-- & Co`;
+    const path = `/projects/${widget.slug}`;
+    await gotoAdmin(page, `/admin${path}`);
+    await page.getByLabel("Title").fill(hostile);
+    await save(page);
+
+    for (const route of [path, "/projects", "/"]) {
+      const { status, html } = await publicHtml(request, route);
+      expect(status, route).toBe(200);
+      // The title is never in the markup as typed: not in the JSON-LD, the loader data or the text.
+      expect(html, route).not.toContain("<script>window.__pwned");
+      const blocks = [
+        ...html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g),
+      ];
+      expect(blocks, route).toHaveLength(1);
+      expect(blocks[0][1], route).not.toMatch(/[<>]/);
+      const graph = JSON.parse(blocks[0][1])["@graph"] as Record<string, unknown>[];
+      expect(graph.length, route).toBeGreaterThan(0);
+      if (route === path) {
+        // Escaped on the way out, and the same string again once parsed.
+        expect(graph[0].name).toBe(hostile);
+        const crumbs = graph[1].itemListElement as { name: string }[];
+        expect(crumbs.at(-1)?.name).toBe(hostile);
+      }
+    }
+
+    // In a browser: nothing ran, and the page shows the title as text.
+    await page.goto(`${ADMIN_ORIGIN}${path}`);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(hostile);
+    expect(await page.evaluate(() => "__pwned" in window)).toBe(false);
+    const parsed = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('script[type="application/ld+json"]'), (el) =>
+        JSON.parse(el.textContent ?? ""),
+      ),
+    );
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0]["@graph"][0].name).toBe(hostile);
+
+    // The write purged the sitemap with the pages: the published project is in it.
+    const sitemap = await request.get(`${ADMIN_ORIGIN}/sitemap.xml`);
+    expect(await sitemap.text()).toContain(`<loc>https://ryanyogan.com${path}</loc>`);
+
+    await gotoAdmin(page, `/admin${path}`);
+    await page.getByLabel("Title").fill(widget.renamed);
+    await save(page);
+    expect((await publicHtml(request, path)).html).not.toContain("__pwned");
+  });
+
   test("change its slug: validated, unique, and the old URL is a 404", async ({
     page,
     request,
@@ -359,6 +411,7 @@ test.describe("signed in (local bypass, test-only database)", () => {
     await save(page);
     expect((await publicHtml(request, "/projects")).html).not.toContain(widget.renamed);
     expect((await publicHtml(request, `/projects/${widget.slug}`)).status).toBe(404);
+    expect((await publicHtml(request, "/sitemap.xml")).html).not.toContain(widget.slug);
   });
 
   test("delete it, after a confirmation", async ({ page, request }) => {

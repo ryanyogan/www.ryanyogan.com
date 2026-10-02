@@ -1,12 +1,25 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { writingPosts } from "~/lib/content";
 import type { WritingPost } from "~/lib/content";
-import { pageTitle, seo } from "~/lib/seo";
+import { collectionNode, pageTitle, seo } from "~/lib/seo";
 
 const description = "Build logs, one retraction, and what I learned running teams.";
 
 export const Route = createFileRoute("/writing/")({
-  head: () => seo({ title: pageTitle("Writing"), description, path: "/writing" }),
+  head: () =>
+    seo({
+      title: pageTitle("Writing"),
+      description,
+      path: "/writing",
+      graph: [
+        collectionNode({
+          name: pageTitle("Writing"),
+          description,
+          path: "/writing",
+          items: writingPosts.map((post) => ({ name: post.title, path: `/writing/${post.slug}` })),
+        }),
+      ],
+    }),
   component: WritingPage,
 });
 

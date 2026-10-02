@@ -1,7 +1,15 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { writingPosts } from "~/lib/content";
 import { Prose } from "~/components/Prose";
-import { absoluteUrl, canonical, pageTitle } from "~/lib/seo";
+import {
+  WEBSITE_ID,
+  absoluteUrl,
+  breadcrumbNode,
+  isoDateTime,
+  pageTitle,
+  personRef,
+  seo,
+} from "~/lib/seo";
 
 export const Route = createFileRoute("/writing/$slug")({
   component: WritingDetail,
@@ -13,33 +21,39 @@ export const Route = createFileRoute("/writing/$slug")({
   head: ({ loaderData: post }) => {
     // The loader throws notFound() for an unknown slug, and head still runs.
     if (!post) return {};
-    return {
+    const path = `/writing/${post.slug}`;
+    const published = isoDateTime(post.isoDate);
+    return seo({
+      title: pageTitle(post.title),
+      ogTitle: post.title,
+      description: post.excerpt,
+      path,
+      type: "article",
       meta: [
-        { title: pageTitle(post.title) },
-        { name: "description", content: post.excerpt },
-        { property: "og:title", content: post.title },
-        { property: "og:description", content: post.excerpt },
-        { property: "og:url", content: absoluteUrl(`/writing/${post.slug}`) },
-        { property: "og:type", content: "article" },
-        { property: "article:author", content: post.author },
-        { property: "article:published_time", content: post.isoDate },
+        // ogp.me: article:author is a profile URL, not a name.
+        { property: "article:author", content: absoluteUrl("/work") },
+        { property: "article:published_time", content: published },
       ],
-      links: canonical(`/writing/${post.slug}`),
-      scripts: [
+      graph: [
         {
-          type: "application/ld+json",
-          children: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Article",
-            headline: post.title,
-            description: post.excerpt,
-            author: { "@type": "Person", name: post.author, url: absoluteUrl("") },
-            publisher: { "@type": "Person", name: post.author },
-            datePublished: post.isoDate,
-          }),
+          "@type": "BlogPosting",
+          "@id": `${absoluteUrl(path)}#post`,
+          headline: post.title,
+          description: post.excerpt,
+          url: absoluteUrl(path),
+          // Posts record one date; there is no modification date to state.
+          datePublished: published,
+          author: personRef(),
+          mainEntityOfPage: { "@type": "WebPage", "@id": absoluteUrl(path) },
+          isPartOf: { "@id": WEBSITE_ID },
+          inLanguage: "en",
         },
+        breadcrumbNode([
+          { name: "Writing", path: "/writing" },
+          { name: post.title, path },
+        ]),
       ],
-    };
+    });
   },
 });
 

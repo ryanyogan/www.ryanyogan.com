@@ -1,4 +1,5 @@
-// Edge cache for the pages rendered from D1 (/, /projects, /projects/<slug>): the pure part.
+// Edge cache for what is rendered from D1 (/, /projects, /projects/<slug>, /sitemap.xml): the
+// pure part.
 // Which requests may use the cache, under which key, how a copy is stored and served, and
 // which keys an admin write purges. No Cloudflare import, so it is unit-tested with a fake
 // cache (page-cache.test.ts); the wiring into the Worker is page-cache-edge.ts.
@@ -26,7 +27,7 @@ const TRACKING_PARAM =
 
 // Deliberately case-sensitive and strict: `/Projects` or `/projects/Foo` still render (or
 // 404) through the router, they are just not cached, so no second spelling shares a key.
-const CACHEABLE_PATH = /^\/(?:projects(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?)?$/;
+const CACHEABLE_PATH = /^\/(?:projects(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?|sitemap\.xml)?$/;
 
 function hasAccessToken(headers: Headers): boolean {
   if (headers.get(ACCESS_JWT_HEADER)) return true;
@@ -41,7 +42,7 @@ function hasAccessToken(headers: Headers): boolean {
  * - anything but GET;
  * - a request carrying the Cloudflare Access cookie or JWT header (the signed-in owner
  *   always gets a fresh render, and nothing rendered for them is stored);
- * - any path other than /, /projects and /projects/<slug>, which excludes /admin and the
+ * - any path other than /, /projects, /projects/<slug> and /sitemap.xml, which excludes /admin and the
  *   server-function URLs (/_serverFn/...) by construction;
  * - a query string with anything but tracking parameters: those pages take no query, so an
  *   unknown one is not worth a cache entry per value.
@@ -60,22 +61,27 @@ export function cacheKeyFor(request: Request): string | null {
   return `${url.origin}${path}`;
 }
 
-/** Every key an admin write to `slugs` can have changed: the two lists and each project page. */
+/**
+ * Every key an admin write to `slugs` can have changed: the two lists, the sitemap and each
+ * project page.
+ */
 export function purgeKeysFor(origin: string, slugs: readonly string[]): string[] {
-  const keys = [`${origin}/`, `${origin}/projects`];
+  const keys = [`${origin}/`, `${origin}/projects`, `${origin}/sitemap.xml`];
   for (const slug of new Set(slugs)) if (slug) keys.push(`${origin}/projects/${slug}`);
   return keys;
 }
 
 /**
- * Only a complete, public, successful HTML page is stored: status 200, `text/html`, a
+ * Only a complete, public, successful page is stored: status 200, `text/html` (or the
+ * sitemap's `application/xml`), a
  * `Cache-Control` that says `public` with an `s-maxage` (the route's own policy; an error
  * is `no-store` by then, see src/start.ts), and no `Set-Cookie`. A draft or unknown slug is
  * a 404, so it can never get in.
  */
 export function isStorable(response: Response): boolean {
   if (response.status !== 200) return false;
-  if (!(response.headers.get("content-type") ?? "").includes("text/html")) return false;
+  const type = response.headers.get("content-type") ?? "";
+  if (!type.includes("text/html") && !type.includes("application/xml")) return false;
   if (response.headers.has("set-cookie")) return false;
   const policy = (response.headers.get("cache-control") ?? "").toLowerCase();
   return policy.includes("public") && policy.includes("s-maxage") && !policy.includes("no-store");

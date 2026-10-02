@@ -1,6 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
-import { getPublishedProject, listPublishedProjects } from "./db/projects";
+import {
+  getPublishedProject,
+  listPublishedProjectDates,
+  listPublishedProjects,
+} from "./db/projects";
 
 /**
  * Cache policy for the pages rendered from D1: browsers always revalidate, a
@@ -47,6 +51,11 @@ async function guarded<T>(read: () => Promise<T>): Promise<T> {
 /** Published projects for Home, /projects and the palette. Drafts never leave the Worker. */
 export const fetchProjects = createServerFn({ method: "GET" }).handler(() =>
   guarded(() => listPublishedProjects(env.DB)),
+);
+
+/** Published slugs with their `updated_at`, for /sitemap.xml. */
+export const fetchSitemapProjects = createServerFn({ method: "GET" }).handler(() =>
+  guarded(() => listPublishedProjectDates(env.DB)),
 );
 
 /** One published project plus the others in its group, or null (unknown slug or draft). */

@@ -12,6 +12,8 @@ function isDynamic(path: string): boolean {
     clean === "" ||
     clean === "/projects" ||
     clean.startsWith("/projects/") ||
+    // Lists the published projects, so the Worker renders it too (src/routes/sitemap[.]xml.ts).
+    clean === "/sitemap.xml" ||
     // Never prerendered: the admin is rendered per request, behind the owner check.
     clean === "/admin" ||
     clean.startsWith("/admin/")
@@ -48,10 +50,17 @@ export default defineConfig(({ command, isPreview }) => ({
       remoteBindings: command === "serve" && !isPreview && !process.env.NO_REMOTE_BINDINGS,
     }),
     tanstackStart({
+      // Nothing links to /llms.txt, so the prerender crawl would not find it.
+      pages: [{ path: "/llms.txt" }],
       prerender: {
         enabled: true,
+        // Emit work.html, not work/index.html: the asset server then serves /work with a 200
+        // (the form every canonical, link and feed uses) instead of redirecting it to /work/.
+        autoSubfolderIndex: false,
         // Pages that read projects from D1 are rendered by the Worker on request.
-        filter: ({ path }) => !isDynamic(path),
+        // The route tree also offers "/writing/" (the index route's own path). Prerendering
+        // it would put writing/index.html next to writing.html and serve both URLs with a 200.
+        filter: ({ path }) => !isDynamic(path) && !path.split(/[?#]/)[0].endsWith("/"),
       },
     }),
     react(),

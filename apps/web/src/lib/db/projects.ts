@@ -89,6 +89,16 @@ export async function listPublishedProjects(db: D1Database): Promise<Project[]> 
   return results.map(toProject).sort(byGroupThenOrder);
 }
 
+/** Slug and last change of every published project, for the sitemap. Drafts never appear. */
+export async function listPublishedProjectDates(
+  db: D1Database,
+): Promise<{ slug: string; updatedAt: string }[]> {
+  const { results } = await db
+    .prepare(`SELECT slug, updated_at FROM projects WHERE published = 1 ORDER BY slug`)
+    .all<Pick<ProjectRow, "slug" | "updated_at">>();
+  return results.map((row) => ({ slug: row.slug, updatedAt: row.updated_at }));
+}
+
 /** One published project with its body, or null for an unknown slug or a draft. */
 export async function getPublishedProject(
   db: D1Database,

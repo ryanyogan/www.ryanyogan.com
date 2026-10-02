@@ -5,10 +5,13 @@ import { test as base, expect } from "@playwright/test";
 export const SITE_URL = "https://ryanyogan.com";
 export const CLIENT_DIR = fileURLToPath(new URL("../dist/client", import.meta.url));
 
+// The prerender writes writing/<slug>.html (not <slug>/index.html), so a post is served at
+// its bare path.
 function slugs(section: string): string[] {
   return readdirSync(`${CLIENT_DIR}/${section}`, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name)
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".html"))
+    .map((entry) => entry.name.replace(/\.html$/, ""))
+    .filter((name) => name !== "index")
     .sort();
 }
 
@@ -37,6 +40,16 @@ export const routes = [
   "/writing",
   "/projects/lincoln-project",
   `/writing/${postSlugs[0]}`,
+];
+
+/** Every indexable URL of the site: what the sitemap must list, no more and no less. */
+export const publicRoutes = [
+  "/",
+  "/work",
+  "/projects",
+  "/writing",
+  ...projectSlugs.map((slug) => `/projects/${slug}`),
+  ...postSlugs.map((slug) => `/writing/${slug}`),
 ];
 
 /** The second preview: same build, admin bypass on, its own database (playwright.config.ts). */

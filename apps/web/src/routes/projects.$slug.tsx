@@ -4,7 +4,7 @@ import { ProjectLinks } from "~/components/ProjectLinks";
 import { Prose } from "~/components/Prose";
 import { StatusPill } from "~/components/StatusPill";
 import { PROJECT_PAGE_CACHE, fetchProject } from "~/lib/projects.functions";
-import { absoluteUrl, canonical, pageTitle } from "~/lib/seo";
+import { breadcrumbNode, pageTitle, projectNode, seo } from "~/lib/seo";
 
 export const Route = createFileRoute("/projects/$slug")({
   component: ProjectDetailPage,
@@ -21,16 +21,19 @@ export const Route = createFileRoute("/projects/$slug")({
     // The loader throws notFound() for an unknown slug, and head still runs.
     if (!loaderData) return {};
     const { project } = loaderData;
-    return {
-      meta: [
-        { title: pageTitle(project.title) },
-        { name: "description", content: project.tagline },
-        { property: "og:title", content: pageTitle(project.title) },
-        { property: "og:description", content: project.tagline },
-        { property: "og:url", content: absoluteUrl(`/projects/${project.slug}`) },
+    const path = `/projects/${project.slug}`;
+    return seo({
+      title: pageTitle(project.title),
+      description: project.tagline,
+      path,
+      graph: [
+        projectNode(project),
+        breadcrumbNode([
+          { name: "Projects", path: "/projects" },
+          { name: project.title, path },
+        ]),
       ],
-      links: canonical(`/projects/${project.slug}`),
-    };
+    });
   },
 });
 

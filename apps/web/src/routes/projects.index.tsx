@@ -5,15 +5,29 @@ import type { Project, ProjectStatus } from "@repo/shared";
 import { ProjectLinks } from "~/components/ProjectLinks";
 import { StatusPill } from "~/components/StatusPill";
 import { PROJECT_PAGE_CACHE, fetchProjects } from "~/lib/projects.functions";
-import { pageTitle, seo } from "~/lib/seo";
+import { collectionNode, pageTitle, seo } from "~/lib/seo";
+
+const description =
+  "Agent memory, MCP servers, durable AI workflows and desktop tools. Everything I've built, with its real status.";
 
 export const Route = createFileRoute("/projects/")({
-  head: () =>
+  // loaderData is missing when the loader failed (a 500): the page then has no item list.
+  head: ({ loaderData }) =>
     seo({
       title: pageTitle("Projects"),
-      description:
-        "Agent memory, MCP servers, durable AI workflows and desktop tools. Everything I've built, with its real status.",
+      description,
       path: "/projects",
+      graph: [
+        collectionNode({
+          name: pageTitle("Projects"),
+          description,
+          path: "/projects",
+          items: (loaderData ?? []).map((project) => ({
+            name: project.title,
+            path: `/projects/${project.slug}`,
+          })),
+        }),
+      ],
     }),
   loader: () => fetchProjects(),
   headers: () => ({ "Cache-Control": PROJECT_PAGE_CACHE }),

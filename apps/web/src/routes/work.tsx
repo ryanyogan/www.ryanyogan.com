@@ -1,7 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { contactEmail, workSections } from "@repo/shared";
 import type { ReactNode } from "react";
-import { pageTitle, seo } from "~/lib/seo";
+import { WEBSITE_ID, absoluteUrl, pageTitle, personNode, seo } from "~/lib/seo";
 
 export const Route = createFileRoute("/work")({
   head: () =>
@@ -10,6 +10,21 @@ export const Route = createFileRoute("/work")({
       description:
         "How to work with Ryan Yogan: how he leads, what he has scaled, what he is building now, what he is open to, and a compact timeline.",
       path: "/work",
+      type: "profile",
+      meta: [
+        { property: "profile:first_name", content: "Ryan" },
+        { property: "profile:last_name", content: "Yogan" },
+      ],
+      graph: [
+        {
+          "@type": "ProfilePage",
+          "@id": absoluteUrl("/work"),
+          url: absoluteUrl("/work"),
+          name: pageTitle("Work"),
+          isPartOf: { "@id": WEBSITE_ID },
+          mainEntity: personNode(),
+        },
+      ],
     }),
   component: WorkPage,
 });

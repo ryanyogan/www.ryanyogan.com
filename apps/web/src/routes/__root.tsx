@@ -4,7 +4,7 @@ import { Link, Outlet, HeadContent, Scripts, createRootRoute } from "@tanstack/r
 import { Header } from "~/components/Header";
 import { Footer } from "~/components/Footer";
 import { KeyboardLayer } from "~/components/KeyboardLayer";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, absoluteUrl } from "~/lib/seo";
+import { SITE_DESCRIPTION, SITE_LOCALE, SITE_NAME, SITE_TITLE, absoluteUrl } from "~/lib/seo";
 import appCss from "~/styles/app.css?url";
 
 export const Route = createRootRoute({
@@ -16,6 +16,7 @@ export const Route = createRootRoute({
       { title: SITE_TITLE },
       { name: "description", content: SITE_DESCRIPTION },
       { property: "og:site_name", content: SITE_NAME },
+      { property: "og:locale", content: SITE_LOCALE },
       { property: "og:type", content: "website" },
       { property: "og:title", content: SITE_TITLE },
       { property: "og:description", content: SITE_DESCRIPTION },
@@ -73,6 +74,10 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en">
       <head>
+        {/* Here, not in head(): the router keeps one meta per name, and this needs two. The
+            values are --paper in each scheme (styles/app.css). */}
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6eee1" />
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1b1613" />
         <HeadContent />
       </head>
       <body>

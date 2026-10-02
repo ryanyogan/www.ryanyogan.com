@@ -2,6 +2,7 @@ import { createMiddleware, createStart } from "@tanstack/react-start";
 import { adminFunctions } from "~/lib/admin/admin.functions";
 import { adminRequestGuard } from "~/lib/admin/middleware";
 import { pageCache } from "~/lib/page-cache-edge";
+import { trailingSlashRedirect } from "~/lib/trailing-slash";
 
 const adminFunctionPaths = new Set(adminFunctions.map((fn) => fn.url));
 
@@ -18,10 +19,19 @@ const noStoreOnError = createMiddleware().server(async ({ next }) => {
   return { ...result, response };
 });
 
+/**
+ * One URL per page: /projects/ answers 308 to /projects before the cache or the router sees
+ * it. (The cache key drops a trailing slash too; with this in front it never has to.)
+ */
+const bareUrls = createMiddleware().server(({ next, request }) => {
+  return trailingSlashRedirect(request) ?? next();
+});
+
 // Global request middleware: runs before the router for every request the Worker handles.
 export const startInstance = createStart(() => ({
   requestMiddleware: [
-    // Outermost: it stores the final response, after `noStoreOnError` has marked errors.
+    bareUrls,
+    // Outermost but for the redirect: it stores the final response, after `noStoreOnError` has marked errors.
     pageCache,
     noStoreOnError,
     adminRequestGuard((pathname) => adminFunctionPaths.has(pathname)),
