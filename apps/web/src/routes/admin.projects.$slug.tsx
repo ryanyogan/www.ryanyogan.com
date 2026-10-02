@@ -16,8 +16,8 @@ function EditProject() {
   const project = Route.useLoaderData();
   return (
     <>
-      <h1 className="display mt-8 text-[clamp(1.8rem,4vw,2.6rem)]">Edit {project.title}</h1>
-      <p className="label mt-3">
+      <h1 className="mt-10">Edit {project.title}</h1>
+      <p className="small mt-2">
         {project.published ? "Published" : "Draft"} &middot; source: {project.source} &middot;
         updated <time dateTime={project.updatedAt}>{project.updatedAt.slice(0, 10)}</time>
         {project.aiGeneratedAt && (
@@ -83,15 +83,15 @@ function GithubStats(props: {
   return (
     <div
       data-testid="github-stats"
-      className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-y border-rule py-3"
+      className="small mt-5 flex flex-wrap items-center gap-x-5 gap-y-1 border-y border-rule py-1"
     >
-      <span className="label break-all">GitHub: {props.repoFullName}</span>
-      <span className="label">Stars: {stars ?? "unknown"}</span>
-      <span className="label">Last push: {pushedAt ? pushedAt.slice(0, 10) : "unknown"}</span>
+      <span className="break-all">GitHub: {props.repoFullName}</span>
+      <span>Stars: {stars ?? "unknown"}</span>
+      <span>Last push: {pushedAt ? pushedAt.slice(0, 10) : "unknown"}</span>
       <button type="button" className="adm-btn" disabled={busy} onClick={refresh}>
         {busy ? "Refreshing..." : "Refresh from GitHub"}
       </button>
-      <span aria-live="polite" data-testid="github-refresh-message" className="font-semibold">
+      <span aria-live="polite" data-testid="github-refresh-message" className="adm-ok">
         {message}
       </span>
     </div>

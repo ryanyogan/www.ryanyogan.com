@@ -7,8 +7,8 @@
 // Safety: a project body is text the owner types in the admin, so the result must be inert
 // whatever it contains. Raw HTML in the source is never parsed as HTML (it is shown as the
 // text that was typed), rehype-sanitize then keeps only GitHub's allowlist of elements,
-// attributes and URL schemes, and the last step replaces the attributes of every styled
-// element with a fixed set. See markdown.test.ts.
+// attributes and URL schemes, and the last step replaces the attributes of every element it
+// knows with a fixed set (no classes, apart from the highlighter's own on code). See markdown.test.ts.
 import type { Element, ElementContent, Properties, Root, RootContent } from "hast";
 import rehypeHighlight from "rehype-highlight";
 import rehypeSanitize from "rehype-sanitize";
@@ -19,43 +19,10 @@ import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 
 /**
- * The prose styles: one class list per element. A restyle changes these strings (Tailwind
- * reads them from this file) and nothing else.
+ * Elements that keep no attribute at all. The look comes from the `.prose` rules in
+ * styles/app.css; this file emits plain elements with no classes.
  */
-const classes: Record<string, string> = {
-  h1: "display mb-6 text-[2.2rem] text-ink",
-  h2: "display mt-12 mb-4 text-[1.7rem] text-ink",
-  h3: "display mt-8 mb-3 text-[1.35rem] text-ink",
-  h4: "mt-6 mb-2 font-sans text-[1.1rem] font-semibold text-ink",
-  p: "mb-6 text-[1.125rem] leading-relaxed text-ink-soft",
-  ul: "mb-6 list-none space-y-2 p-0",
-  ol: "mb-6 list-decimal space-y-2 pl-6 text-[1.125rem] text-ink-soft marker:text-muted",
-  li: "border-l border-rule-strong pl-4 text-[1.125rem] leading-relaxed text-ink-soft [ol>&]:border-0 [ol>&]:pl-1",
-  a: "link text-ink decoration-build",
-  blockquote:
-    "my-8 border-l-[3px] border-build pl-5 font-serif italic [&>p]:text-[1.3rem] [&>p]:leading-snug [&>p]:text-ink [&>p:last-child]:mb-0",
-  inlineCode:
-    "rounded-[4px] border border-rule bg-surface px-1.5 py-0.5 font-mono text-[0.85em] text-ink",
-  pre: "mb-6 overflow-x-auto rounded-card bg-[#1e1e1e] p-0 font-mono text-sm leading-relaxed text-[#d4d4d4]",
-  strong: "font-semibold text-ink",
-  em: "italic",
-  hr: "my-12 border-rule-strong",
-  tableWrap: "mb-6 overflow-x-auto",
-  table: "w-full font-sans text-[0.95rem]",
-  thead: "border-b border-rule-strong",
-  tr: "border-b border-rule",
-  th: "label px-4 py-3 text-left font-medium",
-  td: "px-4 py-3 text-ink-soft",
-  figure: "my-10",
-  figureImg: "w-full rounded-card",
-  figcaption: "mt-3 text-[0.9rem] text-muted",
-  img: "max-w-full rounded-card",
-};
-
-const cls = (name: string): string[] => classes[name].split(" ");
-
-/** Elements whose attributes are replaced by their class list alone. */
-const classOnly = new Set([
+const bare = new Set([
   "h1",
   "h2",
   "h3",
@@ -72,6 +39,7 @@ const classOnly = new Set([
   "tr",
   "th",
   "td",
+  "tbody",
 ]);
 
 const el = (tagName: string, properties: Properties, children: ElementContent[]): Element => ({
@@ -94,25 +62,17 @@ function style(node: Element): Element {
     const only = node.children.length === 1 ? node.children[0] : undefined;
     if (only?.type === "element" && only.tagName === "img") {
       const alt = text(only.properties.alt) ?? "";
-      const img = el(
-        "img",
-        { src: text(only.properties.src), alt, className: cls("figureImg"), loading: "lazy" },
-        [],
-      );
-      const caption = alt
-        ? [el("figcaption", { className: cls("figcaption") }, [{ type: "text", value: alt }])]
-        : [];
-      return el("figure", { className: cls("figure") }, [img, ...caption]);
+      const img = el("img", { src: text(only.properties.src), alt, loading: "lazy" }, []);
+      const caption = alt ? [el("figcaption", {}, [{ type: "text", value: alt }])] : [];
+      return el("figure", {}, [img, ...caption]);
     }
   }
-  if (classOnly.has(tag)) return el(tag, { className: cls(tag) }, children);
+  if (bare.has(tag)) return el(tag, {}, children);
 
   switch (tag) {
-    case "tbody":
-      return el(tag, {}, children);
     case "a": {
       const href = text(node.properties.href);
-      const properties: Properties = { href, className: cls("a") };
+      const properties: Properties = { href };
       if (href?.startsWith("http")) {
         properties.target = "_blank";
         properties.rel = ["noopener", "noreferrer"];
@@ -121,22 +81,20 @@ function style(node: Element): Element {
     }
     case "code": {
       // A highlighted block carries "hljs language-x". Anything else, a fenced block with no
-      // language included, is styled as inline code.
+      // language included, carries no class.
       // The language is whatever follows the fence, so only a plain name is kept as a class.
       const given = node.properties.className;
       const highlighted =
         Array.isArray(given) &&
         given.length > 0 &&
         given.every((c) => /^[\w+#.-]+$/.test(String(c)));
-      return el(tag, { className: highlighted ? given.map(String) : cls("inlineCode") }, children);
+      return el(tag, highlighted ? { className: given.map(String) } : {}, children);
     }
     case "pre":
-      return el(tag, { tabIndex: 0, className: cls("pre") }, children);
+      return el(tag, { tabIndex: 0 }, children);
     case "table":
       // Wide tables scroll inside a focusable wrapper.
-      return el("div", { className: cls("tableWrap"), tabIndex: 0 }, [
-        el(tag, { className: cls("table") }, children),
-      ]);
+      return el("div", { tabIndex: 0 }, [el(tag, {}, children)]);
     case "img":
       // An image inside other content (text, a link, a list item) stays phrasing content.
       return el(
@@ -144,7 +102,6 @@ function style(node: Element): Element {
         {
           src: text(node.properties.src),
           alt: text(node.properties.alt) ?? "",
-          className: cls("img"),
           loading: "lazy",
         },
         [],
@@ -190,7 +147,7 @@ function build() {
 
 let processor: ReturnType<typeof build> | undefined;
 
-/** GitHub-flavoured markdown as sanitised, styled, highlighted HTML. Synchronous. */
+/** GitHub-flavoured markdown as sanitised, highlighted HTML. Synchronous. */
 export function renderMarkdown(markdown: string): string {
   // Built on first use: registering the highlighter's grammars is not free, and the Worker
   // should not pay for it at startup.

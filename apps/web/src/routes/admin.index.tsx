@@ -32,14 +32,14 @@ function AdminProjects() {
 
   return (
     <>
-      <div className="mt-8 flex flex-wrap items-end justify-between gap-4">
+      <div className="adm-head flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div>
-          <h1 className="display text-[clamp(1.8rem,4vw,2.6rem)]">Projects</h1>
+          <h1>Projects</h1>
           <p className="mt-2 text-ink-soft">
             {projects.length} in total, {drafts} unpublished.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="adm-actions">
           <Link to="/admin/import" className="adm-btn">
             Import from GitHub
           </Link>
@@ -48,53 +48,48 @@ function AdminProjects() {
           </Link>
         </div>
       </div>
-      <p role="status" className="mt-3 min-h-6 font-semibold text-build">
+      <p role="status" className="adm-ok min-h-6">
         {message}
       </p>
 
       {projectGroups.map((group) => {
         const rows = projects.filter((p) => p.group === group.id);
         return (
-          <section key={group.id} aria-labelledby={`adm-${group.id}`} className="mt-8">
-            <h2
-              id={`adm-${group.id}`}
-              className="display border-b border-rule-strong pb-2 text-[1.35rem]"
-            >
-              {group.title} <span className="label ml-1">{rows.length}</span>
+          <section
+            key={group.id}
+            aria-labelledby={`adm-${group.id}`}
+            className="row adm-group mt-6"
+          >
+            <h2 id={`adm-${group.id}`} className="lab gut">
+              {group.title} <span className="ml-1 font-normal">{rows.length}</span>
             </h2>
             {rows.length === 0 ? (
-              <p className="mt-3 text-muted">No projects in this group.</p>
+              <p className="col text-muted">No projects in this group.</p>
             ) : (
-              <ol className="m-0 list-none p-0">
+              <ol className="col adm-rows">
                 {rows.map((project, index) => (
-                  <li
-                    key={project.slug}
-                    data-slug={project.slug}
-                    className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-rule py-3"
-                  >
+                  <li key={project.slug} data-slug={project.slug}>
                     <div className="min-w-0 flex-1 basis-[260px]">
                       <Link
                         to="/admin/projects/$slug"
                         params={{ slug: project.slug }}
-                        className="link text-[1.1rem] font-semibold"
+                        className="link adm-title"
                       >
                         {project.title}
                       </Link>
-                      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                        <StatusPill status={project.status} label={project.statusLabel} />
-                        <span
-                          className={`label ${project.published ? "!text-build" : "!text-lead"}`}
-                        >
+                      <div className="adm-meta">
+                        <span className={project.published ? undefined : "font-medium text-ink"}>
                           {project.published ? "Published" : "Draft"}
                         </span>
-                        <span className="label">Source: {project.source}</span>
-                        <span className="label">
+                        <StatusPill status={project.status} label={project.statusLabel} />
+                        <span>Source: {project.source}</span>
+                        <span>
                           Updated{" "}
                           <time dateTime={project.updatedAt}>{project.updatedAt.slice(0, 10)}</time>
                         </span>
                       </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="adm-actions">
                       <button
                         type="button"
                         className="adm-btn"

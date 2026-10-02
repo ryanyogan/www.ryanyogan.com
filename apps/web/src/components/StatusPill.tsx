@@ -6,5 +6,9 @@ import type { ProjectStatus } from "@repo/shared";
  * overrides the default word for the status.
  */
 export function StatusPill({ status, label }: { status: ProjectStatus; label?: string }) {
-  return <span className={`st st-${status}`}>{label ?? projectStatusLabels[status]}</span>;
+  return (
+    <span className="st" data-status={status}>
+      {label ?? projectStatusLabels[status]}
+    </span>
+  );
 }

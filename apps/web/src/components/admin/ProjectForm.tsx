@@ -86,17 +86,17 @@ function Field({
   const described = [hint ? `${id}-hint` : "", error ? `${id}-err` : ""].filter(Boolean).join(" ");
   return (
     <div>
-      <label htmlFor={id} className="mb-1 block font-semibold">
+      <label htmlFor={id} className="adm-label">
         {label}
       </label>
       {children({ id, "aria-invalid": Boolean(error), "aria-describedby": described || undefined })}
       {hint && (
-        <p id={`${id}-hint`} className="mt-1 text-[0.9rem] text-muted">
+        <p id={`${id}-hint`} className="adm-hint">
           {hint}
         </p>
       )}
       {error && (
-        <p id={`${id}-err`} className="mt-1 text-[0.95rem] font-semibold text-lead">
+        <p id={`${id}-err`} className="adm-err">
           {error}
         </p>
       )}
@@ -222,15 +222,15 @@ export function ProjectForm({
   const err = (field: ProjectField) => errors[field];
 
   return (
-    <form onSubmit={onSubmit} noValidate className="mt-6">
+    <form onSubmit={onSubmit} noValidate className="mt-8">
       {mode === "edit" && repoFullName && (
         <section
           aria-labelledby="adm-ai-h"
           data-testid="ai-draft"
-          className="mb-8 rounded-card border border-rule bg-surface p-[clamp(16px,2.4vw,22px)]"
+          className="mb-10 border-y border-rule py-3"
         >
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <h2 id="adm-ai-h" className="font-semibold">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+            <h2 id="adm-ai-h" className="h-m">
               Draft with AI
             </h2>
             <button
@@ -241,32 +241,29 @@ export function ProjectForm({
             >
               {aiBusy ? "Drafting..." : proposal ? "Draft again" : "Draft with AI"}
             </button>
-            <span className="text-[0.9rem] text-muted">
+            <span className="small">
               Reads {repoFullName} and its README. Nothing is saved until you press Save changes.
             </span>
           </div>
           <div aria-live="polite">
             {aiError && (
-              <p data-testid="ai-error" className="mt-3 font-semibold text-lead">
+              <p data-testid="ai-error" className="adm-err pb-2">
                 {aiError}
               </p>
             )}
           </div>
           {proposal && (
-            <div className="mt-4">
-              <div
-                data-testid="ai-caveats"
-                className="rounded-card border border-lead-rule bg-lead-bg p-[clamp(12px,2vw,18px)]"
-              >
-                <h3 className="font-semibold">Check before using: the model could not confirm</h3>
+            <div className="mt-3 pb-3">
+              <div data-testid="ai-caveats" className="border-l-2 border-ink py-1 pl-5">
+                <h3 className="h-m">Check before using: the model could not confirm</h3>
                 {proposal.caveats.length ? (
-                  <ul className="mt-1 list-disc pl-5">
+                  <ul className="mt-2 max-w-[70ch] list-disc space-y-1 pl-5">
                     {proposal.caveats.map((caveat) => (
                       <li key={caveat}>{caveat}</li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="mt-1">
+                  <p className="mt-2 max-w-[70ch]">
                     The model listed nothing. That is not proof: read the draft against the repo.
                   </p>
                 )}
@@ -275,16 +272,16 @@ export function ProjectForm({
                 <div
                   key={field}
                   data-testid={`ai-field-${field}`}
-                  className="mt-4 grid grid-cols-1 gap-3 border-t border-rule pt-3 md:grid-cols-2"
+                  className="mt-6 grid grid-cols-1 gap-x-10 gap-y-4 border-t border-rule pt-4 md:grid-cols-2"
                 >
                   <div className="min-w-0">
-                    <p className="label">Current {field}</p>
+                    <p className="lab">Current {field}</p>
                     <p className="mt-1 whitespace-pre-wrap break-words text-ink-soft">
                       {values[field] || "(empty)"}
                     </p>
                   </div>
                   <div className="min-w-0">
-                    <p className="label">Proposed {field}</p>
+                    <p className="lab">Proposed {field}</p>
                     <p
                       data-testid={`ai-proposed-${field}`}
                       className="mt-1 whitespace-pre-wrap break-words"
@@ -293,7 +290,7 @@ export function ProjectForm({
                     </p>
                     <button
                       type="button"
-                      className="adm-btn mt-2"
+                      className="adm-btn mt-1"
                       disabled={values[field] === proposed(field)}
                       onClick={() => useProposed([field])}
                     >
@@ -302,20 +299,20 @@ export function ProjectForm({
                   </div>
                 </div>
               ))}
-              <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-rule pt-3">
+              <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-1 border-t border-rule pt-3">
                 <button type="button" className="adm-btn" onClick={() => useProposed(AI_FIELDS)}>
                   Use all
                 </button>
                 <button type="button" className="adm-btn" onClick={() => setProposal(null)}>
                   Discard proposal
                 </button>
-                <span className="text-[0.9rem] text-muted" data-testid="ai-suggested">
+                <span className="small" data-testid="ai-suggested">
                   Suggested group: {proposal.suggestedGroup}, status: {proposal.suggestedStatus}{" "}
                   (not applied; set them below if you agree).
                 </span>
               </div>
               {aiAccepted && (
-                <p className="mt-3 font-semibold" data-testid="ai-unsaved">
+                <p className="adm-ok mt-2" data-testid="ai-unsaved">
                   AI text is in the form but not saved. Edit it, then press Save changes.
                 </p>
               )}
@@ -323,8 +320,8 @@ export function ProjectForm({
           )}
         </section>
       )}
-      <div className="grid grid-cols-1 gap-x-10 gap-y-8 lg:grid-cols-2">
-        <div className="flex min-w-0 flex-col gap-5">
+      <div className="grid grid-cols-1 gap-x-12 gap-y-8 lg:grid-cols-2">
+        <div className="flex min-w-0 flex-col gap-6">
           <Field label="Title" error={err("title")}>
             {(a) => (
               <input
@@ -348,7 +345,7 @@ export function ProjectForm({
             {(a) => (
               <input
                 {...a}
-                className="adm-input font-mono"
+                className="adm-input adm-code"
                 value={values.slug}
                 autoCapitalize="none"
                 spellCheck={false}
@@ -377,7 +374,7 @@ export function ProjectForm({
               <textarea
                 {...a}
                 rows={3}
-                className="adm-input !font-sans !text-[1rem]"
+                className="adm-input"
                 value={values.tagline}
                 onChange={(e) => set("tagline", e.target.value)}
               />
@@ -395,7 +392,7 @@ export function ProjectForm({
             )}
           </Field>
 
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <Field label="Group" error={err("group")}>
               {(a) => (
                 <select
@@ -432,7 +429,7 @@ export function ProjectForm({
 
           <Field
             label="Status label"
-            hint='Optional pill text in place of the status word, e.g. "On npm".'
+            hint='Optional text in place of the status word, e.g. "On npm".'
             error={err("statusLabel")}
           >
             {(a) => (
@@ -472,31 +469,29 @@ export function ProjectForm({
           </Field>
 
           <div>
-            <label className="flex min-h-11 cursor-pointer items-center gap-3 font-semibold">
+            <label className="flex min-h-11 cursor-pointer items-center gap-3 font-medium">
               <input
                 type="checkbox"
-                className="size-5 accent-build"
+                className="adm-check"
                 checked={values.published}
                 onChange={(e) => set("published", e.target.checked)}
               />
               Published
             </label>
-            <p className="text-[0.9rem] text-muted">
+            <p className="adm-hint !mt-0">
               Unticked, the project is a draft: it is on no public page and its URL is a 404.
             </p>
-            {err("published") && (
-              <p className="mt-1 text-[0.95rem] font-semibold text-lead">{err("published")}</p>
-            )}
+            {err("published") && <p className="adm-err">{err("published")}</p>}
           </div>
         </div>
 
-        <div className="flex min-w-0 flex-col gap-5">
+        <div className="flex min-w-0 flex-col gap-6">
           <Field label="Body (markdown)" error={err("body")}>
             {(a) => (
               <textarea
                 {...a}
                 rows={16}
-                className="adm-input"
+                className="adm-input adm-code"
                 spellCheck
                 value={values.body}
                 onChange={(e) => set("body", e.target.value)}
@@ -504,13 +499,10 @@ export function ProjectForm({
             )}
           </Field>
           <section aria-labelledby="adm-preview-h">
-            <h2 id="adm-preview-h" className="label mb-2">
+            <h2 id="adm-preview-h" className="adm-label">
               Preview
             </h2>
-            <div
-              data-testid="body-preview"
-              className="min-h-24 rounded-card border border-rule bg-surface p-[clamp(16px,2.4vw,26px)]"
-            >
+            <div data-testid="body-preview" className="adm-box min-h-24">
               {values.body.trim() ? (
                 <BodyPreview markdown={values.body} />
               ) : (
@@ -521,7 +513,7 @@ export function ProjectForm({
         </div>
       </div>
 
-      <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-rule-strong pt-5">
+      <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-rule pt-5">
         <button type="submit" className="adm-btn adm-btn-primary" disabled={busy}>
           {mode === "create" ? "Create project" : "Save changes"}
         </button>
@@ -529,28 +521,25 @@ export function ProjectForm({
           Back to list
         </Link>
         {mode === "edit" && values.published && (
-          <a href={`/projects/${initial.slug}`} className="link font-semibold">
+          <a href={`/projects/${initial.slug}`} className="adm-btn">
             View public page
           </a>
         )}
-        <p
-          role="status"
-          className={`font-semibold ${message?.kind === "error" ? "text-lead" : "text-build"}`}
-        >
+        <p role="status" className={message?.kind === "error" ? "adm-err !mt-0" : "adm-ok"}>
           {message?.text}
         </p>
       </div>
 
       {mode === "edit" && (
-        <div className="mt-8 rounded-card border border-lead-rule bg-lead-bg p-[clamp(16px,2.4vw,22px)]">
-          <h2 className="font-semibold">Delete this project</h2>
-          <p className="mt-1 text-ink-soft">
-            Removes the row from the database. This cannot be undone.
+        <div className="adm-box mt-12">
+          <h2 className="h-m">Delete this project</h2>
+          <p className="mt-1 max-w-[62ch] text-ink-soft">
+            Removes the row from the database. <strong>This cannot be undone.</strong>
           </p>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
+          <div className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-1">
             {confirmingDelete ? (
               <>
-                <span className="font-semibold">
+                <span className="font-medium text-error">
                   Delete &ldquo;{initial.title}&rdquo; for good?
                 </span>
                 <button
@@ -602,5 +591,5 @@ function BodyPreview({ markdown }: { markdown: string }) {
       current = false;
     };
   }, [markdown]);
-  return <Prose html={html} />;
+  return <Prose html={html} className="read" />;
 }

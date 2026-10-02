@@ -86,15 +86,15 @@ function ImportFromGithub() {
 
   return (
     <>
-      <div className="mt-8 flex flex-wrap items-end justify-between gap-4">
+      <div className="adm-head flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div>
-          <h1 className="display text-[clamp(1.8rem,4vw,2.6rem)]">Import from GitHub</h1>
-          <p className="mt-2 text-ink-soft">
+          <h1>Import from GitHub</h1>
+          <p className="mt-2 max-w-[62ch] text-ink-soft">
             Public repositories only. An import creates a draft; nothing is public until you publish
             it.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="adm-actions">
           <button type="button" className="adm-btn" disabled={busy !== ""} onClick={reload}>
             {busy === "reload" ? "Reloading..." : "Reload from GitHub"}
           </button>
@@ -104,23 +104,23 @@ function ImportFromGithub() {
         </div>
       </div>
 
-      <p role="status" className="mt-3 min-h-6 font-semibold text-build">
+      <p role="status" className="adm-ok min-h-6">
         {message}
       </p>
 
       {!result.ok ? (
-        <p role="alert" data-testid="github-error" className="mt-3 font-semibold text-lead">
+        <p role="alert" data-testid="github-error" className="adm-err">
           {result.error}
         </p>
       ) : (
         <>
-          <p className="label mt-1" data-testid="repo-counts">
+          <p className="small mt-1" data-testid="repo-counts">
             {result.user}: {repos.length} public repositories, {visible.length} shown &middot;
             fetched <time dateTime={result.fetchedAt}>{result.fetchedAt.slice(11, 16)} UTC</time>
           </p>
-          <div className="mt-4 flex flex-wrap items-end gap-x-5 gap-y-3">
-            <label className="flex min-w-0 flex-1 basis-[220px] flex-col gap-1">
-              <span className="label">Search repositories</span>
+          <div className="mt-5 flex flex-wrap items-end gap-x-6 gap-y-3">
+            <label className="flex min-w-0 flex-1 basis-[220px] flex-col">
+              <span className="adm-label">Search repositories</span>
               <input
                 type="search"
                 className="adm-input"
@@ -131,8 +131,8 @@ function ImportFromGithub() {
                 }}
               />
             </label>
-            <label className="flex flex-col gap-1">
-              <span className="label">Sort by</span>
+            <label className="flex flex-col">
+              <span className="adm-label">Sort by</span>
               <select
                 className="adm-input"
                 value={sort}
@@ -143,9 +143,10 @@ function ImportFromGithub() {
               </select>
             </label>
             {toggles.map(([label, checked, set]) => (
-              <label key={label} className="flex items-center gap-2">
+              <label key={label} className="flex min-h-11 cursor-pointer items-center gap-2.5">
                 <input
                   type="checkbox"
+                  className="adm-check"
                   checked={checked}
                   onChange={(event) => set(event.target.checked)}
                 />
@@ -157,30 +158,22 @@ function ImportFromGithub() {
           {visible.length === 0 ? (
             <p className="mt-6 text-muted">No repositories match.</p>
           ) : (
-            <ol className="m-0 mt-4 list-none p-0">
+            <ol className="adm-rows mt-6">
               {visible.slice(0, limit).map((repo) => {
                 const slug = result.imported[repo.fullName.toLowerCase()];
                 return (
-                  <li
-                    key={repo.fullName}
-                    data-repo={repo.name}
-                    className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-rule py-3"
-                  >
+                  <li key={repo.fullName} data-repo={repo.name}>
                     <div className="min-w-0 flex-1 basis-[260px]">
-                      <a
-                        href={repo.htmlUrl}
-                        rel="noreferrer"
-                        className="link text-[1.1rem] font-semibold break-words"
-                      >
+                      <a href={repo.htmlUrl} rel="noreferrer" className="link adm-title">
                         {repo.name}
                       </a>
-                      <p className="mt-1 break-words text-ink-soft">
+                      <p className="mt-0.5 break-words text-ink-soft">
                         {repo.description ?? "No description."}
                       </p>
-                      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                        <span className="label">{repo.language ?? "No language"}</span>
-                        <span className="label">Stars: {repo.stars}</span>
-                        <span className="label">
+                      <div className="adm-meta">
+                        <span>{repo.language ?? "No language"}</span>
+                        <span>Stars: {repo.stars}</span>
+                        <span>
                           Pushed{" "}
                           {repo.pushedAt ? (
                             <time dateTime={repo.pushedAt}>{repo.pushedAt.slice(0, 10)}</time>
@@ -188,9 +181,9 @@ function ImportFromGithub() {
                             "never"
                           )}
                         </span>
-                        {repo.fork && <span className="label">Fork</span>}
-                        {repo.archived && <span className="label">Archived</span>}
-                        {slug && <span className="label !text-build">Imported</span>}
+                        {repo.fork && <span>Fork</span>}
+                        {repo.archived && <span>Archived</span>}
+                        {slug && <span className="font-medium text-ink">Imported</span>}
                       </div>
                     </div>
                     {slug ? (
@@ -219,7 +212,7 @@ function ImportFromGithub() {
             </ol>
           )}
           {visible.length > limit && (
-            <button type="button" className="adm-btn mt-4" onClick={() => setLimit(limit + PAGE)}>
+            <button type="button" className="adm-btn mt-3" onClick={() => setLimit(limit + PAGE)}>
               Show {Math.min(PAGE, visible.length - limit)} more
             </button>
           )}

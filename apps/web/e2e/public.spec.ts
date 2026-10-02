@@ -279,7 +279,7 @@ test("each project page shows its status, group and links from the database", as
     await page.goto(`/projects/${slug}`);
     const header = page.locator("main article header");
     await expect(header.locator("h1"), slug).toHaveText(want.title);
-    await expect(header.locator(`span.st.st-${want.status}`), slug).toHaveText(
+    await expect(header.locator(`span.st[data-status="${want.status}"]`), slug).toHaveText(
       want.statusLabel ?? statusLabels[want.status],
     );
     await expect(

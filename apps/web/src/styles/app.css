@@ -26,6 +26,8 @@
   --muted: #666a6a;
   --accent: #3d6a55;
   --rule: #dcdbd5;
+  /* Validation and destructive actions. 6.4:1 on paper; the dark value is 7.4:1. */
+  --error: #a1321f;
   color-scheme: light;
 
   /* Layout: the label gutter, the gap beside it, and the space under a section. */
@@ -43,6 +45,7 @@
   --muted: #8f918d;
   --accent: #93b8a4;
   --rule: #323536;
+  --error: #e8998a;
   color-scheme: dark;
 }
 
@@ -54,6 +57,7 @@
     --muted: #8f918d;
     --accent: #93b8a4;
     --rule: #323536;
+    --error: #e8998a;
     color-scheme: dark;
   }
 }
@@ -77,6 +81,7 @@
   --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-rule: var(--rule);
+  --color-error: var(--error);
 
   /* Sans: headings and interface. Serif: body. Mono: code only, no web font. */
   --font-sans:
@@ -88,45 +93,6 @@
 
   --container-wrap: 1296px;
   --container-measure: 32em;
-
-  /*
-   * COMPATIBILITY, remove when the page tickets (Home, Work, Projects, Writing, Admin) are
-   * done: names from the old look that page components still use, pointed at the new values.
-   */
-  --color-surface: var(--paper);
-  --color-rule-strong: var(--rule);
-  --color-lead: var(--accent);
-  --color-lead-bg: transparent;
-  --color-lead-rule: var(--rule);
-  --color-build: var(--accent);
-  --color-build-bg: transparent;
-  --color-build-rule: var(--rule);
-  --color-gold: var(--muted);
-  --color-amber: var(--muted);
-  --color-focus: var(--accent);
-  --radius-card: 0;
-}
-
-/* COMPATIBILITY, same removal: the old names as plain custom properties (inline SVG, var()). */
-:root {
-  --surface: var(--paper);
-  --rule-strong: var(--rule);
-  --lead: var(--accent);
-  --lead-bg: transparent;
-  --lead-rule: var(--rule);
-  --build: var(--accent);
-  --build-bg: transparent;
-  --build-rule: var(--rule);
-  --gold: var(--muted);
-  --amber: var(--muted);
-  --focus: var(--accent);
-}
-
-/* Square corners everywhere, including the old rounded-* utilities still in page components. */
-*,
-::before,
-::after {
-  border-radius: 0 !important;
 }
 
 @layer base {
@@ -277,8 +243,7 @@
   }
 
   /* Gutter label, and small interface text. */
-  .lab,
-  .label {
+  .lab {
     font-family: var(--font-sans);
     font-size: 0.875rem;
     font-weight: 500;
@@ -291,15 +256,6 @@
     font-size: 0.875rem;
     line-height: 1.55;
     color: var(--muted);
-  }
-
-  /* COMPATIBILITY: the old display heading class. Size is still set per use. */
-  .display {
-    font-family: var(--font-sans);
-    font-weight: 500;
-    line-height: 1.18;
-    letter-spacing: -0.02em;
-    text-wrap: balance;
   }
 
   /* Inline text link: ink text, accent underline. */
@@ -751,10 +707,12 @@
     margin: min(12vh, 110px) auto auto;
     padding: 0;
     overflow: hidden;
-    border: 1px solid var(--muted);
+    border: 1px solid var(--rule);
     background: var(--paper);
     color: var(--ink);
     font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.5;
   }
 
   .kb-dialog[open] {
@@ -763,7 +721,7 @@
   }
 
   .kb-dialog::backdrop {
-    background: rgb(20 22 23 / 0.5);
+    background: rgb(20 22 23 / 0.45);
   }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -792,68 +750,215 @@
   }
 }
 
-/* Admin forms (/admin only). Colours and corners follow the tokens; the Admin ticket restyles. */
+/* Admin (/admin only): the public type, palette and spacing, in the interface face. */
 @layer components {
+  .adm {
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .adm-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    column-gap: 24px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .adm-head {
+    padding-top: 40px;
+    padding-bottom: 32px;
+  }
+
+  .adm-group {
+    padding-bottom: 40px;
+  }
+
+  .adm-rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .adm-rows > li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px 24px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .adm-title {
+    font-weight: 500;
+    font-size: 1.0625rem;
+    overflow-wrap: anywhere;
+  }
+
+  /* Facts under a row title: plain small text, separated by space. */
+  .adm-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 16px;
+    margin-top: 2px;
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+
+  .adm-meta .st {
+    font-size: inherit;
+    line-height: inherit;
+  }
+
+  .adm-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 20px;
+  }
+
+  .adm-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.9375rem;
+    font-weight: 500;
+  }
+
+  .adm-hint {
+    margin-top: 6px;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  .adm-err {
+    margin-top: 6px;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    font-weight: 500;
+    color: var(--error);
+  }
+
+  .adm-ok {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
   .adm-input {
     display: block;
     width: 100%;
     min-height: 44px;
-    padding: 8px 12px;
-    border: 1px solid var(--muted);
+    padding: 9px 12px;
+    border: 1px solid var(--rule);
+    border-radius: 0;
     background: var(--paper);
     color: var(--ink);
     font: inherit;
     font-family: var(--font-sans);
   }
 
+  .adm-input:hover {
+    border-color: var(--muted);
+  }
+
+  .adm-input:focus-visible {
+    border-color: var(--ink);
+    outline-offset: 1px;
+  }
+
   textarea.adm-input {
-    font-family: var(--font-mono);
-    font-size: 0.9rem;
     line-height: 1.55;
     resize: vertical;
   }
 
-  .adm-input[aria-invalid="true"] {
-    border-color: var(--ink);
-    border-width: 2px;
+  .adm-input.adm-code {
+    font-family: var(--font-mono);
+    font-size: 0.9375rem;
   }
 
+  .adm-input[aria-invalid="true"] {
+    border-color: var(--error);
+  }
+
+  .adm-check {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--accent);
+  }
+
+  /* Secondary action: a text button. 44px to press. */
   .adm-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     min-height: 44px;
-    padding: 6px 16px;
-    border: 1px solid var(--muted);
+    min-width: 44px;
+    border: 0;
+    border-radius: 0;
     background: transparent;
     color: var(--ink);
+    font-family: var(--font-sans);
     font-weight: 500;
-    font-size: 0.95rem;
+    font-size: 0.9375rem;
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.35em;
     cursor: pointer;
   }
 
   .adm-btn:hover:not(:disabled) {
-    border-color: var(--ink);
+    color: var(--accent);
   }
 
   .adm-btn:disabled {
-    opacity: 0.45;
+    color: var(--muted);
+    text-decoration: none;
     cursor: not-allowed;
   }
 
+  /* Primary action: solid ink. */
   .adm-btn-primary {
-    border-color: var(--ink);
+    padding: 0 20px;
     background: var(--ink);
     color: var(--paper);
+    text-decoration: none;
   }
 
   .adm-btn-primary:hover:not(:disabled) {
     background: var(--ink-soft);
+    color: var(--paper);
+  }
+
+  .adm-btn-primary:disabled {
+    background: var(--muted);
+    color: var(--paper);
   }
 
   .adm-btn-danger {
-    border-color: var(--accent);
-    color: var(--accent);
+    color: var(--error);
+    text-decoration-color: var(--error);
+  }
+
+  .adm-btn-danger:hover:not(:disabled) {
+    color: var(--error);
+    text-decoration-thickness: 2px;
+  }
+
+  /* The preview reads as the public page does. */
+  .adm .prose {
+    font-family: var(--font-serif);
+  }
+
+  /* A plain bordered section (preview, delete). */
+  .adm-box {
+    border: 1px solid var(--rule);
+    padding: clamp(16px, 2.4vw, 24px);
   }
 }
 
@@ -1467,9 +1572,9 @@
 }
 
 /*
- * Rendered markdown (components/Prose.tsx). The renderer in lib/markdown.ts still puts its old
- * utility classes on each element; these rules are outside any layer so they win over them.
- * Sizes are in em: the container sets the body size and the measure (.post, .read).
+ * Rendered markdown (components/Prose.tsx). The renderer in lib/markdown.ts emits plain
+ * elements with no classes; everything is styled from here. Sizes are in em: the container
+ * sets the body size and the measure (.post, .read).
  */
 .prose {
   --code-bg: light-dark(#eeede8, #25282a);

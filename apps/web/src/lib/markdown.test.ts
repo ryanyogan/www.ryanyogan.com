@@ -8,37 +8,35 @@ describe("renderMarkdown: structure the prose styles rely on", () => {
   it("renders an image alone in a paragraph as a figure, not inside a <p>", () => {
     const html = renderMarkdown("Before.\n\n![Nexus brain](/images/nexus.png)\n\nAfter.");
     expect(html).toContain(
-      '<figure class="my-10"><img src="/images/nexus.png" alt="Nexus brain" class="w-full rounded-card" loading="lazy"><figcaption class="mt-3 text-[0.9rem] text-muted">Nexus brain</figcaption></figure>',
+      '<figure><img src="/images/nexus.png" alt="Nexus brain" loading="lazy"><figcaption>Nexus brain</figcaption></figure>',
     );
     expect(html).not.toMatch(/<p[^>]*>\s*<figure/);
   });
 
   it("keeps an image among other content inline", () => {
     const html = renderMarkdown("See ![icon](/i.png) here.");
-    expect(html).toContain(
-      '<img src="/i.png" alt="icon" class="max-w-full rounded-card" loading="lazy">',
-    );
+    expect(html).toContain('<img src="/i.png" alt="icon" loading="lazy">');
     expect(html).not.toContain("<figure");
   });
 
   it("opens external links in a new tab and leaves internal ones alone", () => {
     const html = renderMarkdown("[out](https://example.com) and [in](/work)");
     expect(html).toContain(
-      '<a href="https://example.com" class="link text-ink decoration-build" target="_blank" rel="noopener noreferrer">out</a>',
+      '<a href="https://example.com" target="_blank" rel="noopener noreferrer">out</a>',
     );
-    expect(html).toContain('<a href="/work" class="link text-ink decoration-build">in</a>');
+    expect(html).toContain('<a href="/work">in</a>');
   });
 
   it("highlights fenced code at render time and makes the block focusable", () => {
     const html = renderMarkdown("```ts\nconst a: number = 1;\n```");
-    expect(html).toMatch(/<pre tabindex="0" class="mb-6 [^"]+"><code class="hljs language-ts">/);
+    expect(html).toMatch(/<pre tabindex="0"><code class="hljs language-ts">/);
     expect(html).toContain('<span class="hljs-keyword">const</span>');
   });
 
-  it("styles inline code and wraps tables in a focusable scroller", () => {
+  it("leaves inline code bare and wraps tables in a focusable scroller", () => {
     const html = renderMarkdown("Use `pnpm`.\n\n| a | b |\n|---|:-:|\n| 1 | 2 |");
-    expect(html).toMatch(/<code class="rounded-\[4px\][^"]+">pnpm<\/code>/);
-    expect(html).toMatch(/<div class="mb-6 overflow-x-auto" tabindex="0"><table class="w-full/);
+    expect(html).toMatch(/<code>pnpm<\/code>/);
+    expect(html).toMatch(/<div tabindex="0"><table>/);
     expect(html).not.toContain("style=");
   });
 
