@@ -65,6 +65,12 @@ jobs:
       - name: End-to-end tests
         run: pnpm test:e2e
 
+      # What each public page type downloads from the build above, gzip, against the budgets
+      # in apps/web/scripts/perf-budget.mjs. Also fails if a public page fetches the markdown
+      # parser, the highlighter or another post's body.
+      - name: Transfer budget
+        run: pnpm perf:budget
+
       - name: Upload Playwright report
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4

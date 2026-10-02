@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { writingPosts } from "~/lib/content";
+import { loadPostHtml, writingPosts } from "~/lib/content";
 import { Prose } from "~/components/Prose";
 import {
   WEBSITE_ID,
@@ -13,13 +13,15 @@ import {
 
 export const Route = createFileRoute("/writing/$slug")({
   component: WritingDetail,
-  loader: ({ params }) => {
-    const post = writingPosts.find((p) => p.slug === params.slug);
-    if (!post) throw notFound();
-    return post;
+  // Only the slug-specific part: the post's metadata is already in the bundle.
+  loader: async ({ params }) => {
+    const html = await loadPostHtml(params.slug);
+    if (html === undefined) throw notFound();
+    return { html };
   },
-  head: ({ loaderData: post }) => {
+  head: ({ params }) => {
     // The loader throws notFound() for an unknown slug, and head still runs.
+    const post = writingPosts.find((p) => p.slug === params.slug);
     if (!post) return {};
     const path = `/writing/${post.slug}`;
     const published = isoDateTime(post.isoDate);
@@ -60,9 +62,11 @@ export const Route = createFileRoute("/writing/$slug")({
 const cardClass = "group rounded-card border border-rule bg-surface p-4 hover:border-build";
 
 function WritingDetail() {
-  const post = Route.useLoaderData();
-  // writingPosts is newest first.
-  const at = writingPosts.findIndex((p) => p.slug === post.slug);
+  const { html } = Route.useLoaderData();
+  const { slug } = Route.useParams();
+  // writingPosts is newest first. The loader has already answered 404 for an unknown slug.
+  const at = writingPosts.findIndex((p) => p.slug === slug);
+  const post = writingPosts[at];
   const newer = at > 0 ? writingPosts[at - 1] : undefined;
   const older = at >= 0 && at < writingPosts.length - 1 ? writingPosts[at + 1] : undefined;
 
@@ -84,9 +88,7 @@ function WritingDetail() {
           </p>
         </header>
 
-        <div className="max-w-[68ch] pt-[clamp(24px,4vw,40px)]">
-          <Prose content={post.content} />
-        </div>
+        <Prose className="max-w-[68ch] pt-[clamp(24px,4vw,40px)]" html={html} />
       </article>
 
       <nav aria-label="More writing" className="wrap mt-[clamp(36px,6vw,64px)]">

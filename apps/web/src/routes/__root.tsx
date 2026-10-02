@@ -6,6 +6,7 @@ import { Footer } from "~/components/Footer";
 import { KeyboardLayer } from "~/components/KeyboardLayer";
 import { SITE_DESCRIPTION, SITE_LOCALE, SITE_NAME, SITE_TITLE, absoluteUrl } from "~/lib/seo";
 import appCss from "~/styles/app.css?url";
+import { fontPreloads } from "~/styles/fonts";
 
 export const Route = createRootRoute({
   notFoundComponent: NotFound,
@@ -34,12 +35,7 @@ export const Route = createRootRoute({
         title: "Ryan Yogan, writing",
         href: absoluteUrl("/rss.xml"),
       },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:ital,wght@0,400..700;1,400..600&display=swap",
-      },
+      ...fontPreloads,
     ],
   }),
   component: RootComponent,

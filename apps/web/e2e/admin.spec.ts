@@ -207,10 +207,22 @@ test.describe("signed in (local bypass, test-only database)", () => {
     await page.getByLabel("Summary").fill("Widget summary zq4");
     await page.getByLabel("Tagline").fill("Widget tagline zq4");
     await page.getByLabel("Tech").fill("Zig, SQLite");
-    await page.getByLabel("Body (markdown)").fill("## Widget heading zq4\n\nSome **bold** text.");
+    // The body is text the owner types, rendered to HTML. Markup in it must stay inert, in
+    // the preview here and on the public page once published (checked below).
+    await page
+      .getByLabel("Body (markdown)")
+      .fill(
+        "## Widget heading zq4\n\nSome **bold** text.\n\n" +
+          "<script>window.pwnedZq4 = 1</script>\n\n" +
+          '<img src="/nope.png" onerror="window.pwnedZq4 = 1">\n\n' +
+          "[hostile link zq4](javascript:window.pwnedZq4=1)",
+      );
     const preview = page.getByTestId("body-preview");
     await expect(preview.getByRole("heading", { name: "Widget heading zq4" })).toBeVisible();
     await expect(preview.locator("strong")).toHaveText("bold");
+    await expect(preview.getByText("window.pwnedZq4 = 1</script>")).toBeVisible();
+    await expect(preview.locator("script, img, [onerror], a[href^='javascript']")).toHaveCount(0);
+    expect(await page.evaluate(() => "pwnedZq4" in window)).toBe(false);
     await page.getByRole("button", { name: "Create project" }).click();
     await expect(page).toHaveURL(`${ADMIN_ORIGIN}/admin/projects/${widget.slug}`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(`Edit ${widget.title}`);
@@ -251,6 +263,14 @@ test.describe("signed in (local bypass, test-only database)", () => {
     const detail = await publicHtml(request, `/projects/${widget.slug}`);
     expect(detail.status).toBe(200);
     expect(detail.html).toContain("Widget heading zq4");
+
+    // The hostile markup from the body arrives as text: nothing runs, nothing is an element.
+    await page.goto(`${ADMIN_ORIGIN}/projects/${widget.slug}`);
+    const prose = page.locator("article");
+    await expect(prose.getByText("window.pwnedZq4 = 1</script>")).toBeVisible();
+    await expect(prose.locator("script, [onerror], a[href^='javascript']")).toHaveCount(0);
+    await prose.getByText("hostile link zq4").click();
+    expect(await page.evaluate(() => "pwnedZq4" in window)).toBe(false);
     expect(await cacheStatus(request, `/projects/${widget.slug}`)).toBe("HIT");
 
     await page.goto(`${ADMIN_ORIGIN}/projects`);

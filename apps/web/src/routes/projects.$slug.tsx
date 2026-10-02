@@ -82,9 +82,7 @@ function ProjectDetailPage() {
           </dl>
         </header>
 
-        <div className="max-w-[68ch] pt-[clamp(24px,4vw,40px)]">
-          <Prose content={project.content} />
-        </div>
+        <Prose className="max-w-[68ch] pt-[clamp(24px,4vw,40px)]" html={project.html} />
       </article>
 
       <nav aria-label="More projects" className="wrap mt-[clamp(36px,6vw,64px)]">

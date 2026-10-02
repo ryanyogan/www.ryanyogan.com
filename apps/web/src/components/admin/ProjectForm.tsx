@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
 import { PROJECT_STATUSES, projectGroups, projectStatusLabels } from "@repo/shared";
@@ -512,7 +512,7 @@ export function ProjectForm({
               className="min-h-24 rounded-card border border-rule bg-surface p-[clamp(16px,2.4vw,26px)]"
             >
               {values.body.trim() ? (
-                <Prose content={values.body} />
+                <BodyPreview markdown={values.body} />
               ) : (
                 <p className="text-muted">Nothing to preview yet.</p>
               )}
@@ -585,4 +585,22 @@ export function ProjectForm({
       )}
     </form>
   );
+}
+
+/**
+ * The body as the public page will show it. The renderer (parser and highlighter) is the
+ * same module the Worker uses, fetched on first use so that only this form downloads it.
+ */
+function BodyPreview({ markdown }: { markdown: string }) {
+  const [html, setHtml] = useState("");
+  useEffect(() => {
+    let current = true;
+    void import("~/lib/markdown").then(({ renderMarkdown }) => {
+      if (current) setHtml(renderMarkdown(markdown));
+    });
+    return () => {
+      current = false;
+    };
+  }, [markdown]);
+  return <Prose html={html} />;
 }

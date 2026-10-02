@@ -3,6 +3,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import { posts } from "./vite-plugin-posts";
 
 const localStateDir = process.env.LOCAL_STATE_DIR;
 
@@ -36,6 +37,7 @@ export default defineConfig(({ command, isPreview }) => ({
     tsconfigPaths: true,
   },
   plugins: [
+    posts(),
     cloudflare({
       viteEnvironment: { name: "ssr" },
       // Local D1 lives in .wrangler/state, where `wrangler d1 ... --local` also writes.

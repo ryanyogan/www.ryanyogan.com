@@ -1,5 +1,3 @@
-import { parseFrontmatter } from "./frontmatter";
-
 export interface WritingPost {
   slug: string;
   title: string;
@@ -10,14 +8,26 @@ export interface WritingPost {
   year: string;
   author: string;
   excerpt: string;
-  content: string;
 }
 
-const writingFiles = import.meta.glob("../../content/writing/*.md", {
+// vite-plugin-posts.ts answers both queries at build time. The frontmatter of every post is
+// in the bundle of any page that lists posts; a post's body is a chunk of its own, fetched
+// only by that post's page.
+const writingMeta = import.meta.glob("../../content/writing/*.md", {
   eager: true,
-  query: "?raw",
+  query: "?meta",
   import: "default",
-}) as Record<string, string>;
+}) as Record<string, Record<string, unknown>>;
+
+const writingHtml = import.meta.glob("../../content/writing/*.md", {
+  query: "?html",
+  import: "default",
+}) as Record<string, () => Promise<string>>;
+
+/** The rendered body of a post, or undefined for an unknown slug. */
+export async function loadPostHtml(slug: string): Promise<string | undefined> {
+  return writingHtml[`../../content/writing/${slug}.md`]?.();
+}
 
 function slugFromPath(path: string): string {
   return path.split("/").pop()!.replace(".md", "");
@@ -37,9 +47,8 @@ function isoDay(date: string, slug: string): string {
   return `${parsed.getFullYear()}-${month}-${day}`;
 }
 
-export const writingPosts: WritingPost[] = Object.entries(writingFiles)
-  .map(([path, raw]) => {
-    const { data, content } = parseFrontmatter(raw);
+export const writingPosts: WritingPost[] = Object.entries(writingMeta)
+  .map(([path, data]) => {
     const slug = slugFromPath(path);
     const date = data.date as string;
     return {
@@ -50,7 +59,6 @@ export const writingPosts: WritingPost[] = Object.entries(writingFiles)
       year: data.year as string,
       author: data.author as string,
       excerpt: data.excerpt as string,
-      content,
     };
   })
   .sort((a, b) => b.isoDate.localeCompare(a.isoDate));

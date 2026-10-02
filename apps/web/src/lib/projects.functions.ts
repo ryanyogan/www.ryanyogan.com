@@ -58,7 +58,11 @@ export const fetchSitemapProjects = createServerFn({ method: "GET" }).handler(()
   guarded(() => listPublishedProjectDates(env.DB)),
 );
 
-/** One published project plus the others in its group, or null (unknown slug or draft). */
+/**
+ * One published project plus the others in its group, or null (unknown slug or draft).
+ * The body leaves the Worker as sanitised HTML (`html`), never as markdown, so the page
+ * needs no parser in the browser.
+ */
 export const fetchProject = createServerFn({ method: "GET" })
   .inputValidator((slug: string) => slug)
   .handler(async ({ data: slug }) => {
@@ -66,8 +70,11 @@ export const fetchProject = createServerFn({ method: "GET" })
       Promise.all([getPublishedProject(env.DB, slug), listPublishedProjects(env.DB)]),
     );
     if (!project) return null;
+    // Imported on first use: the parser and highlighter stay out of the Worker's startup.
+    const { renderMarkdown } = await import("./markdown");
+    const { content, ...rest } = project;
     const siblings = all
       .filter((p) => p.group === project.group)
       .map((p) => ({ slug: p.slug, title: p.title }));
-    return { project, siblings };
+    return { project: { ...rest, html: renderMarkdown(content) }, siblings };
   });
