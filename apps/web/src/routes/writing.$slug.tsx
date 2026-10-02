@@ -59,7 +59,14 @@ export const Route = createFileRoute("/writing/$slug")({
   },
 });
 
-const cardClass = "group rounded-card border border-rule bg-surface p-4 hover:border-build";
+/** Whole minutes to read the rendered body at 230 words a minute. */
+function readingMinutes(html: string): number {
+  const words = html
+    .replace(/<[^>]+>/g, " ")
+    .split(/\s+/)
+    .filter(Boolean).length;
+  return Math.max(1, Math.round(words / 230));
+}
 
 function WritingDetail() {
   const { html } = Route.useLoaderData();
@@ -71,62 +78,46 @@ function WritingDetail() {
   const older = at >= 0 && at < writingPosts.length - 1 ? writingPosts[at + 1] : undefined;
 
   return (
-    <main id="main" className="pb-[clamp(48px,8vw,96px)]">
-      <article className="wrap">
-        <header className="border-b-2 border-rule-strong pt-[clamp(32px,6vw,72px)] pb-[clamp(22px,3vw,32px)]">
-          <p className="label">
-            <Link to="/writing" className="link">
-              Writing
-            </Link>
-          </p>
-          <h1 className="display mt-3 max-w-[24ch] text-[clamp(2.2rem,6vw,3.6rem)]">
-            {post.title}
-          </h1>
-          <p className="mt-4 max-w-[62ch] text-[1.125rem] text-ink-soft">{post.excerpt}</p>
-          <p className="mt-5 font-mono text-[0.82rem] tracking-[0.03em] text-ink-soft">
-            <time dateTime={post.isoDate}>{post.date}</time> &middot; {post.author}
-          </p>
+    <main id="main" className="wrap">
+      <article>
+        <header className="row post-head">
+          <div className="col push">
+            <p className="crumbs">
+              <Link to="/writing">Writing</Link>
+            </p>
+            <h1>{post.title}</h1>
+            <p className="lede">{post.excerpt}</p>
+            <p className="small post-meta">
+              <time dateTime={post.isoDate}>{post.date}</time> &middot; {readingMinutes(html)} min
+              read &middot; {post.author}
+            </p>
+          </div>
         </header>
 
-        <Prose className="max-w-[68ch] pt-[clamp(24px,4vw,40px)]" html={html} />
+        <div className="row post-body">
+          <Prose className="col push post" html={html} />
+        </div>
       </article>
 
-      <nav aria-label="More writing" className="wrap mt-[clamp(36px,6vw,64px)]">
-        <div className="grid grid-cols-1 gap-4 border-t border-rule-strong pt-6 sm:grid-cols-2">
-          {newer ? (
-            <Link to="/writing/$slug" params={{ slug: newer.slug }} className={cardClass}>
-              <span className="label block">&larr; Newer</span>
-              <span className="display mt-1 block text-[1.3rem] group-hover:underline">
+      <nav aria-label="More writing" className="row post-end">
+        <div className="col push">
+          <div className="post-nav">
+            {newer && (
+              <Link to="/writing/$slug" params={{ slug: newer.slug }}>
+                <span>Newer</span>
                 {newer.title}
-              </span>
-            </Link>
-          ) : (
-            <Link to="/writing" className={cardClass}>
-              <span className="label block">&larr; Back</span>
-              <span className="display mt-1 block text-[1.3rem] group-hover:underline">
-                All writing
-              </span>
-            </Link>
-          )}
-          {older ? (
-            <Link
-              to="/writing/$slug"
-              params={{ slug: older.slug }}
-              className={`${cardClass} sm:text-right`}
-            >
-              <span className="label block">Older &rarr;</span>
-              <span className="display mt-1 block text-[1.3rem] group-hover:underline">
+              </Link>
+            )}
+            {older && (
+              <Link to="/writing/$slug" params={{ slug: older.slug }} className="older">
+                <span>Older</span>
                 {older.title}
-              </span>
-            </Link>
-          ) : (
-            <Link to="/writing" className={`${cardClass} sm:text-right`}>
-              <span className="label block">Back &rarr;</span>
-              <span className="display mt-1 block text-[1.3rem] group-hover:underline">
-                All writing
-              </span>
-            </Link>
-          )}
+              </Link>
+            )}
+          </div>
+          <p className="post-all">
+            <Link to="/writing">All writing</Link>
+          </p>
         </div>
       </nav>
     </main>
