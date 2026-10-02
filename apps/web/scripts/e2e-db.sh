@@ -5,7 +5,7 @@
 #   .wrangler/e2e-admin  the preview with the admin bypass on (port 4174); its tests write
 set -eu
 
-pnpm db:seed:generate
+node --experimental-strip-types scripts/seed-projects.ts
 
 for dir in .wrangler/e2e .wrangler/e2e-admin; do
   rm -rf "$dir"

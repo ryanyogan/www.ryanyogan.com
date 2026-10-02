@@ -1,6 +1,11 @@
 node_modules
 # pnpm puts its store here when the checkout is on another filesystem than $HOME (containers)
 .pnpm-store
+# This repo uses pnpm (pnpm-lock.yaml); other package managers' lockfiles are never committed
+bun.lock
+bun.lockb
+package-lock.json
+yarn.lock
 dist
 .output
 *.local

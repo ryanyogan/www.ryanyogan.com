@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "preinstall": "node scripts/only-pnpm.mjs",
     "dev": "pnpm --filter @repo/web dev",
     "build": "pnpm --filter @repo/web build",
     "preview": "pnpm --filter @repo/web preview",
@@ -15,7 +16,8 @@
     "ready": "pnpm fmt && pnpm lint && pnpm typecheck && pnpm build",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm --filter @repo/web test",
-    "test:e2e": "pnpm --filter @repo/web test:e2e"
+    "test:e2e": "pnpm --filter @repo/web test:e2e",
+    "test:fresh-clone": "sh scripts/fresh-clone-check.sh"
   },
   "devDependencies": {
     "oxfmt": "latest",

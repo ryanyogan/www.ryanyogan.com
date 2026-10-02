@@ -43,8 +43,9 @@ export default defineConfig(({ command, isPreview }) => ({
       ...(process.env.E2E_NO_INSPECTOR ? { inspectorPort: false as const } : {}),
       // The AI binding is remote (the real, billed Workers AI). Only `vite dev` may reach
       // it: a remote session needs a wrangler login, and it keeps `vite build` from exiting
-      // after the prerender. Build, preview, CI and the e2e suite never open one.
-      remoteBindings: command === "serve" && !isPreview,
+      // after the prerender. Build, preview, CI and the e2e suite never open one, and
+      // NO_REMOTE_BINDINGS=1 turns it off for dev too (scripts/fresh-clone-check.sh).
+      remoteBindings: command === "serve" && !isPreview && !process.env.NO_REMOTE_BINDINGS,
     }),
     tanstackStart({
       prerender: {

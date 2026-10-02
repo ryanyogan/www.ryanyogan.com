@@ -4,10 +4,8 @@ pnpm workspace: the site is `apps/web` (TanStack Start on a Cloudflare Worker) a
 live in `packages/shared`. Needs Node 22.6 or newer and pnpm 9.
 
 ```sh
-pnpm install
-pnpm --filter @repo/web db:migrate:local   # once, and after adding a migration
-pnpm --filter @repo/web db:seed:local      # once, and after editing content/projects/*.md
-pnpm dev        # http://localhost:3000
+pnpm install    # pnpm only: npm, yarn and Bun are refused by the preinstall guard
+pnpm dev        # http://localhost:3000; migrates and seeds the local database when needed
 pnpm check      # format check, lint, typecheck
 pnpm build
 ```
@@ -39,8 +37,8 @@ pnpm db:seed:generate
 pnpm exec wrangler d1 execute DB --remote --file db/seed.sql
 ```
 
-Local D1 files are keyed by `database_id`, so whenever that id changes run `pnpm db:migrate:local` and
-`pnpm db:seed:local` again.
+Local D1 files are keyed by `database_id`; when that id changes, the next `pnpm dev` sets the new local
+database up.
 
 ## Admin
 

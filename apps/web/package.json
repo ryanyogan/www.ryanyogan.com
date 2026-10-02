@@ -4,15 +4,17 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node scripts/ensure-local-db.mjs",
     "dev": "vite dev",
     "build": "vite build",
+    "prepreview": "node scripts/ensure-local-db.mjs",
     "preview": "vite preview",
     "deploy": "pnpm build && wrangler deploy",
     "cf-typegen": "wrangler types",
     "typecheck": "wrangler types && tsc --noEmit",
     "db:migrate:local": "wrangler d1 migrations apply DB --local",
     "db:seed:generate": "node --experimental-strip-types scripts/seed-projects.ts",
-    "db:seed:local": "pnpm db:seed:generate && wrangler d1 execute DB --local --file db/seed.sql",
+    "db:seed:local": "node --experimental-strip-types scripts/seed-projects.ts && wrangler d1 execute DB --local --file db/seed.sql",
     "db:e2e": "sh scripts/e2e-db.sh",
     "test": "vitest run",
     "test:e2e": "pnpm db:e2e && node scripts/e2e-run.mjs"
