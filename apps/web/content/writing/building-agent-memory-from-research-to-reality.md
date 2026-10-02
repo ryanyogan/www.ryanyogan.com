@@ -249,7 +249,7 @@ Whether that distinction produces meaningfully different behavior is what I'm tr
 
 The AI community has borrowed Kahneman's System 1 / System 2 dichotomy as vocabulary without honoring its architectural implications. When people say "System 1" in an AI context, they usually mean "a fast LLM call." When they say "System 2," they mean "a slow LLM call with chain-of-thought." That's not what Kahneman described.
 
-In the original framing, System 1 and System 2 are different modes of cognition with different speeds, different effort levels, different mechanisms, and lazy handoffs between them. System 1 is automatic, effortless, prior to deliberation, and critically, *not the same machinery as deliberate reasoning*.
+In the original framing, System 1 and System 2 are different modes of cognition with different speeds, different effort levels, different mechanisms, and lazy handoffs between them. System 1 is automatic, effortless, prior to deliberation, and critically, _not the same machinery as deliberate reasoning_.
 
 Lincoln tries to take the framing literally. I realize that sounds grandiose. Bear with me.
 

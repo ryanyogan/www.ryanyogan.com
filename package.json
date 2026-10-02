@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "preinstall": "node scripts/only-pnpm.mjs",
     "dev": "pnpm --filter @repo/web dev",
     "build": "pnpm --filter @repo/web build",
     "preview": "pnpm --filter @repo/web preview",
@@ -11,8 +12,13 @@
     "lint": "oxlint --deny-warnings .",
     "fmt": "oxfmt --write .",
     "fmt:check": "oxfmt --check .",
-    "check": "pnpm fmt:check && pnpm lint",
-    "ready": "pnpm fmt && pnpm lint && pnpm build"
+    "check": "pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test",
+    "ready": "pnpm fmt && pnpm lint && pnpm typecheck && pnpm build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm --filter @repo/web test",
+    "test:e2e": "pnpm --filter @repo/web test:e2e",
+    "perf:budget": "pnpm --filter @repo/web perf:budget",
+    "test:fresh-clone": "sh scripts/fresh-clone-check.sh"
   },
   "devDependencies": {
     "oxfmt": "latest",
@@ -20,7 +26,13 @@
     "typescript": "^5.8.0"
   },
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=22.6.0"
   },
-  "packageManager": "pnpm@9.15.9"
+  "packageManager": "pnpm@9.15.9",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd"
+    ]
+  }
 }

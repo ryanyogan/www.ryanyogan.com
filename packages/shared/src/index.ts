@@ -1,24 +1,21 @@
 export type {
-  Article,
-  ArchiveArticle,
-  ArchiveYear,
-  ExperimentProject,
-  FeaturedProject,
   NavLink,
   Project,
-  ProjectCategory,
+  ProjectDetail,
+  ProjectGroup,
+  ProjectGroupInfo,
+  ProjectSource,
+  ProjectStatus,
   WorkRole,
   WorkSection,
 } from "./types";
+export { PROJECT_GROUPS, PROJECT_SOURCES, PROJECT_STATUSES } from "./types";
 export {
-  articles,
+  contactEmail,
   footerLinks,
   navLinks,
-  projectCategories,
-  projects,
-  sidebarNav,
-  socialLinks,
+  projectGroups,
+  projectStatusLabels,
   workBio,
   workSections,
-  writingArchive,
 } from "./content";

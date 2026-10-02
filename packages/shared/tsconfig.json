@@ -6,10 +6,7 @@
     "target": "ES2022",
     "skipLibCheck": true,
     "strictNullChecks": true,
-    "composite": true,
-    "declaration": true,
-    "declarationMap": true,
-    "outDir": "./dist"
+    "noEmit": true
   },
   "include": ["src"]
 }

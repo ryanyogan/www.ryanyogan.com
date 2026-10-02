@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      # Version comes from "packageManager" in package.json.
+      - uses: pnpm/action-setup@v4
+
+      # package.json "engines" asks for Node >= 22.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Format check
+        run: pnpm fmt:check
+
+      - name: Lint
+        run: pnpm lint
+
+      # Before typecheck: src/routeTree.gen.ts is git-ignored and the build generates it.
+      - name: Build
+        run: pnpm build
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # JWT verification, the admin guard and write validation; a locally generated key pair.
+      - name: Unit tests
+        run: pnpm test
+
+      # This checkout is a fresh clone: no local database yet. `pnpm dev` must migrate and
+      # seed it by itself and serve / and /projects with the 13 projects (a few seconds).
+      - name: Fresh clone dev check
+        run: sh scripts/fresh-clone-check.sh --in-place
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @repo/web exec playwright install --with-deps chromium
+
+      # The same command as locally. It migrates and seeds throwaway local D1 databases
+      # (miniflare, under apps/web/.wrangler; no account, token or --remote), runs Playwright
+      # against the build above with local stubs for GitHub and Workers AI, exits non-zero on
+      # any failed test, and writes the totals to the job summary.
+      - name: End-to-end tests
+        run: pnpm test:e2e
+
+      # What each public page type downloads from the build above, gzip, against the budgets
+      # in apps/web/scripts/perf-budget.mjs. Also fails if a public page fetches the markdown
+      # parser, the highlighter or another post's body.
+      - name: Transfer budget
+        run: pnpm perf:budget
+
+      - name: Upload Playwright report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
+            apps/web/e2e-results.json
+          if-no-files-found: ignore
+          retention-days: 7

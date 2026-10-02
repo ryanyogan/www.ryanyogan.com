@@ -1,122 +1,119 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { projectDetails } from "~/lib/content";
+import { projectGroups } from "@repo/shared";
+import { ProjectLinks } from "~/components/ProjectLinks";
 import { Prose } from "~/components/Prose";
+import { StatusPill } from "~/components/StatusPill";
+import { projectOgImage } from "~/lib/og-images";
+import { PROJECT_PAGE_CACHE, fetchProject } from "~/lib/projects.functions";
+import { breadcrumbNode, pageTitle, projectNode, seo } from "~/lib/seo";
 
 export const Route = createFileRoute("/projects/$slug")({
   component: ProjectDetailPage,
-  loader: ({ params }) => {
-    const project = projectDetails.find((p) => p.slug === params.slug);
-    if (!project) throw notFound();
-    return project;
+  loader: async ({ params }) => {
+    // Null for an unknown slug and for a draft: both are a plain 404.
+    const found = await fetchProject({ data: params.slug });
+    if (!found) throw notFound();
+    return found;
   },
-  head: ({ loaderData }) => ({
-    meta: [
-      { title: `${loaderData.title} — Ryan Yogan` },
-      { name: "description", content: loaderData.tagline },
-      { property: "og:title", content: loaderData.title },
-      { property: "og:description", content: loaderData.tagline },
-      { property: "og:url", content: `https://ryanyogan.com/projects/${loaderData.slug}` },
-    ],
+  headers: ({ loaderData }) => ({
+    "Cache-Control": loaderData ? PROJECT_PAGE_CACHE : "no-store",
   }),
+  head: ({ loaderData }) => {
+    // The loader throws notFound() for an unknown slug, and head still runs.
+    if (!loaderData) return {};
+    const { project } = loaderData;
+    const path = `/projects/${project.slug}`;
+    const image = projectOgImage(project);
+    return seo({
+      title: pageTitle(project.title),
+      description: project.tagline,
+      path,
+      image,
+      graph: [
+        projectNode({ ...project, image: image.path }),
+        breadcrumbNode([
+          { name: "Projects", path: "/projects" },
+          { name: project.title, path },
+        ]),
+      ],
+    });
+  },
 });
 
 function ProjectDetailPage() {
-  const project = Route.useLoaderData();
+  const { project, siblings } = Route.useLoaderData();
+  const group = projectGroups.find((g) => g.id === project.group);
+  const at = siblings.findIndex((p) => p.slug === project.slug);
+  const previous = at > 0 ? siblings[at - 1] : undefined;
+  const next = at >= 0 && at < siblings.length - 1 ? siblings[at + 1] : undefined;
 
   return (
-    <main className="pt-28 md:pt-40 pb-16 md:pb-24 px-5 sm:px-6 md:px-8 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-0">
-      <aside className="hidden md:block md:col-span-3">
-        <div className="sticky top-40 space-y-8">
-          <Link
-            to="/projects"
-            className="font-sans text-[10px] tracking-widest uppercase text-neutral-400 hover:text-primary transition-colors"
-          >
-            &larr; Projects
-          </Link>
-          <div className="space-y-4">
-            <div className="space-y-1">
-              <span className="block font-sans text-[10px] tracking-[0.2em] uppercase text-on-surface-variant opacity-60">
-                Stack
-              </span>
-              {project.tech.map((t) => (
-                <span key={t} className="block font-sans text-xs text-on-surface-variant">
-                  {t}
-                </span>
-              ))}
+    <main id="main" className="wrap">
+      <article>
+        <header className="row pd-head">
+          <div className="col push">
+            <p className="crumbs">
+              <Link to="/projects">Projects</Link>
+              {group && (
+                <>
+                  <span aria-hidden="true">/</span>
+                  <Link to="/projects" hash={group.id}>
+                    {group.title}
+                  </Link>
+                </>
+              )}
+            </p>
+            <div className="pd-title">
+              <h1>{project.title}</h1>
+              <StatusPill status={project.status} label={project.statusLabel} />
             </div>
-            {project.github && (
-              <a
-                href={project.github}
-                className="block font-sans text-[10px] tracking-widest uppercase text-neutral-400 hover:text-primary"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                GitHub &#8599;
-              </a>
-            )}
-            {project.live && (
-              <a
-                href={project.live}
-                className="block font-sans text-[10px] tracking-widest uppercase text-neutral-400 hover:text-primary"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Live Site &#8599;
-              </a>
-            )}
+            <p className="lede">{project.tagline}</p>
+            <dl className="pd-meta">
+              <div>
+                <dt>Stack</dt>
+                <dd className="tech">{project.tech.join(" · ")}</dd>
+              </div>
+              <div>
+                <dt>Links</dt>
+                <dd>
+                  <ProjectLinks project={project} />
+                </dd>
+              </div>
+            </dl>
           </div>
-        </div>
-      </aside>
-      <article className="md:col-span-9">
-        <header className="mb-10 md:mb-16">
-          <Link
-            to="/projects"
-            className="md:hidden font-sans text-[10px] tracking-widest uppercase text-neutral-400 hover:text-primary mb-8 block"
-          >
-            &larr; Projects
-          </Link>
-          <h1 className="font-sans text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter text-primary leading-[0.95] mb-4">
-            {project.title}
-          </h1>
-          <p className="font-serif text-xl text-on-surface-variant italic mb-4">
-            {project.tagline}
-          </p>
-          <div className="flex flex-wrap gap-1.5 md:gap-2 mb-4 md:mb-6">
-            {project.tech.map((t) => (
-              <span
-                key={t}
-                className="bg-surface-container-highest px-3 py-1 font-sans text-[10px] tracking-widest uppercase font-bold text-on-surface-variant"
-              >
-                {t}
-              </span>
-            ))}
-          </div>
-          <div className="flex gap-6 mb-8">
-            {project.github && (
-              <a
-                href={project.github}
-                className="font-sans text-xs tracking-widest uppercase text-neutral-400 hover:text-primary"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                GitHub &#8599;
-              </a>
-            )}
-            {project.live && (
-              <a
-                href={project.live}
-                className="font-sans text-xs tracking-widest uppercase text-neutral-400 hover:text-primary"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Live Site &#8599;
-              </a>
-            )}
-          </div>
-          <div className="h-px w-full bg-outline-variant opacity-20" />
         </header>
-        <Prose content={project.content} />
+
+        <div className="row pd-body">
+          <Prose className="col push read" html={project.html} />
+        </div>
       </article>
+
+      <nav aria-label="More projects" className="row">
+        <div className="col push pd-nav">
+          {previous ? (
+            <Link to="/projects/$slug" params={{ slug: previous.slug }}>
+              <span>&larr; Previous in {group?.title}</span>
+              {previous.title}
+            </Link>
+          ) : (
+            <Link to="/projects">
+              <span>&larr; Back</span>
+              All projects
+            </Link>
+          )}
+          {next ? (
+            <Link to="/projects/$slug" params={{ slug: next.slug }}>
+              <span>Next in {group?.title} &rarr;</span>
+              {next.title}
+            </Link>
+          ) : previous ? (
+            <Link to="/projects">
+              <span>Back &rarr;</span>
+              All projects
+            </Link>
+          ) : null}
+        </div>
+      </nav>
     </main>
   );
 }

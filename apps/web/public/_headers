@@ -1,0 +1,3 @@
+# Preview images drawn at build time: the file name carries a hash of the image.
+/og/*
+  Cache-Control: public, max-age=31536000, immutable

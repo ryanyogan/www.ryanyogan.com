@@ -1,18 +1,32 @@
-import { footerLinks } from "@repo/shared";
+import { useRouterState } from "@tanstack/react-router";
+import { contactEmail, footerLinks } from "@repo/shared";
+import { openDialog } from "~/lib/keys";
 
 export function Footer() {
+  // No shortcuts under /admin (see KeyboardLayer), so no hint about them there.
+  const admin = useRouterState({
+    select: (state) => /^\/admin(\/|$)/i.test(state.location.pathname),
+  });
   return (
-    <footer className="w-full py-8 md:py-12 mt-16 md:mt-24 bg-surface-container-low">
-      <div className="flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto px-5 sm:px-6 md:px-8 gap-4">
-        <span className="font-sans text-[10px] tracking-widest uppercase text-neutral-500">
-          &copy; {new Date().getFullYear()} Ryan Yogan. Built with precision.
-        </span>
-
-        <div className="flex gap-6 md:gap-8">
+    <footer className="font-sans text-[0.875rem] text-muted">
+      <div className="wrap pb-[max(48px,env(safe-area-inset-bottom))]">
+        <div className="flex flex-wrap items-center gap-x-6 border-t border-rule pt-4">
+          <p className="order-last mt-3 w-full sm:order-none sm:mt-0 sm:mr-auto sm:w-auto">
+            Ryan Yogan &middot; Chicago
+          </p>
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            data-testid="keys-hint"
+            className={`quiet hidden ${admin ? "" : "lg:inline-flex"}`}
+            onClick={() => openDialog("help")}
+          >
+            Press&nbsp;<kbd className="kbd">?</kbd>&nbsp;for keys
+          </button>
           {footerLinks.map((link) => (
             <a
-              key={link.label}
-              className="font-sans text-[10px] tracking-widest uppercase text-neutral-500 hover:text-primary underline underline-offset-4"
+              key={link.href}
+              className="quiet link"
               href={link.href}
               target="_blank"
               rel="noopener noreferrer"
@@ -20,6 +34,12 @@ export function Footer() {
               {link.label}
             </a>
           ))}
+          <a className="quiet link" href="/rss.xml">
+            RSS
+          </a>
+          <a className="quiet link" href={`mailto:${contactEmail}`}>
+            {contactEmail}
+          </a>
         </div>
       </div>
     </footer>
