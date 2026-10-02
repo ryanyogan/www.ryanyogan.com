@@ -1,6 +1,7 @@
 ---
 title: "Puck Pro"
-tagline: "Browser-based pose detection at 30fps analyzes hockey shots, Claude Vision reviews the footage, and a gamification layer keeps kids coming back. Born from refusing to pay $150/hour for a shooting coach."
+summary: "Pose detection and vision-model feedback on my kids' hockey shots"
+tagline: "A prototype: in-browser pose detection plus vision-model feedback on my kids' hockey shots. Born from refusing to pay $150/hour for a shooting coach."
 tech:
   - Elixir
   - Phoenix LiveView
@@ -10,9 +11,12 @@ tech:
 github: "https://github.com/ryanyogan/puck_pro"
 year: "2026"
 featured: true
+group: for-people-i-know
+status: prototype
+order: 2
 ---
 
-AI-powered hockey training app with real-time pose detection. Uses MediaPipe in the browser at 30fps to analyze shots, track form, and provide Claude-powered coaching feedback. Born from a father's refusal to pay $150/hour for a shooting coach.
+A prototype hockey training app with real-time pose detection. Uses MediaPipe in the browser at 30fps to analyze shots, track form, and provide Claude-powered coaching feedback. Born from a father's refusal to pay $150/hour for a shooting coach.
 
 ## Real-Time Pose Detection
 

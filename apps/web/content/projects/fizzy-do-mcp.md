@@ -1,6 +1,7 @@
 ---
 title: "Fizzy Do MCP"
-tagline: "70+ MCP tools turning your AI assistant into a full project manager. Boards, cards, comments, workflows, standup summaries, and sprint reporting, all wired into Fizzy."
+summary: "67 MCP tools across 12 categories for the Fizzy kanban"
+tagline: "67 MCP tools across 12 categories for the Fizzy kanban, including composite project-manager tools. Published on npm as fizzy-do-mcp and deliberately simplified to local-first in v0.5."
 tech:
   - TypeScript
   - MCP
@@ -9,11 +10,17 @@ tech:
 github: "https://github.com/ryanyogan/fizzy-do-mcp"
 live: "https://fizzy.yogan.dev"
 year: "2026"
+group: tools-for-agents
+status: live
+statusLabel: "On npm"
+order: 1
 ---
 
-Open-source MCP server connecting AI assistants to Fizzy (Basecamp's task management). Features 70+ tools for boards, cards, comments, workflows, and AI-powered project management. Turn your AI assistant into a full-featured project manager that can create, update, and organize work directly in Fizzy.
+Open-source MCP server connecting AI assistants to the Fizzy kanban, published on npm as `fizzy-do-mcp`. 67 tools across 12 categories, including composite "project manager" tools. Version 0.5 deliberately simplified it to local-first. Turn your AI assistant into a full-featured project manager that can create, update, and organize work directly in Fizzy.
 
-## Full Tool Categories (70+ Tools)
+## Tool Categories
+
+67 tools across 12 categories, including:
 
 - **Boards** — List, create, update, delete, publish/unpublish, archive/unarchive, duplicate, reorder. Full board lifecycle management.
 - **Cards** — Create, update, delete, move, assign, set due dates, add labels, attach files, convert to subtasks. Full card lifecycle with bulk operations.

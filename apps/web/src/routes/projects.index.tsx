@@ -1,140 +1,181 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { projectDetails } from "~/lib/content";
-import type { ProjectDetail } from "~/lib/content";
+import { projectGroups } from "@repo/shared";
+import type { Project, ProjectStatus } from "@repo/shared";
+import { ProjectLinks } from "~/components/ProjectLinks";
+import { StatusPill } from "~/components/StatusPill";
+import { PROJECT_PAGE_CACHE, fetchProjects } from "~/lib/projects.functions";
+import { pageTitle, seo } from "~/lib/seo";
 
 export const Route = createFileRoute("/projects/")({
-  head: () => ({
-    meta: [
-      { title: "Projects — Ryan Yogan" },
-      {
-        name: "description",
-        content:
-          "AI systems, developer experience tools, and open source experiments in Elixir, TypeScript, and whatever else gets the job done.",
-      },
-      { property: "og:title", content: "Projects — Ryan Yogan" },
-      {
-        property: "og:description",
-        content:
-          "AI systems, developer experience tools, and open source experiments in Elixir, TypeScript, and whatever else gets the job done.",
-      },
-      { property: "og:url", content: "https://ryanyogan.com/projects" },
-    ],
-  }),
+  head: () =>
+    seo({
+      title: pageTitle("Projects"),
+      description:
+        "Agent memory, MCP servers, durable AI workflows and desktop tools. Everything I've built, with its real status.",
+      path: "/projects",
+    }),
+  loader: () => fetchProjects(),
+  headers: () => ({ "Cache-Control": PROJECT_PAGE_CACHE }),
   component: ProjectsPage,
 });
 
-function ProjectsPage() {
-  const grouped = projectDetails.reduce<Record<string, ProjectDetail[]>>((acc, project) => {
-    if (!acc[project.year]) acc[project.year] = [];
-    acc[project.year].push(project);
-    return acc;
-  }, {});
+type Filter = "all" | "running" | "prototype";
 
-  const years = Object.keys(grouped).sort((a, b) => Number(b) - Number(a));
-  const totalProjects = projectDetails.length;
+const filters: { id: Filter; label: string; statuses: ProjectStatus[] | null }[] = [
+  { id: "all", label: "All", statuses: null },
+  { id: "running", label: "Running or live", statuses: ["running", "live"] },
+  { id: "prototype", label: "Prototype", statuses: ["prototype"] },
+];
+
+const statusKey: { status: ProjectStatus; label?: string }[] = [
+  { status: "live" },
+  { status: "running", label: "Running locally" },
+  { status: "prototype" },
+  { status: "private" },
+];
+
+function ProjectsPage() {
+  const all = Route.useLoaderData();
+  const total = all.length;
+  const [filter, setFilter] = useState<Filter>("all");
+  const statuses = filters.find((f) => f.id === filter)?.statuses ?? null;
+
+  const groups = projectGroups
+    .map((info) => ({
+      info,
+      projects: all.filter(
+        (p) => p.group === info.id && (!statuses || statuses.includes(p.status)),
+      ),
+    }))
+    .filter((g) => g.projects.length > 0);
+  const shown = groups.reduce((n, g) => n + g.projects.length, 0);
 
   return (
-    <main className="pt-28 md:pt-40 pb-16 md:pb-24 px-5 sm:px-6 md:px-8 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-0">
-      <aside className="hidden md:block md:col-span-3">
-        <div className="sticky top-40 space-y-8">
-          <div className="space-y-1">
-            <span className="block font-sans text-[10px] tracking-[0.2em] uppercase text-on-surface-variant opacity-60">
-              Archive
-            </span>
-            <span className="block font-sans text-sm font-bold uppercase tracking-tight">
-              Projects
+    <main id="main" className="pb-[clamp(48px,8vw,96px)]">
+      <div className="wrap">
+        <section aria-labelledby="proj-h" className="pt-[clamp(40px,7vw,84px)]">
+          <span className="label">Projects &middot; the build side, in full</span>
+          <h1 id="proj-h" className="display mt-3 max-w-[18ch] text-[clamp(2.2rem,6vw,4rem)]">
+            Everything I&rsquo;ve built, with its real status.
+          </h1>
+          <p className="mt-5 max-w-[62ch] text-[1.125rem] text-ink-soft">
+            Live means you can open it. Prototype means prototype. Private means I will describe it
+            and not link it. Nothing here is rounded up.
+          </p>
+
+          <nav aria-label="Project groups" className="mt-7 flex flex-wrap gap-2">
+            {projectGroups.map((g) => (
+              <a
+                key={g.id}
+                href={`#${g.id}`}
+                className="rounded-full border border-rule-strong px-3.5 py-1 text-[0.95rem] font-semibold text-ink-soft hover:bg-surface hover:text-ink"
+              >
+                {g.title}
+              </a>
+            ))}
+          </nav>
+
+          <div className="mt-5 flex flex-wrap items-center gap-x-2.5 gap-y-2">
+            <span className="label mr-1">Status key</span>
+            {statusKey.map((s) => (
+              <StatusPill key={s.status} status={s.status} label={s.label} />
+            ))}
+          </div>
+
+          <div
+            role="group"
+            aria-label="Filter projects by status"
+            className="mt-5 flex flex-wrap items-center gap-2"
+          >
+            <span className="label mr-1">Show</span>
+            {filters.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                aria-pressed={filter === f.id}
+                onClick={() => setFilter(f.id)}
+                className={`min-h-9 cursor-pointer rounded-full border px-3.5 py-1 text-[0.95rem] font-semibold ${
+                  filter === f.id
+                    ? "border-ink bg-ink text-paper"
+                    : "border-rule-strong text-ink-soft hover:bg-surface hover:text-ink"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+            <span role="status" className="label ml-1">
+              Showing {shown} of {total}
             </span>
           </div>
-          <p className="font-sans text-xs leading-relaxed text-on-surface-variant pr-12">
-            Selected engineering works, open-source contributions, and technical experiments.
-          </p>
-        </div>
-      </aside>
+        </section>
 
-      <section className="md:col-span-9">
-        <header className="mb-12 md:mb-24">
-          <h1 className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-extrabold tracking-tighter text-primary leading-[0.9] mb-8">
-            The Workshop.
-          </h1>
-          <div className="h-px w-full bg-outline-variant opacity-20" />
-        </header>
-
-        {years.map((year) => (
-          <YearCollection key={year} year={year} projects={grouped[year]} />
+        {groups.map(({ info, projects }) => (
+          <section
+            key={info.id}
+            id={info.id}
+            aria-labelledby={`${info.id}-h`}
+            className="scroll-mt-24 pt-[clamp(40px,6vw,68px)]"
+          >
+            <div className="grid grid-cols-1 items-baseline gap-x-8 gap-y-1.5 border-b-2 border-build pb-3.5 md:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
+              <h2 id={`${info.id}-h`} className="display text-[clamp(1.5rem,3vw,2rem)]">
+                {info.title}
+              </h2>
+              <p className="text-muted">{info.blurb}</p>
+            </div>
+            <ul className="mt-[18px] grid list-none grid-cols-1 gap-4 p-0 md:grid-cols-2">
+              {projects.map((project) => (
+                <li key={project.slug} className="flex min-w-0 md:last:odd:col-span-2">
+                  <ProjectCard project={project} />
+                </li>
+              ))}
+            </ul>
+          </section>
         ))}
 
-        <div className="pt-12 flex justify-between items-center border-t border-outline-variant/10">
-          <span className="font-sans text-[10px] tracking-widest uppercase text-neutral-400">
-            {totalProjects} projects
-          </span>
-        </div>
-      </section>
+        <section
+          aria-labelledby="proj-open-h"
+          className="mt-[clamp(48px,7vw,84px)] border-t border-rule-strong pt-[clamp(28px,4vw,44px)]"
+        >
+          <span className="label">If one of these is close to what you need</span>
+          <h2 id="proj-open-h" className="display mt-2 text-[clamp(1.5rem,3vw,2rem)]">
+            I take on a small number of builds.
+          </h2>
+          <p className="mt-3 max-w-[62ch] text-ink-soft">
+            MCP servers, agent memory, and Cloudflare-native AI products.{" "}
+            <Link to="/work" hash="work-open" className="link">
+              The full list of what I&rsquo;m open to &rarr;
+            </Link>
+          </p>
+        </section>
+      </div>
     </main>
   );
 }
 
-function YearCollection({ year, projects }: { year: string; projects: ProjectDetail[] }) {
+function ProjectCard({ project }: { project: Project }) {
   return (
-    <div className="mb-16 md:mb-32">
-      <div className="flex items-baseline gap-4 mb-8 md:mb-12">
-        <h2 className="font-sans text-xs font-bold tracking-[0.3em] uppercase text-on-surface-variant">
-          {year}
-        </h2>
-        <div className="h-px flex-grow bg-outline-variant opacity-10" />
+    <article className="flex w-full min-w-0 flex-col gap-2.5 rounded-card border border-rule bg-surface p-[clamp(18px,2.4vw,26px)]">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1.5">
+        <h3 className="display text-[1.5rem]">
+          <Link
+            to="/projects/$slug"
+            params={{ slug: project.slug }}
+            data-kb-item
+            className="underline decoration-rule-strong decoration-1 underline-offset-[0.18em] hover:decoration-build hover:decoration-2"
+          >
+            {project.title}
+          </Link>
+        </h3>
+        <StatusPill status={project.status} label={project.statusLabel} />
       </div>
-
-      <div className="space-y-10 md:space-y-16">
-        {projects.map((project) => (
-          <article key={project.slug} className="grid grid-cols-1 md:grid-cols-4 gap-4 group">
-            <div className="flex flex-wrap gap-2 pt-1.5">
-              {project.tech.slice(0, 3).map((tag) => (
-                <span
-                  key={tag}
-                  className="font-sans text-[10px] tracking-widest uppercase text-neutral-400"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-            <div className="md:col-span-3">
-              <Link
-                to="/projects/$slug"
-                params={{ slug: project.slug }}
-                className="block font-sans text-xl sm:text-2xl md:text-3xl font-bold tracking-tight hover:text-neutral-500 transition-colors duration-300"
-              >
-                {project.title}
-              </Link>
-              <p className="mt-4 text-lg text-on-surface-variant leading-relaxed max-w-2xl opacity-80">
-                {project.tagline}
-              </p>
-              {(project.github || project.live) && (
-                <div className="mt-3 flex items-center gap-4">
-                  {project.github && (
-                    <a
-                      href={project.github}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-sans text-[10px] tracking-widest uppercase text-neutral-400 hover:text-primary transition-colors"
-                    >
-                      GitHub
-                    </a>
-                  )}
-                  {project.live && (
-                    <a
-                      href={project.live}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-sans text-[10px] tracking-widest uppercase text-neutral-400 hover:text-primary transition-colors"
-                    >
-                      Live
-                    </a>
-                  )}
-                </div>
-              )}
-            </div>
-          </article>
-        ))}
+      <p className="font-mono text-[0.76rem] tracking-[0.03em] text-muted">
+        {project.tech.join(" · ")}
+      </p>
+      <p className="text-ink-soft">{project.tagline}</p>
+      <div className="mt-auto pt-1.5">
+        <ProjectLinks project={project} />
       </div>
-    </div>
+    </article>
   );
 }

@@ -1,25 +1,51 @@
-import { footerLinks } from "@repo/shared";
+import { useRouterState } from "@tanstack/react-router";
+import { contactEmail, footerLinks } from "@repo/shared";
+import { openDialog } from "~/lib/keys";
 
 export function Footer() {
+  // No shortcuts under /admin (see KeyboardLayer), so no hint about them there.
+  const admin = useRouterState({
+    select: (state) => /^\/admin(\/|$)/i.test(state.location.pathname),
+  });
   return (
-    <footer className="w-full py-8 md:py-12 mt-16 md:mt-24 bg-surface-container-low">
-      <div className="flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto px-5 sm:px-6 md:px-8 gap-4">
-        <span className="font-sans text-[10px] tracking-widest uppercase text-neutral-500">
-          &copy; {new Date().getFullYear()} Ryan Yogan. Built with precision.
-        </span>
-
-        <div className="flex gap-6 md:gap-8">
-          {footerLinks.map((link) => (
-            <a
-              key={link.label}
-              className="font-sans text-[10px] tracking-widest uppercase text-neutral-500 hover:text-primary underline underline-offset-4"
-              href={link.href}
-              target="_blank"
-              rel="noopener noreferrer"
+    <footer className="border-t border-rule-strong pt-[26px] pb-10 text-[0.95rem] text-muted">
+      <div className="wrap flex flex-wrap justify-between gap-x-10 gap-y-5">
+        <div>
+          <p>Ryan Yogan &middot; Chicago</p>
+          <p>Leads teams. Builds agent systems. Coaches hockey.</p>
+          <p className={`mt-2 hidden ${admin ? "" : "lg:block"}`} data-testid="keys-hint">
+            <button
+              type="button"
+              aria-haspopup="dialog"
+              className="cursor-pointer hover:text-ink"
+              onClick={() => openDialog("help")}
             >
-              {link.label}
+              Press <kbd className="kbd">?</kbd> for keys
+            </button>
+          </p>
+        </div>
+
+        <div className="max-w-[34em]">
+          <p>
+            Open to advising, fractional engineering leadership, and a small number of builds.{" "}
+            <a className="link text-ink-soft" href={`mailto:${contactEmail}`}>
+              {contactEmail}
             </a>
-          ))}
+          </p>
+          <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-1">
+            {footerLinks.map((link) => (
+              <li key={link.href}>
+                <a className="link" href={link.href} target="_blank" rel="noopener noreferrer">
+                  {link.label}
+                </a>
+              </li>
+            ))}
+            <li>
+              <a className="link" href="/rss.xml">
+                RSS
+              </a>
+            </li>
+          </ul>
         </div>
       </div>
     </footer>

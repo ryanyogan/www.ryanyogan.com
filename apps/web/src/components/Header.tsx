@@ -1,120 +1,129 @@
-import { Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { Link, useRouterState } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 import { navLinks } from "@repo/shared";
+import { openDialog } from "~/lib/keys";
+import { SearchIcon } from "./KeyboardLayer";
 import { ThemeToggle } from "./ThemeToggle";
 
-export function Header() {
-  const [mobileOpen, setMobileOpen] = useState(false);
+const NAV_ID = "site-nav";
 
+export function Header() {
+  const [open, setOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  // The keyboard layer (palette, shortcuts) is off under /admin, so its opener is not shown.
+  const admin = /^\/admin(\/|$)/i.test(pathname);
+
+  // Navigating closes the menu.
   useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
+    setOpen(false);
+  }, [pathname]);
+
+  // While open: focus moves into the menu, Escape closes it and hands focus
+  // back to the button, and a press outside the header closes it.
+  useEffect(() => {
+    if (!open) return;
+
+    navRef.current?.querySelector("a")?.focus();
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      setOpen(false);
+      buttonRef.current?.focus();
     }
+
+    function onPointerDown(event: PointerEvent) {
+      if (!headerRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("pointerdown", onPointerDown);
     return () => {
-      document.body.style.overflow = "";
+      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("pointerdown", onPointerDown);
     };
-  }, [mobileOpen]);
+  }, [open]);
 
   return (
-    <header className="fixed top-0 w-full z-50 bg-surface">
-      <nav className="flex justify-between items-center max-w-7xl mx-auto px-5 sm:px-6 md:px-8 py-4 md:py-6">
+    <header
+      ref={headerRef}
+      className="sticky top-0 z-20 border-b border-rule bg-paper/90 backdrop-blur-[10px]"
+    >
+      <div className="wrap flex flex-wrap items-center gap-x-2.5 gap-y-2 py-3 md:gap-x-5">
         <Link
           to="/"
-          className="font-sans text-base tracking-[0.12em] text-primary font-semibold"
+          aria-label="Ryan Yogan, home"
+          className="mr-auto inline-flex items-center gap-2.5 font-serif text-[1.15rem] font-semibold"
         >
+          <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" className="flex-none">
+            <path d="M13 1a12 12 0 0 0 0 24z" fill="var(--lead)" />
+            <path d="M13 1a12 12 0 0 1 0 24z" fill="var(--build)" />
+            <rect x="12.25" y="1" width="1.5" height="24" fill="var(--paper)" />
+          </svg>
           Ryan Yogan
         </Link>
 
-        <div className="hidden md:flex items-center space-x-10">
-          {navLinks.map((link) => (
-            <Link
-              key={link.label}
-              to={link.href}
-              className="font-sans text-xs tracking-[0.2em] uppercase text-on-surface-variant hover:text-primary transition-colors border-b border-transparent hover:border-on-surface-variant/20 pb-0.5"
-              activeProps={{
-                className:
-                  "font-sans text-xs tracking-[0.2em] uppercase text-primary font-semibold border-b border-primary/30 pb-0.5",
-              }}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </div>
+        <button
+          type="button"
+          hidden={admin}
+          aria-haspopup="dialog"
+          aria-keyshortcuts="/ Control+K Meta+K"
+          className={`${admin ? "hidden" : "inline-flex"} cursor-pointer items-center gap-[7px] rounded-full border border-rule-strong px-3 py-1.5 text-[0.85rem] font-semibold text-ink-soft hover:bg-surface hover:text-ink`}
+          onClick={() => openDialog("palette")}
+        >
+          <SearchIcon />
+          <span className="sr-only sm:not-sr-only">Search</span>
+          <kbd aria-hidden="true" className="kbd ml-0.5 hidden md:inline">
+            /
+          </kbd>
+        </button>
 
-        <div className="hidden md:flex items-center space-x-8">
-          <ThemeToggle />
-        </div>
+        <ThemeToggle />
 
         <button
-          className="md:hidden text-primary relative z-[60]"
-          onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label="Toggle menu"
+          ref={buttonRef}
+          type="button"
+          className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-rule-strong px-3 py-1.5 text-[0.85rem] font-semibold text-ink-soft hover:bg-surface hover:text-ink md:hidden"
+          aria-expanded={open}
+          aria-controls={NAV_ID}
+          onClick={() => setOpen((value) => !value)}
         >
           <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
+            width="14"
+            height="14"
+            viewBox="0 0 14 14"
             fill="none"
-            viewBox="0 0 24 24"
             stroke="currentColor"
-            strokeWidth={2}
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            aria-hidden="true"
           >
-            {mobileOpen ? (
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            )}
+            {open ? <path d="M2 2l10 10M12 2L2 12" /> : <path d="M1 3h12M1 7h12M1 11h12" />}
           </svg>
+          Menu
         </button>
-      </nav>
 
-      <div
-        className={`fixed inset-0 z-50 bg-surface/95 backdrop-blur-sm transition-opacity duration-300 md:hidden ${
-          mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-        }`}
-      >
-        <div className="flex justify-end px-5 py-4">
-          <button
-            className="text-primary"
-            onClick={() => setMobileOpen(false)}
-            aria-label="Close menu"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="flex flex-col items-center justify-center h-[calc(100%-4rem)]">
-          <nav className="flex flex-col items-center space-y-8">
+        <nav
+          ref={navRef}
+          id={NAV_ID}
+          aria-label="Primary"
+          className={`${open ? "block" : "hidden"} w-full md:block md:w-auto`}
+        >
+          <ul className="flex flex-col gap-0.5 pb-1 md:flex-row md:pb-0">
             {navLinks.map((link) => (
-              <Link
-                key={link.label}
-                to={link.href}
-                className="font-sans text-2xl tracking-widest uppercase text-neutral-500 hover:text-primary transition-colors"
-                activeProps={{
-                  className:
-                    "font-sans text-2xl tracking-widest uppercase text-primary border-b border-primary pb-1",
-                }}
-                onClick={() => setMobileOpen(false)}
-              >
-                {link.label}
-              </Link>
+              <li key={link.href}>
+                <Link
+                  to={link.href}
+                  className="block rounded-full px-[13px] py-[7px] text-[0.98rem] font-semibold text-ink-soft hover:bg-surface hover:text-ink aria-[current=page]:bg-ink aria-[current=page]:text-paper"
+                >
+                  {link.label}
+                </Link>
+              </li>
             ))}
-          </nav>
-
-          <div className="w-16 h-px bg-outline-variant/30 my-8" />
-
-          <ThemeToggle />
-        </div>
+          </ul>
+        </nav>
       </div>
     </header>
   );

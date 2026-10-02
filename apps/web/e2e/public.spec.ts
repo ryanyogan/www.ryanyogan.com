@@ -1,0 +1,275 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import {
+  BROKEN_ORIGIN,
+  SITE_URL,
+  draft,
+  expect,
+  postSlugs,
+  projectSlugs,
+  routes,
+  test,
+} from "./fixtures";
+
+const PUBLIC_CACHE = "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
+
+// --- Dark theme -------------------------------------------------------------------------
+
+for (const route of routes) {
+  test(`${route} renders in the dark theme`, async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("theme", "dark"));
+    const response = await page.goto(route);
+    expect(response?.status()).toBe(200);
+    await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+    await expect(page.locator("h1")).toBeVisible();
+    const [background, ink] = await page.evaluate(() => {
+      const style = getComputedStyle(document.body);
+      return [style.backgroundColor, style.color];
+    });
+    // A dark page: the background is darker than the text.
+    const light = (rgb: string) =>
+      (rgb.match(/[\d.]+/g) ?? []).slice(0, 3).reduce((a, n) => a + Number(n), 0);
+    expect(light(background), `${background} vs ${ink}`).toBeLessThan(light(ink));
+    // The console-error fixture fails the test if anything was logged.
+  });
+}
+
+test("the chosen theme persists across client and full navigation", async ({ page }) => {
+  await page.goto("/");
+  const html = page.locator("html");
+  const toggle = page.getByRole("button", { name: /^Colour theme/ });
+  await expect(async () => {
+    if (!(await html.getAttribute("class"))?.includes("dark")) await toggle.click();
+    await expect(html).toHaveClass(/\bdark\b/, { timeout: 1000 });
+  }).toPass({ timeout: 15_000 });
+
+  await page
+    .getByRole("navigation", { name: "Primary" })
+    .getByRole("link", { name: "Projects" })
+    .click();
+  await expect(page).toHaveURL(/\/projects$/);
+  await expect(html).toHaveClass(/\bdark\b/);
+  await page.locator('main a[href="/projects/lincoln-project"]').first().click();
+  await expect(page).toHaveURL(/\/projects\/lincoln-project$/);
+  await expect(html).toHaveClass(/\bdark\b/);
+  for (const path of ["/writing", "/work", `/writing/${postSlugs[0]}`]) {
+    await page.goto(path);
+    await expect(html).toHaveClass(/\bdark\b/);
+    await expect(toggle).toHaveAccessibleName(/^Colour theme: Dark/);
+  }
+});
+
+// --- SEO --------------------------------------------------------------------------------
+
+test("every public route has its own title and description, Open Graph tags and canonical", async ({
+  page,
+}) => {
+  const seen = { title: new Map<string, string>(), description: new Map<string, string>() };
+  const all = [
+    ...new Set([
+      ...routes,
+      ...projectSlugs.map((slug) => `/projects/${slug}`),
+      ...postSlugs.map((slug) => `/writing/${slug}`),
+    ]),
+  ];
+  for (const route of all) {
+    await page.goto(route);
+    const meta = await page.evaluate(() => {
+      const one = (selector: string) => {
+        const found = document.head.querySelectorAll(selector);
+        return found.length === 1
+          ? (found[0].getAttribute("content") ?? found[0].getAttribute("href") ?? "")
+          : `#${found.length}`;
+      };
+      return {
+        title: document.title.trim(),
+        titles: document.head.querySelectorAll("title").length,
+        description: one('meta[name="description"]'),
+        ogTitle: one('meta[property="og:title"]'),
+        ogDescription: one('meta[property="og:description"]'),
+        ogImage: one('meta[property="og:image"]'),
+        ogType: one('meta[property="og:type"]'),
+        canonical: one('link[rel="canonical"]'),
+      };
+    });
+    expect(meta.titles, route).toBe(1);
+    expect(meta.title.length, route).toBeGreaterThan(3);
+    expect(meta.description.length, `${route} description: ${meta.description}`).toBeGreaterThan(
+      20,
+    );
+    // Posts drop the site-name suffix in og:title; everything else repeats the title.
+    expect(
+      meta.title.startsWith(meta.ogTitle) && meta.ogTitle.length > 3,
+      `${route}: ${meta.ogTitle}`,
+    ).toBe(true);
+    expect(meta.ogDescription, route).toBe(meta.description);
+    expect(meta.ogImage, route).toMatch(/^https:\/\/ryanyogan\.com\//);
+    expect(meta.ogType, route).not.toMatch(/^#/);
+    expect(meta.canonical, route).toBe(`${SITE_URL}${route}`);
+    for (const key of ["title", "description"] as const) {
+      const other = seen[key].get(meta[key]);
+      expect(other, `${route} shares its ${key} with ${other}: ${meta[key]}`).toBeUndefined();
+      seen[key].set(meta[key], route);
+    }
+  }
+});
+
+test("the Open Graph image exists", async ({ request }) => {
+  const html = await (await request.get("/")).text();
+  const image = /property="og:image" content="([^"]+)"/.exec(html)?.[1] ?? "";
+  expect(image.startsWith(SITE_URL)).toBe(true);
+  const response = await request.get(image.slice(SITE_URL.length));
+  expect(response.status()).toBe(200);
+  expect(response.headers()["content-type"]).toContain("image/");
+});
+
+// --- Links ------------------------------------------------------------------------------
+
+test("every internal link reachable from / answers 200", async ({ request }) => {
+  const queue = ["/"];
+  const seen = new Set(queue);
+  const broken: string[] = [];
+  while (queue.length) {
+    const path = queue.shift() as string;
+    const response = await request.get(path);
+    if (response.status() !== 200) broken.push(`${path} -> ${response.status()}`);
+    if (!(response.headers()["content-type"] ?? "").includes("text/html")) continue;
+    const html = await response.text();
+    for (const match of html.matchAll(/<(?:a|link)\b[^>]*?\bhref="([^"]+)"/g)) {
+      let href = match[1].replaceAll("&amp;", "&");
+      if (href.startsWith(SITE_URL)) href = href.slice(SITE_URL.length) || "/";
+      if (!href.startsWith("/") || href.startsWith("//")) continue;
+      href = href.split("#")[0];
+      if (href && !seen.has(href)) {
+        seen.add(href);
+        queue.push(href);
+      }
+    }
+  }
+  expect(broken).toEqual([]);
+  // The crawl found the site: every project, every post, the feed.
+  for (const slug of projectSlugs) expect(seen.has(`/projects/${slug}`), slug).toBe(true);
+  for (const slug of postSlugs) expect(seen.has(`/writing/${slug}`), slug).toBe(true);
+  expect(seen.has("/rss.xml")).toBe(true);
+  expect([...seen].filter((path) => path.includes(draft.slug) || /^\/admin/i.test(path))).toEqual(
+    [],
+  );
+});
+
+test("rss.xml item links resolve and the feed has no draft", async ({ request }) => {
+  const xml = await (await request.get("/rss.xml")).text();
+  const links = [...xml.matchAll(/<item>[\s\S]*?<link>([^<]+)<\/link>/g)].map((m) => m[1]);
+  expect(links.length).toBe(postSlugs.length);
+  for (const link of links) {
+    expect(link.startsWith(`${SITE_URL}/`), link).toBe(true);
+    expect((await request.get(link.slice(SITE_URL.length))).status(), link).toBe(200);
+  }
+  for (const text of [draft.slug, draft.title, draft.marker]) expect(xml).not.toContain(text);
+});
+
+// --- Projects from the database -----------------------------------------------------------
+
+const groupTitles: Record<string, string> = {};
+const statusLabels: Record<string, string> = {};
+{
+  const shared = readFileSync(
+    fileURLToPath(new URL("../../../packages/shared/src/content.ts", import.meta.url)),
+    "utf8",
+  );
+  for (const m of shared.matchAll(/id: "([a-z-]+)",\s*title: "([^"]+)"/g)) groupTitles[m[1]] = m[2];
+  const block = /projectStatusLabels[^=]*=\s*\{([\s\S]*?)\}/.exec(shared)?.[1] ?? "";
+  for (const m of block.matchAll(/"?([a-z-]+)"?:\s*"([^"]+)"/g)) statusLabels[m[1]] = m[2];
+}
+
+/** The front matter of the markdown file the seed loads into D1. */
+function seeded(slug: string): Record<string, string> {
+  const file = fileURLToPath(new URL(`../content/projects/${slug}.md`, import.meta.url));
+  const head = /^---\n([\s\S]*?)\n---/.exec(readFileSync(file, "utf8"))?.[1] ?? "";
+  const fields: Record<string, string> = {};
+  for (const m of head.matchAll(/^([a-zA-Z]+):\s*"?(.*?)"?\s*$/gm)) fields[m[1]] = m[2];
+  return fields;
+}
+
+test("each project page shows its status, group and links from the database", async ({ page }) => {
+  expect(Object.keys(groupTitles).length).toBeGreaterThan(2);
+  expect(Object.keys(statusLabels).length).toBeGreaterThan(2);
+  for (const slug of projectSlugs) {
+    const want = seeded(slug);
+    await page.goto(`/projects/${slug}`);
+    const header = page.locator("main article header");
+    await expect(header.locator("h1"), slug).toHaveText(want.title);
+    await expect(header.locator(`span.st.st-${want.status}`), slug).toHaveText(
+      want.statusLabel ?? statusLabels[want.status],
+    );
+    await expect(
+      header.getByRole("link", { name: groupTitles[want.group], exact: true }),
+      slug,
+    ).toHaveAttribute("href", `/projects#${want.group}`);
+    const external = header.locator('a[target="_blank"]');
+    const hrefs = await external.evaluateAll((links) => links.map((a) => a.getAttribute("href")));
+    expect(hrefs, slug).toEqual([want.live, want.github].filter(Boolean));
+    if (!hrefs.length)
+      await expect(header.getByText(/No public link\.|Private\. No link\./)).toBeVisible();
+  }
+});
+
+// --- Drafts -------------------------------------------------------------------------------
+
+test("a draft is in no feed, sitemap, robots file or data response, and its URL is a 404", async ({
+  request,
+}) => {
+  for (const path of [
+    "/rss.xml",
+    "/sitemap.xml",
+    "/sitemap-index.xml",
+    "/sitemap.txt",
+    "/robots.txt",
+    "/feed.xml",
+  ]) {
+    const body = await (await request.get(path)).text();
+    for (const text of [draft.slug, draft.title, draft.marker])
+      expect(body, path).not.toContain(text);
+  }
+  for (const path of [
+    `/projects/${draft.slug}`,
+    `/projects/${draft.slug}/`,
+    `/Projects/${draft.slug}`,
+  ]) {
+    const response = await request.get(path);
+    expect(response.status(), path).toBe(404);
+    const body = await response.text();
+    for (const text of [draft.title, draft.marker]) expect(body, path).not.toContain(text);
+  }
+});
+
+// --- Response headers ---------------------------------------------------------------------
+
+test("404 responses are not cacheable; the prerendered and dynamic pages are", async ({
+  request,
+}) => {
+  for (const path of [
+    "/no-such-page",
+    "/projects/no-such-project",
+    `/projects/${draft.slug}`,
+    "/writing/no-such-post",
+  ]) {
+    const response = await request.get(path);
+    expect(response.status(), path).toBe(404);
+    expect(response.headers()["cache-control"], path).toBe("no-store");
+  }
+  for (const path of ["/", "/projects", "/projects/lincoln-project"]) {
+    expect((await request.get(path)).headers()["cache-control"], path).toBe(PUBLIC_CACHE);
+  }
+});
+
+test("a database failure is a 500 that no cache may keep", async ({ request }) => {
+  // BROKEN_ORIGIN is the same build on a D1 with no tables: every query throws.
+  for (const path of ["/", "/projects", "/projects/lincoln-project"]) {
+    const response = await request.get(`${BROKEN_ORIGIN}${path}`);
+    expect(response.status(), path).toBe(500);
+    expect(response.headers()["cache-control"], path).toBe("no-store");
+    expect(await response.text(), path).not.toMatch(/SQLITE|no such table|D1_ERROR/i);
+  }
+  // Pages that do not read the database still work there.
+  expect((await request.get(`${BROKEN_ORIGIN}/work`)).status()).toBe(200);
+});

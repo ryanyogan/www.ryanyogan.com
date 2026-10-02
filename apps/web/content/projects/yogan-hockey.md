@@ -1,6 +1,7 @@
 ---
 title: "Yogan Hockey"
-tagline: "Every hockey season my family gathers around screens. I got tired of slow, ad-infested sports apps, so I built a real-time NHL dashboard with AI predictions running on a $5/month server."
+summary: "Real-time NHL dashboard that also tracks my brother's pro stats in Germany"
+tagline: "Every hockey season my family gathers around screens. I got tired of slow, ad-infested sports apps, so I built a real-time NHL dashboard on Phoenix LiveView that also tracks my brother's pro stats in Germany."
 tech:
   - Elixir
   - Phoenix LiveView
@@ -11,23 +12,25 @@ github: "https://github.com/ryanyogan/yogan_hockey"
 live: "https://yogan-hockey.fly.dev"
 year: "2026"
 featured: true
+group: for-people-i-know
+status: live
+order: 1
 ---
 
-Real-time NHL stats dashboard with AI-powered predictions, live play-by-play, and a dedicated tracker for Andrew's DEL career. Updates instantly without page refreshes on a $5/month server. Built because every existing hockey app is either slow, ad-infested, or both.
+Real-time NHL stats dashboard with live play-by-play and a dedicated tracker for Andrew's DEL2 career. Updates instantly without page refreshes on a $5/month server. Built because every existing hockey app is either slow, ad-infested, or both.
 
 ## Features
 
 - **Live NHL Scores** — Real-time game updates with 30-second polling via GenServer army
-- **AI Game Predictions** — Claude analyzes matchups, recent form, and head-to-head records. Predictions regenerate on scoring events.
 - **Playoff Bracket Tracker** — Full bracket visualization with elimination scenarios
 - **Per-Game Live View** — Ice rink visualization, period-by-period scoring, shot counts, penalty tracking, and live play-by-play stream
 - **Team & Player Stats** — Deep stats pages with sortable tables and season trends
-- **Andrew's DEL Tracker** — Dedicated section for my brother's career in Germany's top hockey league
+- **Andrew's DEL2 Tracker** — Dedicated section for my brother's pro career in Germany's DEL2
 - **Distributed Caching** — ETS-powered multi-region cache replication via PubSub
 
 ## The GenServer Army
 
-The architecture is built around specialized GenServer processes: LiveScoresServer polls every 30 seconds, TeamsServer pre-populates all 32 teams on startup, PredictionServer watches for scoring events and triggers AI regeneration. Dynamic GamePlayServer processes are spawned on-demand when users visit individual game pages, tracking connected viewers and auto-shutting down when the last viewer disconnects.
+The architecture is built around specialized GenServer processes: LiveScoresServer polls every 30 seconds, TeamsServer pre-populates all 32 teams on startup. Dynamic GamePlayServer processes are spawned on-demand when users visit individual game pages, tracking connected viewers and auto-shutting down when the last viewer disconnects.
 
 ## ETS: The Secret Weapon
 

@@ -8,7 +8,14 @@
     "build": "vite build",
     "preview": "vite preview",
     "deploy": "pnpm build && wrangler deploy",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "typecheck": "wrangler types && tsc --noEmit",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
+    "db:seed:generate": "node --experimental-strip-types scripts/seed-projects.ts",
+    "db:seed:local": "pnpm db:seed:generate && wrangler d1 execute DB --local --file db/seed.sql",
+    "db:e2e": "sh scripts/e2e-db.sh",
+    "test": "vitest run",
+    "test:e2e": "pnpm db:e2e && node scripts/e2e-run.mjs"
   },
   "dependencies": {
     "@repo/shared": "workspace:*",
@@ -21,7 +28,9 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@cloudflare/vite-plugin": "^1.31.0",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.1.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.1.0",
@@ -30,6 +39,7 @@
     "tailwindcss": "^4.1.0",
     "typescript": "^5.8.0",
     "vite": "^8.0.0",
+    "vitest": "^5.0.3",
     "wrangler": "^4.80.0"
   }
 }
