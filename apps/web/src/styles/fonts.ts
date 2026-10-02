@@ -1,10 +1,10 @@
-// The font files worth fetching before the stylesheet asks for them: the two roman faces
-// that set the heading and the first paragraph of every page. The italics and the mono
-// load when something uses them. See fonts.css.
-import frauncesRoman from "./fonts/fraunces-latin-opsz-normal.woff2?url";
-import sourceSansRoman from "./fonts/source-sans-3-latin-wght-normal.woff2?url";
+// The font files worth fetching before the stylesheet asks for them: the interface face
+// (header, headings, labels) and the body roman. The body semibold and italic load when
+// something uses them. See fonts.css.
+import hankenRoman from "./fonts/hanken-grotesk-latin-wght-normal.woff2?url";
+import sourceSerifRoman from "./fonts/source-serif-4-latin-400-normal.woff2?url";
 
-export const fontPreloads = [frauncesRoman, sourceSansRoman].map((href) => ({
+export const fontPreloads = [hankenRoman, sourceSerifRoman].map((href) => ({
   rel: "preload",
   as: "font",
   type: "font/woff2",

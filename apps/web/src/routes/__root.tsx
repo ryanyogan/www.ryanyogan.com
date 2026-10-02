@@ -56,8 +56,8 @@ function NotFound() {
   return (
     <main id="main" className="wrap pt-[clamp(40px,7vw,84px)] pb-[72px]">
       <span className="label mb-[18px] block">404</span>
-      <h1 className="display text-[clamp(2.3rem,6.2vw,4.6rem)]">This page doesn&rsquo;t exist.</h1>
-      <p className="mt-[22px] font-semibold">
+      <h1>This page doesn&rsquo;t exist.</h1>
+      <p className="mt-[22px]">
         <Link to="/" className="link">
           Back to home &rarr;
         </Link>
@@ -72,8 +72,8 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
       <head>
         {/* Here, not in head(): the router keeps one meta per name, and this needs two. The
             values are --paper in each scheme (styles/app.css). */}
-        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6eee1" />
-        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1b1613" />
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f5f1" />
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1c1e1f" />
         <HeadContent />
       </head>
       <body>
@@ -84,7 +84,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
         />
         <a
           href="#main"
-          className="absolute -top-16 left-3 z-50 rounded-lg bg-ink px-4 py-2.5 text-paper focus:top-3"
+          className="absolute -top-20 left-4 z-50 bg-ink px-4 py-3.5 font-sans text-[0.9375rem] font-medium text-paper focus:top-3"
         >
           Skip to content
         </a>

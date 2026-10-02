@@ -2,7 +2,6 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { navLinks } from "@repo/shared";
 import { openDialog } from "~/lib/keys";
-import { SearchIcon } from "./KeyboardLayer";
 import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_ID = "site-nav";
@@ -47,37 +46,44 @@ export function Header() {
   }, [open]);
 
   return (
-    <header
-      ref={headerRef}
-      className="sticky top-0 z-20 border-b border-rule bg-paper/90 backdrop-blur-[10px]"
-    >
-      <div className="wrap flex flex-wrap items-center gap-x-2.5 gap-y-2 py-3 md:gap-x-5">
+    <header ref={headerRef} className="font-sans">
+      <div className="wrap flex flex-wrap items-center gap-x-2 pt-2.5 pb-1.5 md:gap-x-7 md:py-6">
         <Link
           to="/"
           aria-label="Ryan Yogan, home"
-          className="mr-auto inline-flex items-center gap-2.5 font-serif text-[1.15rem] font-semibold"
+          className="mr-auto inline-flex min-h-11 items-center text-base font-semibold tracking-[-0.005em]"
         >
-          <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" className="flex-none">
-            <path d="M13 1a12 12 0 0 0 0 24z" fill="var(--lead)" />
-            <path d="M13 1a12 12 0 0 1 0 24z" fill="var(--build)" />
-            <rect x="12.25" y="1" width="1.5" height="24" fill="var(--paper)" />
-          </svg>
           Ryan Yogan
         </Link>
+
+        {/* Before the buttons so the wide layout reads name, pages, controls; on a phone it
+            drops to its own row under them. */}
+        <nav
+          ref={navRef}
+          id={NAV_ID}
+          aria-label="Primary"
+          className={`${open ? "block" : "hidden"} order-last w-full md:order-none md:block md:w-auto`}
+        >
+          <ul className="-mx-3 flex flex-col pb-2 md:mx-0 md:flex-row md:gap-1 md:pb-0">
+            {navLinks.map((link) => (
+              <li key={link.href}>
+                <Link to={link.href} className="quiet w-full px-3 text-[0.9375rem] md:w-auto">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
 
         <button
           type="button"
           hidden={admin}
           aria-haspopup="dialog"
           aria-keyshortcuts="/ Control+K Meta+K"
-          className={`${admin ? "hidden" : "inline-flex"} cursor-pointer items-center gap-[7px] rounded-full border border-rule-strong px-3 py-1.5 text-[0.85rem] font-semibold text-ink-soft hover:bg-surface hover:text-ink`}
+          className={`${admin ? "hidden" : "quiet"} px-2 text-[0.875rem]`}
           onClick={() => openDialog("palette")}
         >
-          <SearchIcon />
-          <span className="sr-only sm:not-sr-only">Search</span>
-          <kbd aria-hidden="true" className="kbd ml-0.5 hidden md:inline">
-            /
-          </kbd>
+          Search
         </button>
 
         <ThemeToggle />
@@ -85,45 +91,13 @@ export function Header() {
         <button
           ref={buttonRef}
           type="button"
-          className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-rule-strong px-3 py-1.5 text-[0.85rem] font-semibold text-ink-soft hover:bg-surface hover:text-ink md:hidden"
+          className="quiet px-2 text-[0.875rem] md:hidden"
           aria-expanded={open}
           aria-controls={NAV_ID}
           onClick={() => setOpen((value) => !value)}
         >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 14 14"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            aria-hidden="true"
-          >
-            {open ? <path d="M2 2l10 10M12 2L2 12" /> : <path d="M1 3h12M1 7h12M1 11h12" />}
-          </svg>
           Menu
         </button>
-
-        <nav
-          ref={navRef}
-          id={NAV_ID}
-          aria-label="Primary"
-          className={`${open ? "block" : "hidden"} w-full md:block md:w-auto`}
-        >
-          <ul className="flex flex-col gap-0.5 pb-1 md:flex-row md:pb-0">
-            {navLinks.map((link) => (
-              <li key={link.href}>
-                <Link
-                  to={link.href}
-                  className="block rounded-full px-[13px] py-[7px] text-[0.98rem] font-semibold text-ink-soft hover:bg-surface hover:text-ink aria-[current=page]:bg-ink aria-[current=page]:text-paper"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
       </div>
     </header>
   );

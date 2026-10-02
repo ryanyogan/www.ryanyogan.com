@@ -20,14 +20,10 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={() => applyTheme(NEXT[theme])}
-      className="inline-flex cursor-pointer items-center gap-[7px] rounded-full border border-rule-strong px-3 py-1.5 text-[0.85rem] font-semibold text-ink-soft hover:bg-surface hover:text-ink"
+      className="quiet min-w-14 justify-end px-2 text-[0.875rem]"
       aria-label={`Colour theme: ${LABEL[theme]}. Switch to ${LABEL[NEXT[theme]]}.`}
     >
-      <span
-        aria-hidden="true"
-        className="size-3 rounded-full bg-[linear-gradient(90deg,var(--lead)_50%,var(--build)_50%)]"
-      />
-      <span className="hidden sm:inline">{LABEL[theme]}</span>
+      {LABEL[theme]}
     </button>
   );
 }
