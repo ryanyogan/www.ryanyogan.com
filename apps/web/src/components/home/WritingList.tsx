@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import { writingPosts } from "~/lib/content";
-import { BlockHead } from "./BlockHead";
 
 /** The posts shown on Home, newest first. Everything else is on /writing. */
 const homeSlugs = new Set([
@@ -13,43 +12,38 @@ const homeSlugs = new Set([
 ]);
 
 function monthYear(date: string): string {
-  return new Date(date).toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 export function WritingList() {
   const posts = writingPosts.filter((post) => homeSlugs.has(post.slug));
 
   return (
-    <section aria-labelledby="wr-h" className="pt-[clamp(52px,7vw,88px)]">
-      <BlockHead id="wr-h" title="Writing">
-        <p className="max-w-[34em] text-muted">
-          Build logs, one retraction, and what I learned running teams.{" "}
-          <Link to="/writing" className="link font-semibold whitespace-nowrap text-ink">
-            All writing &rarr;
-          </Link>
+    <section aria-labelledby="wr-h" className="row">
+      <div className="gut">
+        <h2 id="wr-h" className="lab">
+          Writing
+        </h2>
+        <p className="gnote">
+          Build logs and what I learned running teams. <Link to="/writing">All writing</Link>
         </p>
-      </BlockHead>
-
-      <ol>
-        {posts.map((post) => (
-          <li
-            key={post.slug}
-            className="grid grid-cols-1 items-baseline gap-x-5 border-b border-rule py-[13px] md:grid-cols-[7rem_minmax(0,1fr)] md:gap-y-1"
-          >
-            <span className="font-mono text-[0.78rem] tracking-[0.06em] text-muted uppercase">
-              {monthYear(post.date)}
-            </span>
-            <Link
-              to="/writing/$slug"
-              params={{ slug: post.slug }}
-              data-kb-item
-              className="link justify-self-start font-serif text-[1.22rem] leading-[1.25] decoration-rule-strong"
-            >
-              {post.title}
-            </Link>
-          </li>
-        ))}
-      </ol>
+      </div>
+      <div className="col">
+        <ol className="wlist">
+          {posts.map((post) => (
+            <li key={post.slug}>
+              <time dateTime={post.isoDate}>{monthYear(post.isoDate)}</time>
+              <Link to="/writing/$slug" params={{ slug: post.slug }} data-kb-item>
+                {post.title}
+              </Link>
+            </li>
+          ))}
+        </ol>
+      </div>
     </section>
   );
 }
