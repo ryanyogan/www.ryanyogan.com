@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import type { APIRequestContext, Page } from "@playwright/test";
 import { ADMIN_ORIGIN, GITHUB_STUB, adminFunctionIds, draft, expect, test } from "./fixtures";
 
@@ -112,6 +113,12 @@ async function publicHtml(request: APIRequestContext, path: string) {
   return { status: response.status(), html: await response.text() };
 }
 
+/** The edge-cache status of a public page: MISS (rendered), HIT, STALE, or null (not cacheable). */
+async function cacheStatus(request: APIRequestContext, path: string) {
+  const response = await request.get(`${ADMIN_ORIGIN}${path}`);
+  return response.headers()["x-cache"] ?? null;
+}
+
 async function save(page: Page) {
   await page.getByRole("button", { name: "Save changes" }).click();
   await expect(page.getByRole("status")).toContainText("Saved");
@@ -216,15 +223,35 @@ test.describe("signed in (local bypass, test-only database)", () => {
   });
 
   test("publish it: it appears on /projects with no rebuild", async ({ page, request }) => {
+    // Both lists are in the edge cache without the widget, and the draft's 404 is not: a
+    // draft never enters the cache however often it is asked for.
+    for (const path of ["/", "/projects"]) {
+      await cacheStatus(request, path);
+      expect(await cacheStatus(request, path), path).toBe("HIT");
+      expect((await publicHtml(request, path)).html, path).not.toContain(widget.title);
+    }
+    for (let i = 0; i < 2; i += 1) {
+      const response = await request.get(`${ADMIN_ORIGIN}/projects/${widget.slug}`);
+      expect(response.status()).toBe(404);
+      expect(response.headers()["x-cache"]).toBeUndefined();
+      expect(response.headers()["cache-control"]).toBe("no-store");
+    }
+
     await gotoAdmin(page, `/admin/projects/${widget.slug}`);
     await page.getByLabel("Published").check();
     await save(page);
 
+    // The save purged them: the very next request is rendered from D1, well inside the TTL.
+    const response = await request.get(`${ADMIN_ORIGIN}/projects`);
+    expect(response.headers()["x-cache"]).toBe("MISS");
+    expect(await response.text()).toContain(widget.title);
+    expect(await cacheStatus(request, "/")).toBe("MISS");
     const list = await publicHtml(request, "/projects");
     expect(list.html).toContain(widget.title);
     const detail = await publicHtml(request, `/projects/${widget.slug}`);
     expect(detail.status).toBe(200);
     expect(detail.html).toContain("Widget heading zq4");
+    expect(await cacheStatus(request, `/projects/${widget.slug}`)).toBe("HIT");
 
     await page.goto(`${ADMIN_ORIGIN}/projects`);
     await expect(page.getByRole("link", { name: widget.title, exact: true })).toBeVisible();
@@ -232,7 +259,6 @@ test.describe("signed in (local bypass, test-only database)", () => {
 
   test("edit it: the public pages show the new text", async ({ page, request }) => {
     await gotoAdmin(page, `/admin/projects/${widget.slug}`);
-    await expect(page.getByLabel("Slug")).toHaveAttribute("readonly", "");
     await page.getByLabel("Title").fill(widget.renamed);
     await page.getByLabel("Status label").fill("Zq4 label");
     await page.getByLabel("Live URL").fill("https://example.com/zephyr");
@@ -243,6 +269,57 @@ test.describe("signed in (local bypass, test-only database)", () => {
     expect(list.html).toContain(widget.renamed);
     expect(list.html).toContain("Zq4 label");
     expect(list.html).toContain("https://example.com/zephyr");
+    // The detail page was cached by the previous test; the edit purged it too.
+    const detail = await request.get(`${ADMIN_ORIGIN}/projects/${widget.slug}`);
+    expect(detail.headers()["x-cache"]).toBe("MISS");
+    expect(await detail.text()).toContain(widget.renamed);
+  });
+
+  test("change its slug: validated, unique, and the old URL is a 404", async ({
+    page,
+    request,
+  }) => {
+    const moved = `${widget.slug}-moved`;
+    await gotoAdmin(page, `/admin/projects/${widget.slug}`);
+    const slug = page.getByLabel("Slug");
+    const saveButton = page.getByRole("button", { name: "Save changes" });
+
+    await slug.fill("Not A Slug");
+    await saveButton.click();
+    await expect(
+      page.getByText("Lower-case letters, digits and single hyphens only"),
+    ).toBeVisible();
+    await slug.fill("perfumery");
+    await saveButton.click();
+    await expect(page.getByText("That slug is already in use.")).toBeVisible();
+    // Neither attempt changed anything.
+    expect((await publicHtml(request, `/projects/${widget.slug}`)).status).toBe(200);
+    await gotoAdmin(page, "/admin");
+    await expect(page.locator('li[data-slug="perfumery"]')).not.toContainText(widget.renamed);
+    await gotoAdmin(page, `/admin/projects/${widget.slug}`);
+
+    await slug.fill(moved);
+    await saveButton.click();
+    await expect(page).toHaveURL(`${ADMIN_ORIGIN}/admin/projects/${moved}`);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(`Edit ${widget.renamed}`);
+
+    // No redirect: the old address is gone (it was cached a moment ago), the new one is live.
+    const old = await request.get(`${ADMIN_ORIGIN}/projects/${widget.slug}`, { maxRedirects: 0 });
+    expect(old.status()).toBe(404);
+    expect((await request.get(`${ADMIN_ORIGIN}/admin/projects/${widget.slug}`)).status()).toBe(404);
+    const live = await publicHtml(request, `/projects/${moved}`);
+    expect(live.status).toBe(200);
+    expect(live.html).toContain(widget.renamed);
+    const list = (await publicHtml(request, "/projects")).html;
+    expect(list).toContain(`href="/projects/${moved}"`);
+    expect(list).not.toContain(`href="/projects/${widget.slug}"`);
+
+    // Back again for the tests below; the first name is free to reuse.
+    await page.getByLabel("Slug").fill(widget.slug);
+    await page.getByRole("button", { name: "Save changes" }).click();
+    await expect(page).toHaveURL(`${ADMIN_ORIGIN}/admin/projects/${widget.slug}`);
+    expect((await publicHtml(request, `/projects/${moved}`)).status).toBe(404);
+    expect((await publicHtml(request, `/projects/${widget.slug}`)).status).toBe(200);
   });
 
   test("editing a seeded project marks it manual", async ({ page }) => {
@@ -297,6 +374,50 @@ test.describe("signed in (local bypass, test-only database)", () => {
 
     const response = await request.get(`${ADMIN_ORIGIN}/admin/projects/${widget.slug}`);
     expect(response.status()).toBe(404);
+  });
+
+  test("a deleted seed project stays deleted when the seed is run again", async ({
+    page,
+    request,
+  }) => {
+    const seeded = { slug: "omatop", title: "Omatop" };
+    expect((await publicHtml(request, `/projects/${seeded.slug}`)).status).toBe(200);
+    expect(await cacheStatus(request, `/projects/${seeded.slug}`)).toBe("HIT");
+
+    await gotoAdmin(page, `/admin/projects/${seeded.slug}`);
+    await page.getByRole("button", { name: "Delete project" }).click();
+    await page.getByRole("button", { name: "Yes, delete it" }).click();
+    await expect(page).toHaveURL(`${ADMIN_ORIGIN}/admin`);
+    expect((await publicHtml(request, `/projects/${seeded.slug}`)).status).toBe(404);
+
+    // The owner's `db:seed:local`, against this preview's database (db/seed.sql was written
+    // by `pnpm db:e2e`). It runs in another process, so the Worker's cache is not purged:
+    // asking with an unknown query parameter skips the cache and reads D1.
+    execFileSync(
+      "pnpm",
+      [
+        "exec",
+        "wrangler",
+        "d1",
+        "execute",
+        "DB",
+        "--local",
+        "--persist-to",
+        ".wrangler/e2e-admin",
+        "--file",
+        "db/seed.sql",
+      ],
+      { stdio: "pipe" },
+    );
+    expect((await publicHtml(request, `/projects/${seeded.slug}?fresh=1`)).status).toBe(404);
+    expect((await publicHtml(request, "/projects?fresh=1")).html).not.toContain(
+      `href="/projects/${seeded.slug}"`,
+    );
+    // The seed did run: an untouched seed row is still there, and the edited one kept its edit.
+    expect((await publicHtml(request, "/projects/lincoln-project?fresh=1")).status).toBe(200);
+    await gotoAdmin(page, "/admin");
+    await expect(page.locator(`li[data-slug="${seeded.slug}"]`)).toHaveCount(0);
+    await expect(page.locator('li[data-slug="perfumery"]')).toContainText("Source: manual");
   });
 
   // --- GitHub import. The Worker's GITHUB_API_BASE points at e2e/github-stub.mjs (five

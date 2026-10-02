@@ -26,6 +26,7 @@ import { repoToDraft } from "./github-import";
 import { AiDraftError, cooldownLeft, draftProject, resolveRunner, type AiDraft } from "./ai";
 import { devBypassApplies, type AdminVars } from "./guard";
 import { adminRead, adminWrite } from "./middleware";
+import { purgeProjectPages } from "../page-cache-edge";
 import { SLUG_PATTERN, validateProjectInput, type FieldErrors } from "./validate";
 
 // Every admin server function. Each one carries `adminRead` or `adminWrite`, which verify
@@ -60,10 +61,14 @@ export const adminCreateProject = createServerFn({ method: "POST" })
     const taken = { ok: false as const, errors: { slug: "That slug is already in use." } };
     if (await projectExists(env.DB, checked.value.slug)) return taken;
     if (!(await createProject(env.DB, checked.value))) return taken;
+    await purgeProjectPages(getRequest(), checked.value.slug);
     return { ok: true, slug: checked.value.slug };
   });
 
-/** Saves every editable field of an existing project. The slug in the payload names the row. */
+/**
+ * Saves every editable field of an existing project. `originalSlug` names the row; when
+ * `slug` differs from it the project is renamed (the old URL becomes a 404, no redirect).
+ */
 export const adminUpdateProject = createServerFn({ method: "POST" })
   .middleware([adminWrite])
   .inputValidator((input: Record<string, unknown>) => input)
@@ -71,11 +76,18 @@ export const adminUpdateProject = createServerFn({ method: "POST" })
     const checked = validateProjectInput(data);
     if (!checked.ok) return checked;
     const { slug, ...fields } = checked.value;
+    // Absent (an older client): the slug in the payload names the row, as before.
+    const original = data.originalSlug === undefined ? slug : slugOf(data.originalSlug);
+    const missing = { ok: false as const, errors: { slug: "No project has that slug any more." } };
+    if (!original) return missing;
     // `aiAccepted` is the editor saying this save contains text taken from an AI draft.
     const aiAccepted = data.aiAccepted === true;
-    if (!(await updateProject(env.DB, slug, fields, { aiAccepted }))) {
-      return { ok: false, errors: { slug: "No project has that slug any more." } };
+    const outcome = await updateProject(env.DB, original, fields, { aiAccepted, newSlug: slug });
+    if (outcome === "missing") return missing;
+    if (outcome === "taken") {
+      return { ok: false, errors: { slug: "That slug is already in use." } };
     }
+    await purgeProjectPages(getRequest(), original, slug);
     return { ok: true, slug };
   });
 
@@ -86,14 +98,20 @@ export const adminMoveProject = createServerFn({ method: "POST" })
     slug: slugOf(input?.slug),
     direction: input?.direction === "up" ? ("up" as const) : ("down" as const),
   }))
-  .handler(async ({ data }) => ({
-    ok: data.slug ? await moveProject(env.DB, data.slug, data.direction) : false,
-  }));
+  .handler(async ({ data }) => {
+    const ok = data.slug ? await moveProject(env.DB, data.slug, data.direction) : false;
+    if (ok) await purgeProjectPages(getRequest(), data.slug);
+    return { ok };
+  });
 
 export const adminDeleteProject = createServerFn({ method: "POST" })
   .middleware([adminWrite])
   .inputValidator((slug: string) => slugOf(slug))
-  .handler(async ({ data: slug }) => ({ ok: slug ? await deleteProject(env.DB, slug) : false }));
+  .handler(async ({ data: slug }) => {
+    const ok = slug ? await deleteProject(env.DB, slug) : false;
+    if (ok) await purgeProjectPages(getRequest(), slug);
+    return { ok };
+  });
 
 // --- GitHub import ------------------------------------------------------------------------
 // Public repositories only (see ./github.ts). No function here publishes anything: an
@@ -188,6 +206,9 @@ export const adminImportGithubRepo = createServerFn({ method: "POST" })
           error: `A project with the slug "${slug}" already exists. Rename or delete it first.`,
         };
       }
+      // An import is a draft, so nothing public changed; purging keeps the rule simple
+      // (every write purges) and costs three cache deletes.
+      await purgeProjectPages(getRequest(), slug);
       return { ok: true, slug, alreadyImported: false };
     } catch (error) {
       return githubFailure(error);
@@ -210,6 +231,7 @@ export const adminRefreshFromGithub = createServerFn({ method: "POST" })
     try {
       const repo = await getRepo(githubConfig(), project.repoFullName);
       await refreshRepoStats(env.DB, slug, { stars: repo.stars, repoPushedAt: repo.pushedAt });
+      await purgeProjectPages(getRequest(), slug);
       return { ok: true, stars: repo.stars, pushedAt: repo.pushedAt };
     } catch (error) {
       return githubFailure(error);

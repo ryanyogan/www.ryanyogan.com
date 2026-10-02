@@ -131,7 +131,7 @@ export function ProjectForm({
     setAiBusy(true);
     setAiError("");
     try {
-      const result = await adminDraftWithAi({ data: values.slug });
+      const result = await adminDraftWithAi({ data: initial.slug });
       if (result.ok) setProposal(result.draft);
       else setAiError(result.error);
     } catch {
@@ -162,7 +162,13 @@ export function ProjectForm({
     event.preventDefault();
     setBusy(true);
     setMessage(null);
-    const payload = { ...values, tech: values.tech.split(","), aiAccepted };
+    const payload = {
+      ...values,
+      tech: values.tech.split(","),
+      aiAccepted,
+      // The row being edited: `slug` may now hold a new name for it.
+      originalSlug: mode === "edit" ? initial.slug : undefined,
+    };
     try {
       const result =
         mode === "create"
@@ -182,6 +188,15 @@ export function ProjectForm({
         await router.navigate({ to: "/admin/projects/$slug", params: { slug: result.slug } });
         return;
       }
+      if (result.slug !== initial.slug) {
+        // Renamed: the old admin URL no longer exists.
+        await router.navigate({
+          to: "/admin/projects/$slug",
+          params: { slug: result.slug },
+          replace: true,
+        });
+        return;
+      }
       await router.invalidate();
       setAiAccepted(false);
       setMessage({ kind: "ok", text: `Saved at ${new Date().toLocaleTimeString()}.` });
@@ -196,7 +211,7 @@ export function ProjectForm({
     setBusy(true);
     setMessage(null);
     try {
-      await adminDeleteProject({ data: values.slug });
+      await adminDeleteProject({ data: initial.slug });
       await router.navigate({ to: "/admin" });
     } catch {
       setMessage({ kind: "error", text: "Not deleted: the request failed." });
@@ -326,7 +341,7 @@ export function ProjectForm({
             hint={
               mode === "create"
                 ? "Lower-case letters, digits and hyphens. Becomes /projects/<slug>."
-                : "Fixed once created."
+                : "Changing it moves the page: the old /projects/<slug> address becomes a 404."
             }
             error={err("slug")}
           >
@@ -335,7 +350,6 @@ export function ProjectForm({
                 {...a}
                 className="adm-input font-mono"
                 value={values.slug}
-                readOnly={mode === "edit"}
                 autoCapitalize="none"
                 spellCheck={false}
                 onChange={(e) => set("slug", e.target.value)}
@@ -515,7 +529,7 @@ export function ProjectForm({
           Back to list
         </Link>
         {mode === "edit" && values.published && (
-          <a href={`/projects/${values.slug}`} className="link font-semibold">
+          <a href={`/projects/${initial.slug}`} className="link font-semibold">
             View public page
           </a>
         )}

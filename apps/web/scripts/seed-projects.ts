@@ -59,7 +59,7 @@ const rows = readdirSync(contentDir)
       fail(slug, `"status" must be one of ${PROJECT_STATUSES.join(", ")}`);
     }
     const tech = Array.isArray(data.tech) ? data.tech : [];
-    return [
+    const values = [
       slug,
       title,
       tagline,
@@ -77,17 +77,19 @@ const rows = readdirSync(contentDir)
     ]
       .map(sql)
       .join(", ");
+    return { slug, values };
   });
 
 // Re-running is safe: a row is only overwritten while it is still an untouched
-// seed row (source = 'seed'), and `published` is left as it is.
+// seed row (source = 'seed'), `published` is left as it is, and a slug the owner deleted
+// or renamed away in /admin (table `deleted_seed_slugs`, migration 0002) is skipped.
 const updates = columns
   .filter((column) => !["slug", "published", "source"].includes(column))
   .map((column) => `  ${column} = excluded.${column}`);
 
 const statements = rows.map(
-  (values) =>
-    `INSERT INTO projects (${columns.join(", ")})\nVALUES (${values})\nON CONFLICT (slug) DO UPDATE SET\n${updates.join(",\n")},\n  updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')\nWHERE projects.source = 'seed';`,
+  ({ slug, values }) =>
+    `INSERT INTO projects (${columns.join(", ")})\nSELECT ${values}\nWHERE NOT EXISTS (SELECT 1 FROM deleted_seed_slugs WHERE slug = ${sql(slug)})\nON CONFLICT (slug) DO UPDATE SET\n${updates.join(",\n")},\n  updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')\nWHERE projects.source = 'seed';`,
 );
 
 mkdirSync(fileURLToPath(new URL("../db", import.meta.url)), { recursive: true });

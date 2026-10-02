@@ -19,7 +19,18 @@ pnpm build
   shows without a redeploy. Only rows with `published = 1` are ever read by a public route.
 - `apps/web/content/projects/*.md` stays in the repo as the seed source. `db:seed:generate` turns it into
   `apps/web/db/seed.sql` (git-ignored): one upsert per file, `published = 1`, `source = 'seed'`. Re-running
-  the seed only overwrites rows whose `source` is still `'seed'` and never changes `published`.
+  the seed only overwrites rows whose `source` is still `'seed'`, never changes `published`, and skips
+  every slug in `deleted_seed_slugs` (migration 0002): deleting a project in `/admin`, or renaming its slug,
+  records the old slug there, so the seed does not bring it back. To restore one, delete its row from
+  that table and run the seed again.
+- Those three pages are kept in the edge cache by the Worker itself (`caches.default`,
+  `apps/web/src/lib/page-cache.ts`): fresh for 60 seconds, then served once more while a new copy is
+  rendered, for up to 5 more minutes. The response says which happened in `x-cache`
+  (`MISS`, `HIT`, `STALE`, `BYPASS`). Every admin write purges `/`, `/projects` and the project's page, so
+  an edit shows on the next request. Two limits: the purge only reaches the Cloudflare data centre that
+  handled the write (elsewhere a copy lives out its 6 minutes at most), and a change made straight to D1
+  (`wrangler d1 execute`, the seed) purges nothing. Never cached: anything but a 200, any request carrying
+  the Access cookie or token, `/admin`, server functions. `vite dev` does not cache at all.
 
 Local dev, `vite preview` and the tests use a local D1 (miniflare, under `apps/web/.wrangler`); none of them
 needs a Cloudflare account. `pnpm typecheck` runs `wrangler types` first to generate the `Env` types
@@ -36,6 +47,10 @@ pnpm exec wrangler d1 migrations apply DB --remote
 pnpm db:seed:generate
 pnpm exec wrangler d1 execute DB --remote --file db/seed.sql
 ```
+
+A deploy that adds a migration (0002, `deleted_seed_slugs`, is not applied remotely yet) needs the first
+command run before `pnpm run deploy`: the admin's delete and slug change write to that table, and the
+generated seed reads it.
 
 Local D1 files are keyed by `database_id`; when that id changes, the next `pnpm dev` sets the new local
 database up.

@@ -1,6 +1,7 @@
 import { createMiddleware, createStart } from "@tanstack/react-start";
 import { adminFunctions } from "~/lib/admin/admin.functions";
 import { adminRequestGuard } from "~/lib/admin/middleware";
+import { pageCache } from "~/lib/page-cache-edge";
 
 const adminFunctionPaths = new Set(adminFunctions.map((fn) => fn.url));
 
@@ -20,6 +21,8 @@ const noStoreOnError = createMiddleware().server(async ({ next }) => {
 // Global request middleware: runs before the router for every request the Worker handles.
 export const startInstance = createStart(() => ({
   requestMiddleware: [
+    // Outermost: it stores the final response, after `noStoreOnError` has marked errors.
+    pageCache,
     noStoreOnError,
     adminRequestGuard((pathname) => adminFunctionPaths.has(pathname)),
   ],

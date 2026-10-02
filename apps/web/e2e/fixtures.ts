@@ -69,9 +69,9 @@ export const test = base.extend<{ consoleErrors: string[] }>({
     async ({ page }, use) => {
       const errors: string[] = [];
       page.on("console", (message) => {
-        if (message.type() === "error") errors.push(message.text());
+        if (message.type() === "error") errors.push(`${page.url()}: ${message.text()}`);
       });
-      page.on("pageerror", (error) => errors.push(String(error)));
+      page.on("pageerror", (error) => errors.push(`${page.url()}: ${String(error)}`));
       await use(errors);
       expect(errors, "console errors").toEqual([]);
     },

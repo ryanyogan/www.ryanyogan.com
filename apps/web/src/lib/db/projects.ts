@@ -227,22 +227,35 @@ export async function createProject(
   }
 }
 
+/** Records that the owner removed `slug`, so the seed never brings it back. */
+function tombstone(db: D1Database, slug: string): D1PreparedStatement {
+  return db
+    .prepare(`INSERT INTO deleted_seed_slugs (slug) VALUES (?1) ON CONFLICT (slug) DO NOTHING`)
+    .bind(slug);
+}
+
 /**
- * Overwrites the editable columns of `slug` (the slug itself never changes), marks a seed
- * row `source = 'manual'` so the seed stops overwriting it (an imported row stays 'github',
- * the seed never touches those), and stamps `updated_at`. A project
- * that moves group goes to the end of the new one. Returns false for an unknown slug.
+ * Overwrites the editable columns of `slug`, marks a seed row `source = 'manual'` so the
+ * seed stops overwriting it (an imported row stays 'github', the seed never touches those),
+ * and stamps `updated_at`. A project that moves group goes to the end of the new one.
+ *
+ * `options.newSlug` renames the project. The old slug is tombstoned in the same batch, so
+ * the seed does not recreate a renamed seed project under its old name; nothing redirects,
+ * the old URL is simply gone. Returns "missing" for an unknown slug and "taken" when the
+ * new slug belongs to another project.
  */
 export async function updateProject(
   db: D1Database,
   slug: string,
   input: Omit<ProjectInput, "slug">,
-  options: { aiAccepted?: boolean } = {},
-): Promise<boolean> {
+  options: { aiAccepted?: boolean; newSlug?: string } = {},
+): Promise<"ok" | "missing" | "taken"> {
+  const newSlug = options.newSlug ?? slug;
   // `aiAccepted`: the owner took text from "Draft with AI" into this save, so stamp it.
-  const result = await db
+  const update = db
     .prepare(
       `UPDATE projects SET
+         slug = ?14,
          title = ?2, tagline = ?3, summary = ?4, body = ?5, tech = ?6,
          sort_order = CASE WHEN "group" = ?7 THEN sort_order ELSE
            (SELECT COALESCE(MAX(sort_order), -1) + 1 FROM projects WHERE "group" = ?7) END,
@@ -265,9 +278,18 @@ export async function updateProject(
       input.live,
       input.published ? 1 : 0,
       options.aiAccepted ? 1 : 0,
-    )
-    .run();
-  return result.meta.changes > 0;
+      newSlug,
+    );
+  if (newSlug === slug) return (await update.run()).meta.changes > 0 ? "ok" : "missing";
+  if (!(await projectExists(db, slug))) return "missing";
+  try {
+    // One transaction: a clash on the new slug rolls the tombstone back too.
+    await db.batch([tombstone(db, slug), update]);
+    return "ok";
+  } catch (error) {
+    if (String(error).includes("UNIQUE constraint failed")) return "taken";
+    throw error;
+  }
 }
 
 /**
@@ -307,10 +329,21 @@ export async function moveProject(
   return true;
 }
 
-/** Deletes a project. Returns false for an unknown slug. */
+/**
+ * Deletes a project and tombstones its slug, so re-running the seed does not resurrect a
+ * seed project the owner deleted. Returns false for an unknown slug.
+ */
 export async function deleteProject(db: D1Database, slug: string): Promise<boolean> {
-  const result = await db.prepare(`DELETE FROM projects WHERE slug = ?1`).bind(slug).run();
-  return result.meta.changes > 0;
+  const [, removed] = await db.batch([
+    db
+      .prepare(
+        `INSERT INTO deleted_seed_slugs (slug) SELECT slug FROM projects WHERE slug = ?1
+         ON CONFLICT (slug) DO NOTHING`,
+      )
+      .bind(slug),
+    db.prepare(`DELETE FROM projects WHERE slug = ?1`).bind(slug),
+  ]);
+  return removed.meta.changes > 0;
 }
 
 /** The slug of the project imported from `repoFullName`, or null. */

@@ -18,6 +18,8 @@ order: 1
 
 Open-source MCP server connecting AI assistants to the Fizzy kanban, published on npm as `fizzy-do-mcp`. 67 tools across 12 categories, including composite "project manager" tools. Version 0.5 deliberately simplified it to local-first. Turn your AI assistant into a full-featured project manager that can create, update, and organize work directly in Fizzy.
 
+Install it from npm: [fizzy-do-mcp](https://www.npmjs.com/package/fizzy-do-mcp).
+
 ## Tool Categories
 
 67 tools across 12 categories, including:
