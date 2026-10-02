@@ -9,7 +9,9 @@ import {
   pageTitle,
   personRef,
   seo,
+  imageUrl,
 } from "~/lib/seo";
+import { staticOgImage } from "~/lib/og-images";
 
 export const Route = createFileRoute("/writing/$slug")({
   component: WritingDetail,
@@ -25,11 +27,13 @@ export const Route = createFileRoute("/writing/$slug")({
     if (!post) return {};
     const path = `/writing/${post.slug}`;
     const published = isoDateTime(post.isoDate);
+    const image = staticOgImage(path);
     return seo({
       title: pageTitle(post.title),
       ogTitle: post.title,
       description: post.excerpt,
       path,
+      image,
       type: "article",
       meta: [
         // ogp.me: article:author is a profile URL, not a name.
@@ -45,6 +49,7 @@ export const Route = createFileRoute("/writing/$slug")({
           url: absoluteUrl(path),
           // Posts record one date; there is no modification date to state.
           datePublished: published,
+          image: imageUrl(image.path),
           author: personRef(),
           mainEntityOfPage: { "@type": "WebPage", "@id": absoluteUrl(path) },
           isPartOf: { "@id": WEBSITE_ID },

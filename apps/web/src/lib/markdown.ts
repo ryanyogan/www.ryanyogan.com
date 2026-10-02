@@ -10,6 +10,8 @@
 // attributes and URL schemes, and the last step replaces the attributes of every element it
 // knows with a fixed set (no classes, apart from the highlighter's own on code). See markdown.test.ts.
 import type { Element, ElementContent, Properties, Root, RootContent } from "hast";
+import elixir from "highlight.js/lib/languages/elixir";
+import { common } from "lowlight";
 import rehypeHighlight from "rehype-highlight";
 import rehypeSanitize from "rehype-sanitize";
 import rehypeStringify from "rehype-stringify";
@@ -138,7 +140,9 @@ function build() {
       .use(rehypeRawAsText)
       .use(rehypeSanitize)
       // After the sanitiser: these two only add attributes this file controls.
-      .use(rehypeHighlight)
+      // The default set has no Elixir, which most code on this site is: its blocks got the
+      // language class and no colours.
+      .use(rehypeHighlight, { languages: { ...common, elixir } })
       .use(rehypeProseStyle)
       .use(rehypeStringify)
       .freeze()

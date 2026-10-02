@@ -3,6 +3,7 @@ import { projectGroups } from "@repo/shared";
 import { ProjectLinks } from "~/components/ProjectLinks";
 import { Prose } from "~/components/Prose";
 import { StatusPill } from "~/components/StatusPill";
+import { projectOgImage } from "~/lib/og-images";
 import { PROJECT_PAGE_CACHE, fetchProject } from "~/lib/projects.functions";
 import { breadcrumbNode, pageTitle, projectNode, seo } from "~/lib/seo";
 
@@ -22,12 +23,14 @@ export const Route = createFileRoute("/projects/$slug")({
     if (!loaderData) return {};
     const { project } = loaderData;
     const path = `/projects/${project.slug}`;
+    const image = projectOgImage(project);
     return seo({
       title: pageTitle(project.title),
       description: project.tagline,
       path,
+      image,
       graph: [
-        projectNode(project),
+        projectNode({ ...project, image: image.path }),
         breadcrumbNode([
           { name: "Projects", path: "/projects" },
           { name: project.title, path },

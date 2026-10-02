@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { writingPosts } from "~/lib/content";
 import type { WritingPost } from "~/lib/content";
 import { collectionNode, pageTitle, seo } from "~/lib/seo";
+import { staticOgImage } from "~/lib/og-images";
 
 const description = "Build logs, one retraction, and what I learned running teams.";
 
@@ -11,6 +12,7 @@ export const Route = createFileRoute("/writing/")({
       title: pageTitle("Writing"),
       description,
       path: "/writing",
+      image: staticOgImage("/writing"),
       graph: [
         collectionNode({
           name: pageTitle("Writing"),

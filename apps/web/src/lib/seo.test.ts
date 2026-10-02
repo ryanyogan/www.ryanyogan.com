@@ -59,7 +59,12 @@ describe("structured data", () => {
 
 describe("seo", () => {
   it("uses the same URL for canonical and og:url", () => {
-    const head = seo({ title: "T", description: "D", path: "/projects/" });
+    const head = seo({
+      title: "T",
+      description: "D",
+      path: "/projects/",
+      image: { path: "/og/projects/x.png?v=1", alt: "A card" },
+    });
     expect(head.links).toEqual([{ rel: "canonical", href: "https://ryanyogan.com/projects" }]);
     expect(head.meta).toContainEqual({
       property: "og:url",
@@ -67,5 +72,26 @@ describe("seo", () => {
     });
     expect(head.meta).toContainEqual({ property: "og:type", content: "website" });
     expect(head.scripts).toEqual([]);
+  });
+
+  it("names the preview image with an absolute URL, its size, type and alt text", () => {
+    const head = seo({
+      title: "T",
+      description: "D",
+      path: "/work",
+      image: { path: "/og/projects/x.png?v=1", alt: "A card" },
+    });
+    const url = "https://ryanyogan.com/og/projects/x.png?v=1";
+    for (const tag of [
+      { property: "og:image", content: url },
+      { property: "og:image:type", content: "image/png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "A card" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: url },
+    ]) {
+      expect(head.meta).toContainEqual(tag);
+    }
   });
 });

@@ -3,6 +3,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import { ogImages } from "./vite-plugin-og";
 import { posts } from "./vite-plugin-posts";
 
 const localStateDir = process.env.LOCAL_STATE_DIR;
@@ -15,6 +16,8 @@ function isDynamic(path: string): boolean {
     clean.startsWith("/projects/") ||
     // Lists the published projects, so the Worker renders it too (src/routes/sitemap[.]xml.ts).
     clean === "/sitemap.xml" ||
+    // A project's preview image, drawn by the Worker (src/routes/og.projects.$file.ts).
+    clean.startsWith("/og/") ||
     // Never prerendered: the admin is rendered per request, behind the owner check.
     clean === "/admin" ||
     clean.startsWith("/admin/")
@@ -38,6 +41,7 @@ export default defineConfig(({ command, isPreview }) => ({
   },
   plugins: [
     posts(),
+    ogImages(),
     cloudflare({
       viteEnvironment: { name: "ssr" },
       // Local D1 lives in .wrangler/state, where `wrangler d1 ... --local` also writes.

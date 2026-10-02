@@ -3,6 +3,7 @@ import { contactEmail, workSections } from "@repo/shared";
 import type { ReactNode } from "react";
 import { AgentLoop } from "~/components/PageArt";
 import { WEBSITE_ID, absoluteUrl, pageTitle, personNode, seo } from "~/lib/seo";
+import { staticOgImage } from "~/lib/og-images";
 
 export const Route = createFileRoute("/work")({
   head: () =>
@@ -11,6 +12,7 @@ export const Route = createFileRoute("/work")({
       description:
         "How to work with Ryan Yogan: how he leads, what he has scaled, what he is building now, what he is open to, and a compact timeline.",
       path: "/work",
+      image: staticOgImage("/work"),
       type: "profile",
       meta: [
         { property: "profile:first_name", content: "Ryan" },

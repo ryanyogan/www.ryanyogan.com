@@ -3,9 +3,11 @@ import type { APIRequestContext } from "@playwright/test";
 import {
   BROKEN_ORIGIN,
   CLIENT_DIR,
+  OG_MAX_BYTES,
   SITE_URL,
   draft,
   expect,
+  pngSize,
   postSlugs,
   projectSlugs,
   publicRoutes,
@@ -266,6 +268,97 @@ test("llms.txt is short, links every post and states nothing private", async ({ 
     expect(text).toContain(`(${SITE_URL}${path})`);
   expect(text).not.toMatch(/gmail\.com|\/admin|<|procore|sonian/i);
   expect(text).not.toContain(draft.slug);
+});
+
+// --- Preview images -------------------------------------------------------------------------
+
+test("every public route names a 1200x630 PNG preview image that exists", async ({ request }) => {
+  const seen = new Map<string, string>();
+  for (const route of publicRoutes) {
+    const body = await html(request, route);
+    const image = meta(body, "og:image");
+    expect(image, route).toMatch(/^https:\/\/ryanyogan\.com\/og\/[^"]+\.png(\?v=[a-z0-9]+)?$/);
+    expect(meta(body, "og:image:type"), route).toBe("image/png");
+    expect(meta(body, "og:image:width"), route).toBe("1200");
+    expect(meta(body, "og:image:height"), route).toBe("630");
+    expect(meta(body, "og:image:alt"), route).toMatch(/^Ryan Yogan\. \S/);
+    expect(meta(body, "twitter:card"), route).toBe("summary_large_image");
+    expect(meta(body, "twitter:image"), route).toBe(image);
+    expect(meta(body, "twitter:image:alt"), route).toBe(meta(body, "og:image:alt"));
+    expect(`${image} ${meta(body, "og:image:alt")}`, route).not.toMatch(/gmail|procore|sonian/i);
+
+    // Each page has its own card.
+    expect(seen.get(image), `${route} shares its image`).toBeUndefined();
+    seen.set(image, route);
+
+    const path = image.slice(SITE_URL.length);
+    const response = await request.get(path, { maxRedirects: 0 });
+    expect(response.status(), path).toBe(200);
+    expect(response.headers()["content-type"], path).toBe("image/png");
+    const bytes = await response.body();
+    expect(pngSize(bytes), path).toEqual({ width: 1200, height: 630 });
+    expect(bytes.length, path).toBeGreaterThan(5 * 1024);
+    expect(bytes.length, path).toBeLessThan(OG_MAX_BYTES);
+
+    const project = route.startsWith("/projects/");
+    if (project) {
+      // Drawn by the Worker from D1, in the pages' edge cache.
+      expect(path, route).toMatch(new RegExp(`^/og${route}\\.png\\?v=`));
+      expect(["MISS", "HIT", "STALE"], path).toContain(response.headers()["x-cache"]);
+    } else {
+      // Drawn by the build: a file named after its own bytes, kept for good.
+      expect(path, route).toMatch(/\.[0-9a-f]{10}\.png$/);
+      expect(existsSync(`${CLIENT_DIR}${path}`), path).toBe(true);
+      expect(response.headers()["cache-control"], path).toBe("public, max-age=31536000, immutable");
+    }
+
+    // The page's main JSON-LD node names the same image.
+    if (project || route.startsWith("/writing/")) {
+      const main = graphOf(body, route).find((node) => node["@type"] !== "BreadcrumbList");
+      expect(main?.image, route).toBe(image);
+    }
+  }
+});
+
+test("a project image is cached, and exists only for a published project", async ({ request }) => {
+  const path = "/og/projects/lincoln-project.png";
+  const first = await request.get(path);
+  const second = await request.get(`${path}?v=anything`);
+  expect(second.headers()["x-cache"]).toBe("HIT");
+  expect((await second.body()).equals(await first.body())).toBe(true);
+  // Any other query is drawn again, not stored.
+  expect((await request.get(`${path}?w=2`)).headers()["x-cache"]).toBeUndefined();
+
+  for (const missing of [
+    `/og/projects/${draft.slug}.png`,
+    `/og/projects/${draft.slug}.png?v=1`,
+    "/og/projects/no-such-project.png",
+    "/og/projects/lincoln-project",
+    "/og/projects/lincoln-project.jpg",
+    "/og/projects/Lincoln-Project.png",
+  ]) {
+    for (let i = 0; i < 2; i += 1) {
+      const response = await request.get(missing, { maxRedirects: 0 });
+      expect(response.status(), missing).toBe(404);
+      expect(response.headers()["content-type"], missing).not.toContain("image/");
+      expect(response.headers()["cache-control"], missing).toBe("no-store");
+      expect(response.headers()["x-cache"], missing).toBeUndefined();
+    }
+  }
+  // A database failure is an error, not an image, and is not kept.
+  const broken = await request.get(`${BROKEN_ORIGIN}${path}`);
+  expect(broken.status()).toBe(503);
+  expect(broken.headers()["cache-control"]).toBe("no-store");
+});
+
+test("the old SVG image is gone and nothing names it", async ({ request }) => {
+  expect(existsSync(`${CLIENT_DIR}/og-default.svg`)).toBe(false);
+  for (const route of publicRoutes) {
+    expect(await html(request, route), route).not.toContain('.svg"');
+  }
+  // Images are not pages: the sitemap does not list them, and robots.txt does not hide them.
+  expect(await (await request.get("/sitemap.xml")).text()).not.toContain("/og/");
+  expect(await (await request.get("/robots.txt")).text()).not.toContain("/og");
 });
 
 // --- Meta ---------------------------------------------------------------------------------

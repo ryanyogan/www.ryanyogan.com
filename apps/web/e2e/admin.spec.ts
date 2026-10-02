@@ -1,6 +1,15 @@
 import { execFileSync } from "node:child_process";
 import type { APIRequestContext, Page } from "@playwright/test";
-import { ADMIN_ORIGIN, GITHUB_STUB, adminFunctionIds, draft, expect, test } from "./fixtures";
+import {
+  ADMIN_ORIGIN,
+  GITHUB_STUB,
+  OG_MAX_BYTES,
+  adminFunctionIds,
+  draft,
+  expect,
+  pngSize,
+  test,
+} from "./fixtures";
 
 // /admin is not in `routes` (fixtures.ts) on purpose: it has no canonical, is noindex and
 // needs the owner. These tests cover it instead.
@@ -119,6 +128,20 @@ async function cacheStatus(request: APIRequestContext, path: string) {
   return response.headers()["x-cache"] ?? null;
 }
 
+/** A project's preview image as the public gets it. */
+async function ogImage(request: APIRequestContext, slug: string) {
+  const response = await request.get(`${ADMIN_ORIGIN}/og/projects/${slug}.png`);
+  const body = await response.body();
+  return {
+    status: response.status(),
+    type: response.headers()["content-type"] ?? "",
+    cache: response.headers()["x-cache"] ?? null,
+    body,
+  };
+}
+
+const ogImageUrl = (html: string) => /property="og:image" content="([^"]+)"/.exec(html)?.[1];
+
 async function save(page: Page) {
   await page.getByRole("button", { name: "Save changes" }).click();
   await expect(page.getByRole("status")).toContainText("Saved");
@@ -164,6 +187,52 @@ test.describe("signed in (local bypass, test-only database)", () => {
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
       );
       expect(overflow, path).toBeLessThanOrEqual(0);
+    }
+  });
+
+  test("form controls have a border of at least 3:1 against the page in both themes", async ({
+    page,
+  }) => {
+    await gotoAdmin(page, "/admin/projects/new");
+    for (const theme of ["light", "dark"]) {
+      const { ratio, border, token, rule } = await page.evaluate((name) => {
+        const root = document.documentElement;
+        root.classList.remove("light", "dark");
+        root.classList.add(name);
+        const rgb = (colour: string) => {
+          const probe = document.createElement("i");
+          probe.style.color = colour;
+          root.appendChild(probe);
+          const value = getComputedStyle(probe).color;
+          probe.remove();
+          return (value.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+        };
+        const luminance = (colour: string) => {
+          const [r, g, b] = rgb(colour).map((channel) => {
+            const c = channel / 255;
+            return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+          });
+          return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        };
+        const styles = getComputedStyle(root);
+        const token = styles.getPropertyValue("--control-border").trim();
+        const [hi, lo] = [
+          luminance(token),
+          luminance(styles.getPropertyValue("--paper").trim()),
+        ].sort((a, b) => b - a);
+        const input = document.querySelector<HTMLElement>("input.adm-input, textarea.adm-input")!;
+        input.style.transition = "none";
+        return {
+          ratio: (hi + 0.05) / (lo + 0.05),
+          border: rgb(getComputedStyle(input).borderTopColor).join(","),
+          token: rgb(token).join(","),
+          rule: rgb(styles.getPropertyValue("--rule").trim()).join(","),
+        };
+      }, theme);
+      expect(ratio, theme).toBeGreaterThanOrEqual(3);
+      expect(border, theme).toBe(token);
+      // The hairlines between content keep their own, lighter tone.
+      expect(rule, theme).not.toBe(token);
     }
   });
 
@@ -247,11 +316,19 @@ test.describe("signed in (local bypass, test-only database)", () => {
       expect(response.status()).toBe(404);
       expect(response.headers()["x-cache"]).toBeUndefined();
       expect(response.headers()["cache-control"]).toBe("no-store");
+      // Nor is a draft ever drawn.
+      const image = await ogImage(request, widget.slug);
+      expect([image.status, image.cache, image.type.includes("image/")]).toEqual([
+        404,
+        null,
+        false,
+      ]);
     }
 
     await gotoAdmin(page, `/admin/projects/${widget.slug}`);
     await page.getByLabel("Published").check();
     await save(page);
+    expect((await ogImage(request, widget.slug)).status).toBe(200);
 
     // The save purged them: the very next request is rendered from D1, well inside the TTL.
     const response = await request.get(`${ADMIN_ORIGIN}/projects`);
@@ -278,6 +355,13 @@ test.describe("signed in (local bypass, test-only database)", () => {
   });
 
   test("edit it: the public pages show the new text", async ({ page, request }) => {
+    // The preview image with the old title is in the edge cache.
+    await ogImage(request, widget.slug);
+    const before = await ogImage(request, widget.slug);
+    expect([before.status, before.type, before.cache]).toEqual([200, "image/png", "HIT"]);
+    expect(pngSize(before.body)).toEqual({ width: 1200, height: 630 });
+    const urlBefore = ogImageUrl((await publicHtml(request, `/projects/${widget.slug}`)).html);
+
     await gotoAdmin(page, `/admin/projects/${widget.slug}`);
     await page.getByLabel("Title").fill(widget.renamed);
     await page.getByLabel("Status label").fill("Zq4 label");
@@ -292,7 +376,18 @@ test.describe("signed in (local bypass, test-only database)", () => {
     // The detail page was cached by the previous test; the edit purged it too.
     const detail = await request.get(`${ADMIN_ORIGIN}/projects/${widget.slug}`);
     expect(detail.headers()["x-cache"]).toBe("MISS");
-    expect(await detail.text()).toContain(widget.renamed);
+    const html = await detail.text();
+    expect(html).toContain(widget.renamed);
+
+    // So was the image: the next request draws the new title, and the page names a new URL
+    // for it, so a platform that keeps images by URL fetches it again.
+    const after = await ogImage(request, widget.slug);
+    expect([after.status, after.type, after.cache]).toEqual([200, "image/png", "MISS"]);
+    expect(pngSize(after.body)).toEqual({ width: 1200, height: 630 });
+    expect(after.body.length).toBeLessThan(OG_MAX_BYTES);
+    expect(after.body.equals(before.body)).toBe(false);
+    expect(ogImageUrl(html)).toContain(`/og/projects/${widget.slug}.png?v=`);
+    expect(ogImageUrl(html)).not.toBe(urlBefore);
   });
 
   test("a title with </script> cannot break out of the JSON-LD block", async ({
@@ -432,6 +527,9 @@ test.describe("signed in (local bypass, test-only database)", () => {
     expect((await publicHtml(request, "/projects")).html).not.toContain(widget.renamed);
     expect((await publicHtml(request, `/projects/${widget.slug}`)).status).toBe(404);
     expect((await publicHtml(request, "/sitemap.xml")).html).not.toContain(widget.slug);
+    // The image was cached while it was public; unpublishing takes it away at once.
+    const image = await ogImage(request, widget.slug);
+    expect([image.status, image.cache]).toEqual([404, null]);
   });
 
   test("delete it, after a confirmation", async ({ page, request }) => {

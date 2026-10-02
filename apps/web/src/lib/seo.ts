@@ -154,6 +154,8 @@ export function projectNode(project: {
   tagline: string;
   tech: readonly string[];
   github?: string;
+  /** Path of the project's preview image. */
+  image?: string;
 }): JsonLdNode {
   const url = absoluteUrl(`/projects/${project.slug}`);
   const languages = project.tech.filter((name) => LANGUAGES.has(name.toLowerCase()));
@@ -165,6 +167,7 @@ export function projectNode(project: {
     name: project.title,
     description: project.tagline,
     author: personRef(),
+    ...(project.image ? { image: absoluteUrl(project.image) } : {}),
     ...(project.github ? { codeRepository: project.github } : {}),
     ...(project.github && languages.length ? { programmingLanguage: languages } : {}),
     ...(keywords.length ? { keywords: keywords.join(", ") } : {}),
@@ -203,15 +206,46 @@ type MetaTag =
   | { name: string; content: string }
   | { property: string; content: string };
 
+/** A page's social preview image: a 1200x630 PNG on this site, and what it shows. */
+export interface SeoImage {
+  /** Site path, query included (src/lib/og-images.ts). */
+  path: string;
+  alt: string;
+}
+
+export const OG_IMAGE_WIDTH = 1200;
+export const OG_IMAGE_HEIGHT = 630;
+
+/** A site path with its query kept (absoluteUrl is for page URLs, which have none). */
+export function imageUrl(path: string): string {
+  return `${SITE_URL}${path}`;
+}
+
+/** The Open Graph and Twitter tags for a preview image. */
+export function imageMeta(image: SeoImage): MetaTag[] {
+  const url = imageUrl(image.path);
+  return [
+    { property: "og:image", content: url },
+    { property: "og:image:type", content: "image/png" },
+    { property: "og:image:width", content: String(OG_IMAGE_WIDTH) },
+    { property: "og:image:height", content: String(OG_IMAGE_HEIGHT) },
+    { property: "og:image:alt", content: image.alt },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:image", content: url },
+    { name: "twitter:image:alt", content: image.alt },
+  ];
+}
+
 /**
- * Title, description, canonical, Open Graph and JSON-LD for a public page. Every public
- * route goes through here; og:site_name, og:locale, og:image and the Twitter card come from
- * the root route and are the same on every page.
+ * Title, description, canonical, Open Graph (image included), the Twitter card and JSON-LD
+ * for a public page. Every public route goes through here; og:site_name and og:locale come
+ * from the root route and are the same on every page.
  */
 export function seo({
   title,
   description,
   path,
+  image,
   ogTitle = title,
   type = "website",
   meta = [],
@@ -220,6 +254,7 @@ export function seo({
   title: string;
   description: string;
   path: string;
+  image: SeoImage;
   /** Posts drop the site-name suffix here. */
   ogTitle?: string;
   type?: "website" | "article" | "profile";
@@ -234,6 +269,7 @@ export function seo({
     { property: "og:description", content: description },
     { property: "og:url", content: absoluteUrl(path) },
     { property: "og:type", content: type },
+    ...imageMeta(image),
     ...meta,
   ];
   return {

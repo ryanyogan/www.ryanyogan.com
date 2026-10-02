@@ -1,5 +1,5 @@
-// Edge cache for what is rendered from D1 (/, /projects, /projects/<slug>, /sitemap.xml): the
-// pure part.
+// Edge cache for what is rendered from D1 (/, /projects, /projects/<slug>, /sitemap.xml and a
+// project's preview image, /og/projects/<slug>.png): the pure part.
 // Which requests may use the cache, under which key, how a copy is stored and served, and
 // which keys an admin write purges. No Cloudflare import, so it is unit-tested with a fake
 // cache (page-cache.test.ts); the wiring into the Worker is page-cache-edge.ts.
@@ -28,6 +28,8 @@ const TRACKING_PARAM =
 // Deliberately case-sensitive and strict: `/Projects` or `/projects/Foo` still render (or
 // 404) through the router, they are just not cached, so no second spelling shares a key.
 const CACHEABLE_PATH = /^\/(?:projects(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?|sitemap\.xml)?$/;
+/** A project's preview image. Its `v` parameter only makes the URL new after an edit. */
+const IMAGE_PATH = /^\/og\/projects\/[a-z0-9]+(?:-[a-z0-9]+)*\.png$/;
 
 function hasAccessToken(headers: Headers): boolean {
   if (headers.get(ACCESS_JWT_HEADER)) return true;
@@ -42,8 +44,8 @@ function hasAccessToken(headers: Headers): boolean {
  * - anything but GET;
  * - a request carrying the Cloudflare Access cookie or JWT header (the signed-in owner
  *   always gets a fresh render, and nothing rendered for them is stored);
- * - any path other than /, /projects, /projects/<slug> and /sitemap.xml, which excludes /admin and the
- *   server-function URLs (/_serverFn/...) by construction;
+ * - any path other than /, /projects, /projects/<slug>, /sitemap.xml and
+ *   /og/projects/<slug>.png, which excludes /admin and the server-function URLs (/_serverFn/...) by construction;
  * - a query string with anything but tracking parameters: those pages take no query, so an
  *   unknown one is not worth a cache entry per value.
  * One trailing slash is dropped and tracking parameters are stripped, so
@@ -54,26 +56,29 @@ export function cacheKeyFor(request: Request): string | null {
   if (hasAccessToken(request.headers)) return null;
   const url = new URL(request.url);
   const path = url.pathname.length > 1 ? url.pathname.replace(/\/$/, "") : url.pathname;
-  if (!CACHEABLE_PATH.test(path)) return null;
+  const image = IMAGE_PATH.test(path);
+  if (!image && !CACHEABLE_PATH.test(path)) return null;
   for (const name of url.searchParams.keys()) {
-    if (!TRACKING_PARAM.test(name)) return null;
+    if (!TRACKING_PARAM.test(name) && !(image && name === "v")) return null;
   }
   return `${url.origin}${path}`;
 }
 
 /**
- * Every key an admin write to `slugs` can have changed: the two lists, the sitemap and each
- * project page.
+ * Every key an admin write to `slugs` can have changed: the two lists, the sitemap, and each
+ * project's page and preview image.
  */
 export function purgeKeysFor(origin: string, slugs: readonly string[]): string[] {
   const keys = [`${origin}/`, `${origin}/projects`, `${origin}/sitemap.xml`];
-  for (const slug of new Set(slugs)) if (slug) keys.push(`${origin}/projects/${slug}`);
+  for (const slug of new Set(slugs)) {
+    if (slug) keys.push(`${origin}/projects/${slug}`, `${origin}/og/projects/${slug}.png`);
+  }
   return keys;
 }
 
 /**
  * Only a complete, public, successful page is stored: status 200, `text/html` (or the
- * sitemap's `application/xml`), a
+ * sitemap's `application/xml`, or a preview image's `image/png`), a
  * `Cache-Control` that says `public` with an `s-maxage` (the route's own policy; an error
  * is `no-store` by then, see src/start.ts), and no `Set-Cookie`. A draft or unknown slug is
  * a 404, so it can never get in.
@@ -81,7 +86,9 @@ export function purgeKeysFor(origin: string, slugs: readonly string[]): string[]
 export function isStorable(response: Response): boolean {
   if (response.status !== 200) return false;
   const type = response.headers.get("content-type") ?? "";
-  if (!type.includes("text/html") && !type.includes("application/xml")) return false;
+  if (!["text/html", "application/xml", "image/png"].some((kind) => type.includes(kind))) {
+    return false;
+  }
   if (response.headers.has("set-cookie")) return false;
   const policy = (response.headers.get("cache-control") ?? "").toLowerCase();
   return policy.includes("public") && policy.includes("s-maxage") && !policy.includes("no-store");

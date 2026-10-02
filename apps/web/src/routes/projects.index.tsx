@@ -7,6 +7,7 @@ import { ProjectLinks } from "~/components/ProjectLinks";
 import { StatusPill } from "~/components/StatusPill";
 import { PROJECT_PAGE_CACHE, fetchProjects } from "~/lib/projects.functions";
 import { collectionNode, pageTitle, seo } from "~/lib/seo";
+import { staticOgImage } from "~/lib/og-images";
 
 const description =
   "Agent memory, MCP servers, durable AI workflows and desktop tools. Everything I've built, with its real status.";
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/projects/")({
       title: pageTitle("Projects"),
       description,
       path: "/projects",
+      image: staticOgImage("/projects"),
       graph: [
         collectionNode({
           name: pageTitle("Projects"),

@@ -4,7 +4,15 @@ import { Link, Outlet, HeadContent, Scripts, createRootRoute } from "@tanstack/r
 import { Header } from "~/components/Header";
 import { Footer } from "~/components/Footer";
 import { KeyboardLayer } from "~/components/KeyboardLayer";
-import { SITE_DESCRIPTION, SITE_LOCALE, SITE_NAME, SITE_TITLE, absoluteUrl } from "~/lib/seo";
+import { staticOgImage } from "~/lib/og-images";
+import {
+  SITE_DESCRIPTION,
+  SITE_LOCALE,
+  SITE_NAME,
+  SITE_TITLE,
+  absoluteUrl,
+  imageMeta,
+} from "~/lib/seo";
 import appCss from "~/styles/app.css?url";
 import { fontPreloads } from "~/styles/fonts";
 
@@ -21,8 +29,8 @@ export const Route = createRootRoute({
       { property: "og:type", content: "website" },
       { property: "og:title", content: SITE_TITLE },
       { property: "og:description", content: SITE_DESCRIPTION },
-      { property: "og:image", content: absoluteUrl("/og-default.svg") },
-      { name: "twitter:card", content: "summary_large_image" },
+      // Each public route names its own image through seo(); this is the fallback.
+      ...imageMeta(staticOgImage("/")),
       { name: "twitter:site", content: "@ryanyogan" },
       { name: "twitter:creator", content: "@ryanyogan" },
     ],

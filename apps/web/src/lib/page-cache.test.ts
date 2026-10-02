@@ -121,6 +121,35 @@ describe("isStorable", () => {
   });
 });
 
+describe("a project's preview image", () => {
+  it("has one key whatever its `v`, and no key for any other query or spelling", () => {
+    const key = `${ORIGIN}/og/projects/lincoln-project.png`;
+    expect(cacheKeyFor(get("/og/projects/lincoln-project.png"))).toBe(key);
+    expect(cacheKeyFor(get("/og/projects/lincoln-project.png?v=1x2y&utm_source=a"))).toBe(key);
+    expect(cacheKeyFor(get("/og/projects/lincoln-project.png?w=600"))).toBeNull();
+    expect(cacheKeyFor(get("/og/projects/Lincoln.png"))).toBeNull();
+    expect(cacheKeyFor(get("/og/projects/lincoln-project"))).toBeNull();
+    expect(cacheKeyFor(get("/og/home.0123456789.png"))).toBeNull();
+    // `v` means nothing on a page.
+    expect(cacheKeyFor(get("/projects?v=1"))).toBeNull();
+  });
+
+  it("is stored as a PNG, and only when it is a public 200", () => {
+    const png = (init: ResponseInit = {}) =>
+      new Response("png", {
+        ...init,
+        headers: {
+          "content-type": "image/png",
+          "cache-control": "public, max-age=0, s-maxage=60",
+          ...init.headers,
+        },
+      });
+    expect(isStorable(png())).toBe(true);
+    expect(isStorable(png({ status: 404 }))).toBe(false);
+    expect(isStorable(png({ headers: { "cache-control": "no-store" } }))).toBe(false);
+  });
+});
+
 describe("purgeKeysFor", () => {
   it("lists both index pages and each distinct project page", () => {
     expect(purgeKeysFor(ORIGIN, ["old", "new", "old", ""])).toEqual([
@@ -128,7 +157,9 @@ describe("purgeKeysFor", () => {
       `${ORIGIN}/projects`,
       `${ORIGIN}/sitemap.xml`,
       `${ORIGIN}/projects/old`,
+      `${ORIGIN}/og/projects/old.png`,
       `${ORIGIN}/projects/new`,
+      `${ORIGIN}/og/projects/new.png`,
     ]);
   });
 });

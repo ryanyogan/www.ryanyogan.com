@@ -26,6 +26,9 @@
   --muted: #666a6a;
   --accent: #3d6a55;
   --rule: #dcdbd5;
+  /* The edge of a form control: 3:1 against paper (WCAG 1.4.11), which a hairline is not.
+     3.16:1 here, 3.39:1 in the dark theme. Rules between content stay --rule. */
+  --control-border: #888b88;
   /* Validation and destructive actions. 6.4:1 on paper; the dark value is 7.4:1. */
   --error: #a1321f;
   color-scheme: light;
@@ -45,6 +48,7 @@
   --muted: #8f918d;
   --accent: #93b8a4;
   --rule: #323536;
+  --control-border: #6e716f;
   --error: #e8998a;
   color-scheme: dark;
 }
@@ -57,6 +61,7 @@
     --muted: #8f918d;
     --accent: #93b8a4;
     --rule: #323536;
+    --control-border: #6e716f;
     --error: #e8998a;
     color-scheme: dark;
   }
@@ -854,7 +859,7 @@
     width: 100%;
     min-height: 44px;
     padding: 9px 12px;
-    border: 1px solid var(--rule);
+    border: 1px solid var(--control-border);
     border-radius: 0;
     background: var(--paper);
     color: var(--ink);

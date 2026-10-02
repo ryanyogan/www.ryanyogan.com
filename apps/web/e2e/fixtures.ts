@@ -58,6 +58,18 @@ export const ADMIN_ORIGIN = "http://localhost:4174";
 export const BROKEN_ORIGIN = "http://localhost:4177";
 export const GITHUB_STUB = "http://127.0.0.1:4175";
 
+/** Width and height from a PNG's IHDR chunk; throws when the bytes are not a PNG. */
+export function pngSize(body: Buffer): { width: number; height: number } {
+  const signature = body.subarray(0, 8).toString("hex");
+  if (signature !== "89504e470d0a1a0a" || body.subarray(12, 16).toString("ascii") !== "IHDR") {
+    throw new Error("not a PNG");
+  }
+  return { width: body.readUInt32BE(16), height: body.readUInt32BE(20) };
+}
+
+/** A social preview image may not be heavier than this. */
+export const OG_MAX_BYTES = 300 * 1024;
+
 /**
  * The ids of the admin server functions, read from the client chunk that calls them
  * (`/_serverFn/<id>`).

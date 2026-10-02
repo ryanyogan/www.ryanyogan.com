@@ -32,6 +32,11 @@ describe("renderMarkdown: structure the prose styles rely on", () => {
     expect(html).toMatch(/<pre tabindex="0"><code class="hljs language-ts">/);
     expect(html).toContain('<span class="hljs-keyword">const</span>');
   });
+  it("highlights Elixir, which the highlighter's default set leaves out", () => {
+    const html = renderMarkdown("```elixir\ndefmodule Memory do\n  def get(id), do: id\nend\n```");
+    expect(html).toContain('<code class="hljs language-elixir">');
+    expect(html).toContain('<span class="hljs-keyword">defmodule</span>');
+  });
 
   it("leaves inline code bare and wraps tables in a focusable scroller", () => {
     const html = renderMarkdown("Use `pnpm`.\n\n| a | b |\n|---|:-:|\n| 1 | 2 |");

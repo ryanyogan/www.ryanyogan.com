@@ -7,6 +7,7 @@ import { ProjectIndex } from "~/components/home/ProjectIndex";
 import { WritingList } from "~/components/home/WritingList";
 import { PROJECT_PAGE_CACHE, fetchProjects } from "~/lib/projects.functions";
 import { SITE_DESCRIPTION, SITE_TITLE, personNode, seo, websiteNode } from "~/lib/seo";
+import { staticOgImage } from "~/lib/og-images";
 
 export const Route = createFileRoute("/")({
   head: () =>
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/")({
       title: SITE_TITLE,
       description: SITE_DESCRIPTION,
       path: "/",
+      image: staticOgImage("/"),
       graph: [websiteNode(), personNode()],
     }),
   loader: () => fetchProjects(),

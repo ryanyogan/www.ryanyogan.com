@@ -195,13 +195,28 @@ test("every public route has its own title and description, Open Graph tags and 
   }
 });
 
+test("code blocks with a language are coloured, Elixir included", async ({ page }) => {
+  await page.goto("/writing/building-agent-memory-from-research-to-reality");
+  const blocks = page.locator("pre code.hljs.language-elixir");
+  expect(await blocks.count()).toBeGreaterThan(0);
+  for (const block of await blocks.all()) {
+    expect(await block.locator("span[class^='hljs-']").count()).toBeGreaterThan(0);
+  }
+  const keyword = page.locator("pre code.language-elixir .hljs-keyword").first();
+  const colours = await keyword.evaluate((el) => [
+    getComputedStyle(el).color,
+    getComputedStyle(el.closest("code")!).color,
+  ]);
+  expect(colours[0]).not.toBe(colours[1]);
+});
+
 test("the Open Graph image exists", async ({ request }) => {
   const html = await (await request.get("/")).text();
   const image = /property="og:image" content="([^"]+)"/.exec(html)?.[1] ?? "";
   expect(image.startsWith(SITE_URL)).toBe(true);
   const response = await request.get(image.slice(SITE_URL.length));
   expect(response.status()).toBe(200);
-  expect(response.headers()["content-type"]).toContain("image/");
+  expect(response.headers()["content-type"]).toBe("image/png");
 });
 
 // --- Links ------------------------------------------------------------------------------
