@@ -486,7 +486,13 @@ export function ProjectForm({
         </div>
 
         <div className="flex min-w-0 flex-col gap-6">
-          <Field label="Body (markdown)" error={err("body")}>
+          <Field
+            label="Body (markdown)"
+            hint={
+              'An image\'s title can state its size, ![alt](url "1200x800"), or its size and a caption, "1200x800 Some caption." A title that is not a size is the caption.'
+            }
+            error={err("body")}
+          >
             {(a) => (
               <textarea
                 {...a}
