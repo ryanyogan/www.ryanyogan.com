@@ -43,6 +43,7 @@ const CSS_BUDGET = 12 * KB;
 const routes = [
   { path: "/", js: JS_BUDGET },
   { path: "/work", js: JS_BUDGET },
+  { path: "/now", js: JS_BUDGET },
   { path: "/projects", js: JS_BUDGET },
   { path: "/projects/lincoln-project", js: JS_BUDGET },
   { path: "/writing", js: JS_BUDGET },

@@ -34,6 +34,7 @@ test("the mobile menu navigates and closes itself", async ({ page }) => {
     ["Projects", "/projects"],
     ["Writing", "/writing"],
     ["Work", "/work"],
+    ["Now", "/now"],
   ] as const) {
     await expect(async () => {
       if ((await button.getAttribute("aria-expanded")) !== "true") await button.click();

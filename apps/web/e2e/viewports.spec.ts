@@ -32,7 +32,7 @@ const longestPost = readdirSync(WRITING_DIR)
   .name.replace(/\.md$/, "");
 
 const POST = `/writing/${longestPost}`;
-const ROUTES = ["/", "/work", "/projects", "/projects/lincoln-project", "/writing", POST];
+const ROUTES = ["/", "/work", "/now", "/projects", "/projects/lincoln-project", "/writing", POST];
 
 /** Everything measured in one pass in the page; returns a list of problems (empty = good). */
 async function audit(page: Page, options: { post: boolean }): Promise<string[]> {

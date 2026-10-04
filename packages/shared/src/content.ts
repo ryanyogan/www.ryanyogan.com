@@ -179,6 +179,7 @@ export const navLinks: NavLink[] = [
   { label: "Work", href: "/work" },
   { label: "Projects", href: "/projects" },
   { label: "Writing", href: "/writing" },
+  { label: "Now", href: "/now" },
 ];
 
 export const footerLinks: NavLink[] = [

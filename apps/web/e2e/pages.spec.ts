@@ -69,6 +69,37 @@ test("Home links the newest posts above the project index, and no post twice", a
   expect(new Set(hrefs).size).toBe(hrefs.length);
 });
 
+test("/now is dated at the top from its markdown file, and is in the nav and the footer", async ({
+  page,
+}) => {
+  const source = readFileSync(new URL("../content/now.md", import.meta.url), "utf8");
+  const updated = /^updated:\s*"?([^"\n]+)/m.exec(source)![1]!;
+  const day = new Date(updated);
+  expect(Number.isNaN(day.getTime())).toBe(false);
+  const iso = [day.getFullYear(), day.getMonth() + 1, day.getDate()]
+    .map((part) => String(part).padStart(2, "0"))
+    .join("-");
+
+  await page.goto("/now");
+  const time = page.locator("main time");
+  await expect(time).toHaveCount(1);
+  await expect(time).toHaveAttribute("datetime", iso);
+  await expect(time).toHaveText(updated);
+  // The date comes before the text it dates.
+  const date = await time.boundingBox();
+  const heading = await page.locator("main .prose h2").first().boundingBox();
+  expect(date!.y).toBeGreaterThan((await page.locator("h1").boundingBox())!.y);
+  expect(date!.y + date!.height).toBeLessThan(heading!.y);
+  // One h2 per section of the file, and nothing left to fill in.
+  await expect(page.locator("main .prose h2")).toHaveCount(source.match(/^## /gm)!.length);
+  await expect(page.locator("main")).not.toContainText(/TODO|TBD|lorem/i);
+
+  await expect(page.locator('#site-nav a[href="/now"]')).toHaveAttribute("aria-current", "page");
+  await expect(page.locator('footer a[href="/now"]')).toHaveCount(1);
+  await page.goto("/");
+  await expect(page.locator('footer a[href="/now"]')).toBeVisible();
+});
+
 test("/rss.xml parses and has one item per post", async ({ page, request }) => {
   const response = await request.get("/rss.xml");
   expect(response.status()).toBe(200);

@@ -4,7 +4,7 @@ import images from "virtual:og-images";
 import { type OgCard, ogAlt, projectKicker } from "./og/template";
 import type { SeoImage } from "./seo";
 
-/** The preview image of a page drawn at build time: /, /work, /projects, /writing, a post. */
+/** The preview image of a page drawn at build time: /, /work, /now, /projects, /writing, a post. */
 export function staticOgImage(route: string): SeoImage {
   const image = images[route] ?? images["/"];
   return { path: image.path, alt: image.alt };

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { writingPosts } from "~/lib/content";
+import { nowPage, writingPosts } from "~/lib/content";
 import { PROJECT_PAGE_CACHE, fetchSitemapProjects } from "~/lib/projects.functions";
 import { buildSitemap } from "~/lib/sitemap";
 
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/sitemap.xml")({
             headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
           });
         }
-        return new Response(buildSitemap({ posts: writingPosts, projects }), {
+        return new Response(buildSitemap({ posts: writingPosts, projects, now: nowPage }), {
           headers: {
             "Content-Type": "application/xml; charset=utf-8",
             "Cache-Control": PROJECT_PAGE_CACHE,

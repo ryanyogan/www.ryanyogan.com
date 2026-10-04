@@ -53,7 +53,7 @@ test("the chosen theme persists across client and full navigation", async ({ pag
   await page.locator('main a[href="/projects/lincoln-project"]').first().click();
   await expect(page).toHaveURL(/\/projects\/lincoln-project$/);
   await expect(html).toHaveClass(/\bdark\b/);
-  for (const path of ["/writing", "/work", `/writing/${postSlugs[0]}`]) {
+  for (const path of ["/writing", "/work", "/now", `/writing/${postSlugs[0]}`]) {
     await page.goto(path);
     await expect(html).toHaveClass(/\bdark\b/);
     await expect(toggle).toHaveAccessibleName(/^Colour theme: Dark/);
