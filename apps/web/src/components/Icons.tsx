@@ -62,6 +62,15 @@ export function SystemThemeIcon(props: IconProps) {
   );
 }
 
+/** A line rising to the right: beside a view count. */
+export function TrendIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M1.75 11.5l4-4 2.75 2.75 5.75-5.75M10.25 4.5h4v4" />
+    </Icon>
+  );
+}
+
 export function MenuIcon(props: IconProps) {
   return (
     <Icon {...props}>

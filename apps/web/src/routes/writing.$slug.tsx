@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { loadPostHtml, writingPosts } from "~/lib/content";
 import { Prose } from "~/components/Prose";
+import { PostViews } from "~/components/ViewCount";
 import {
   WEBSITE_ID,
   absoluteUrl,
@@ -93,8 +94,11 @@ function WritingDetail() {
             <h1>{post.title}</h1>
             <p className="lede">{post.excerpt}</p>
             <p className="small post-meta">
-              <time dateTime={post.isoDate}>{post.date}</time> &middot; {readingMinutes(html)} min
-              read &middot; {post.author}
+              <span>
+                <time dateTime={post.isoDate}>{post.date}</time> &middot; {readingMinutes(html)} min
+                read &middot; {post.author}
+              </span>
+              <PostViews slug={slug} />
             </p>
           </div>
         </header>

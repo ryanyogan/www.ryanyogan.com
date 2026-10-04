@@ -1589,8 +1589,31 @@
     max-width: 24ch;
   }
 
+  /* Date, reading time and author, then the view count, which moves to a line of its own
+     when the two do not fit side by side. */
   .post-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 16px;
     margin-top: 18px;
+  }
+
+  /* A view count (components/ViewCount.tsx). The number arrives after the page has loaded,
+     so the box is there from the start, one line tall and wide enough for six digits:
+     nothing moves when it fills, and nothing shows when it stays empty. */
+  .views {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 5.5em;
+    min-height: 1.55em;
+    min-height: 1lh;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .views svg {
+    flex: none;
   }
 
   .post-body {

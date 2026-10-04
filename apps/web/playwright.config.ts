@@ -54,7 +54,8 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
       testIgnore: /mobile\.spec\.ts$/,
     },
-    // The public smoke tests again at phone size, plus the mobile menu.
+    // The public smoke tests again at phone size, plus the mobile menu and the view count
+    // (its reserved space sits on a line of its own at this width).
     {
       name: "mobile",
       use: {
@@ -63,19 +64,19 @@ export default defineConfig({
         isMobile: true,
         hasTouch: true,
       },
-      testMatch: /(mobile|pages)\.spec\.ts$/,
+      testMatch: /(mobile|pages|views)\.spec\.ts$/,
     },
     // Safari's engine at iPhone size, for what Chromium emulation cannot show (font metrics,
-    // hyphenation, dvh, focus). Public pages only: the device matrix, the mobile menu and the
-    // page smoke tests, plus one test picked by its title: the hydration check in
-    // public.spec.ts. The admin tests, axe (it reads the DOM and computed colours, which do
+    // hyphenation, dvh, focus). Public pages only: the device matrix, the mobile menu, the
+    // page smoke tests and the view count, plus one test picked by its title: the hydration
+    // check in public.spec.ts. The admin tests, axe (it reads the DOM and computed colours, which do
     // not differ by engine) and the rest, which mostly only make requests, stay in Chromium.
     // `grep` is matched against "<file name> <title>".
     {
       name: "webkit",
       use: { ...devices["iPhone 14"] },
-      testMatch: /(viewports|mobile|pages|public)\.spec\.ts$/,
-      grep: /(viewports|mobile|pages)\.spec\.ts|hydrates without a mismatch/,
+      testMatch: /(viewports|mobile|pages|views|public)\.spec\.ts$/,
+      grep: /(viewports|mobile|pages|views)\.spec\.ts|hydrates without a mismatch/,
     },
   ],
   webServer: [
