@@ -345,6 +345,35 @@ for (const theme of ["light", "dark"] as const) {
   }
 }
 
+test("kitchen sink: a footnote links to its note and back, and the notes are set small", async ({
+  page,
+}) => {
+  await kitchenSink(page, 1280, "light");
+  const mark = page.locator(".prose sup a");
+  const notes = page.getByRole("region", { name: "Footnotes" });
+  const note = notes.locator("li");
+  await expect(mark).toHaveAccessibleName("Footnote 1");
+  await expect(note).toContainText("The note itself");
+
+  await mark.click();
+  await expect(page).toHaveURL(/#fn_cost$/);
+  expect(await note.evaluate((li) => li.matches(":target"))).toBe(true);
+  await note.getByRole("link", { name: "Back to reference 1" }).click();
+  await expect(page).toHaveURL(/#fnref_cost$/);
+  expect(await mark.evaluate((a) => a.matches(":target"))).toBe(true);
+
+  const set = await notes.evaluate((section) => {
+    const style = getComputedStyle(section);
+    return {
+      rule: style.borderTopWidth,
+      smaller:
+        parseFloat(style.fontSize) < parseFloat(getComputedStyle(section.parentElement!).fontSize),
+      back: section.querySelector("li a")!.textContent,
+    };
+  });
+  expect(set).toEqual({ rule: "1px", smaller: true, back: "Back" });
+});
+
 test("kitchen sink: a link to a heading scrolls it to the top with room above", async ({
   page,
 }) => {

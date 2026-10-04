@@ -1745,6 +1745,19 @@
   border-top: 1px solid var(--rule);
 }
 
+/* Footnotes (lib/markdown.ts): the notes close the body, small, under a hairline. */
+.prose section {
+  margin-top: 2.5em;
+  padding-top: 0.5em;
+  border-top: 1px solid var(--rule);
+  font-size: 0.875em;
+}
+
+.prose section li,
+.prose sup a {
+  scroll-margin-top: 24px;
+}
+
 /* Inline code: the monospace face and a faint tone, no border or pill. */
 .prose code {
   font-family: var(--font-mono);

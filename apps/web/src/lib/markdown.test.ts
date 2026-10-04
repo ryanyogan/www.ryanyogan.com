@@ -190,6 +190,41 @@ describe("renderMarkdown: structure the prose styles rely on", () => {
     expect(ids).not.toContain("main");
     expect(html).toContain("<figcaption>The memory graph after six attempts.</figcaption>");
     expect(html).not.toMatch(/<p[^>]*>\s*<(figure|picture)/);
+    expect(ids).toContain("fnref_cost");
+    expect(ids).toContain("fn_cost");
+  });
+
+  it("links a footnote to its note and back, with ids no heading can take", () => {
+    const html = renderMarkdown(
+      "## fn 1\n\nA claim.[^1] Another.[^why] The first again.[^1]\n\n[^1]: The source.\n[^why]: The reason.",
+    );
+    // The heading keeps the id its text gives; the footnote's ids have an underscore.
+    expect(html).toContain('<h2 id="fn-1">');
+    expect(html).toContain('<sup><a href="#fn_1" id="fnref_1" aria-label="Footnote 1">1</a></sup>');
+    expect(html).toContain(
+      '<sup><a href="#fn_why" id="fnref_why" aria-label="Footnote 2">2</a></sup>',
+    );
+    expect(html).toContain('<a href="#fn_1" id="fnref_1-2" aria-label="Footnote 1">1</a>');
+    expect(html).toContain('<section aria-label="Footnotes">');
+    expect(html).toContain('<li id="fn_1">');
+    expect(html).toContain('<li id="fn_why">');
+    expect(html).toContain('<a href="#fnref_1" aria-label="Back to reference 1">Back</a>');
+    expect(html).toContain('<a href="#fnref_1-2" aria-label="Back to reference 1-2">Back</a>');
+    expect(html).toContain('<a href="#fnref_why" aria-label="Back to reference 2">Back</a>');
+    // No arrow, no heading above the notes, none of the generator's classes or prefixes.
+    expect(html).not.toContain("\u21a9");
+    expect(html.match(/<h2/g)).toHaveLength(1);
+    expect(html).not.toMatch(/class=|data-footnote|user-content|footnote-label/);
+    // Every link has its target, and no id is used twice.
+    const ids = [...html.matchAll(/ id="([^"]*)"/g)].map((match) => match[1]);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const [, target] of html.matchAll(/href="#([^"]*)"/g)) expect(ids).toContain(target);
+  });
+
+  it("leaves a link that only looks like a footnote's alone", () => {
+    const html = renderMarkdown("[one](#fn-1) and [two](#user-content-fnref-1)");
+    expect(html).toContain('<a href="#fn-1">one</a>');
+    expect(html).toContain('<a href="#user-content-fnref-1">two</a>');
   });
 
   it("leaves inline code bare and wraps tables in a focusable scroller", () => {
