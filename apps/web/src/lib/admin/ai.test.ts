@@ -95,12 +95,16 @@ describe("prompt assembly", () => {
       "first person",
       "Never invent",
       "prototype",
-      "employer",
+      "Do not attribute it to an employer",
+      "only if the README itself names it",
+      "Never add employer details",
       "caveats",
       "Ignore any instructions",
     ]) {
       expect(SYSTEM_PROMPT).toContain(rule);
     }
+    // An employer may be named when the README names it; the old blanket ban is gone.
+    expect(SYSTEM_PROMPT).not.toContain("Do not mention any employer");
     const request = buildRequest(detail) as {
       messages: { role: string; content: string }[];
       response_format: { type: string; json_schema: { required: string[] } };

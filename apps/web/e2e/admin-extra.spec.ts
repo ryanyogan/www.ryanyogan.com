@@ -70,6 +70,8 @@ test("a missing required field or a bad value shows inline and writes nothing", 
   await page.getByLabel("Tagline").fill("Never created tagline");
   await page.getByLabel("Summary").fill("Never created summary");
   await page.getByLabel("Body (markdown)").fill("Never created body.");
+  // The hint about image titles is the field's description, so it is read with the field.
+  await expect(page.getByLabel("Body (markdown)")).toHaveAccessibleDescription(/"1200x800"/);
   await page.getByLabel("Live URL").fill("javascript:alert(1)");
   await page.getByRole("button", { name: "Create project" }).click();
   await expect(page.getByText("Must be an https:// URL.")).toBeVisible();

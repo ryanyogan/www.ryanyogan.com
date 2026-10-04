@@ -427,6 +427,87 @@ test("theme-color is the page background in each colour scheme", async ({ browse
   }
 });
 
+test("theme-color follows a theme picked with the toggle, not the OS", async ({ browser }) => {
+  // The meta in effect: the first whose media matches, as a browser picks it.
+  const inEffect = () => {
+    const metas = [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')];
+    const tag = metas.find((meta) => matchMedia(meta.getAttribute("media") ?? "all").matches);
+    const rgb = (value: string) => {
+      const probe = document.createElement("i");
+      probe.style.color = value;
+      document.documentElement.appendChild(probe);
+      const colour = getComputedStyle(probe).color;
+      probe.remove();
+      return colour;
+    };
+    return {
+      count: metas.length,
+      declared: rgb(tag?.content ?? ""),
+      paper: rgb(getComputedStyle(document.documentElement).getPropertyValue("--paper")),
+    };
+  };
+  const light = "rgb(246, 245, 241)";
+  const dark = "rgb(28, 30, 31)";
+
+  // A stored choice against the OS scheme, on first paint and once the page has hydrated.
+  for (const [os, stored, want] of [
+    ["light", "dark", dark],
+    ["dark", "light", light],
+  ] as const) {
+    const context = await browser.newContext({ colorScheme: os });
+    const page = await context.newPage();
+    await page.addInitScript((theme) => localStorage.setItem("theme", theme), stored);
+    await page.goto("/work");
+    expect(await page.evaluate(inEffect), `stored ${stored}`).toEqual({
+      count: 2,
+      declared: want,
+      paper: want,
+    });
+    await expect(page.getByRole("button", { name: /^Colour theme/ })).toHaveAccessibleName(
+      new RegExp(`^Colour theme: ${stored}`, "i"),
+    );
+    expect(await page.evaluate(inEffect), `stored ${stored}, hydrated`).toEqual({
+      count: 2,
+      declared: want,
+      paper: want,
+    });
+    await context.close();
+  }
+
+  // The toggle goes system, dark, light, system: the OS is light until the last check.
+  const context = await browser.newContext({ colorScheme: "light" });
+  const page = await context.newPage();
+  await page.goto("/work");
+  const toggle = page.getByRole("button", { name: /^Colour theme/ });
+  const html = page.locator("html");
+  // The first click is repeated until the page has hydrated and the handler is attached.
+  await expect(async () => {
+    if (!(await html.getAttribute("class"))?.includes("dark")) await toggle.click();
+    await expect(html).toHaveClass(/\bdark\b/, { timeout: 1000 });
+  }).toPass();
+  expect(await page.evaluate(inEffect), "toggled dark").toEqual({
+    count: 2,
+    declared: dark,
+    paper: dark,
+  });
+  await toggle.click();
+  await expect(html).toHaveClass(/\blight\b/);
+  expect(await page.evaluate(inEffect), "toggled light").toEqual({
+    count: 2,
+    declared: light,
+    paper: light,
+  });
+  await toggle.click();
+  await expect(html).not.toHaveClass(/\b(dark|light)\b/);
+  await page.emulateMedia({ colorScheme: "dark" });
+  expect(await page.evaluate(inEffect), "back on system").toEqual({
+    count: 2,
+    declared: dark,
+    paper: dark,
+  });
+  await context.close();
+});
+
 // --- Being found by name -------------------------------------------------------------------
 
 const textOf = (markup: string) =>

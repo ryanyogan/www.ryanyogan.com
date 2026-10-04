@@ -60,8 +60,10 @@ A block with no language: plain text, no colours.
 
 ![A drawing of a brain made of nodes and edges](/images/brain.png "1098x921 The memory graph after six attempts.")
 
-A last paragraph after the figure, then a rule.
+A last paragraph after the figure, with a footnote[^cost], then a rule.
 
 ---
 
 The end.
+
+[^cost]: The note itself, set small under a hairline at the end of the body.

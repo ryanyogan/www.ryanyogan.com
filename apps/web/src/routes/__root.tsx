@@ -79,9 +79,21 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
     <html lang="en">
       <head>
         {/* Here, not in head(): the router keeps one meta per name, and this needs two. The
-            values are --paper in each scheme (styles/app.css). */}
-        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f5f1" />
-        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1c1e1f" />
+            values are --paper in each scheme (styles/app.css). A theme picked with the toggle
+            rewrites the two media attributes (lib/theme.ts and the script below), never the
+            content, which is what React matches these by when it hydrates. */}
+        <meta
+          name="theme-color"
+          media="(prefers-color-scheme: light)"
+          content="#f6f5f1"
+          data-scheme="light"
+        />
+        <meta
+          name="theme-color"
+          media="(prefers-color-scheme: dark)"
+          content="#1c1e1f"
+          data-scheme="dark"
+        />
         <HeadContent />
         {inlineAppCss && (
           <style
@@ -94,7 +106,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
       <body>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("theme");if(t==="dark")document.documentElement.classList.add("dark");else if(t==="light")document.documentElement.classList.add("light")}catch(e){}}())`,
+            __html: `(function(){try{var t=localStorage.getItem("theme");if(t==="dark"||t==="light"){document.documentElement.classList.add(t);document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.setAttribute("media",m.getAttribute("data-scheme")===t?"all":"not all")})}}catch(e){}}())`,
           }}
         />
         <a
