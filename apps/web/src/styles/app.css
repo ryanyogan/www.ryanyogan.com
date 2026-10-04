@@ -673,6 +673,24 @@
     }
   }
 
+  /* Home above phones (D2): each section after the hero opens with a hairline across the
+     page and its label in ink. More space above the rule than below, so the rule belongs
+     to the section under it. Phones do the same on the gutter, further down. */
+  @media (min-width: 640.02px) {
+    .home .row {
+      padding-bottom: 88px;
+    }
+
+    .home .row + .row {
+      border-top: 1px solid var(--rule);
+      padding-top: 32px;
+    }
+
+    .home .lab {
+      color: var(--ink);
+    }
+  }
+
   @media (max-width: 1080px) {
     .hero {
       grid-template-columns: minmax(0, 1fr) 180px;
