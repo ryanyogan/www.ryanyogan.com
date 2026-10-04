@@ -13,7 +13,7 @@ import {
   absoluteUrl,
   imageMeta,
 } from "~/lib/seo";
-import appCss from "~/styles/app.css?url";
+import { APP_CSS_ID, appCssHref, appCssText, inlineAppCss } from "~/styles/inline";
 import { fontPreloads } from "~/styles/fonts";
 
 export const Route = createRootRoute({
@@ -35,7 +35,7 @@ export const Route = createRootRoute({
       { name: "twitter:creator", content: "@ryanyogan" },
     ],
     links: [
-      { rel: "stylesheet", href: appCss },
+      ...(inlineAppCss ? [] : [{ rel: "stylesheet", href: appCssHref }]),
       // No canonical here: each route sets its own through seo() or canonical().
       {
         rel: "alternate",
@@ -83,6 +83,13 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
         <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f5f1" />
         <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1c1e1f" />
         <HeadContent />
+        {inlineAppCss && (
+          <style
+            id={APP_CSS_ID}
+            data-href={appCssHref}
+            dangerouslySetInnerHTML={{ __html: appCssText }}
+          />
+        )}
       </head>
       <body>
         <script
