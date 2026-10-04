@@ -215,6 +215,38 @@ test.describe("device matrix", () => {
   }
 });
 
+test("at 320px the header is one row: the wordmark and three named 44px icon buttons", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await ready(page, "/");
+  const header = page.locator("body > header");
+  const buttons = header.locator("button:visible");
+  await expect(buttons).toHaveCount(3);
+  await expect(buttons.nth(0)).toHaveAccessibleName("Search");
+  await expect(buttons.nth(1)).toHaveAccessibleName(/^Colour theme: /);
+  await expect(buttons.nth(2)).toHaveAccessibleName("Menu");
+  // The shortcut is still announced and shown on hover.
+  await expect(buttons.nth(0)).toHaveAttribute("aria-keyshortcuts", /\//);
+  await expect(buttons.nth(0)).toHaveAttribute("title", /\//);
+
+  const wordmark = (await header.getByRole("link", { name: "Ryan Yogan, home" }).boundingBox())!;
+  let left = wordmark.x + wordmark.width;
+  for (const button of await buttons.all()) {
+    // An icon and nothing else: exactly one drawing showing, no text.
+    await expect(button.locator("svg:visible")).toHaveCount(1);
+    expect((await button.textContent())?.trim()).toBe("");
+    const box = (await button.boundingBox())!;
+    expect(box.width).toBeGreaterThanOrEqual(44);
+    expect(box.height).toBeGreaterThanOrEqual(44);
+    expect(Math.abs(box.y - wordmark.y)).toBeLessThan(1);
+    expect(box.x).toBeGreaterThanOrEqual(left);
+    expect(box.x + box.width).toBeLessThanOrEqual(320);
+    left = box.x + box.width;
+  }
+  expect((await header.boundingBox())!.height).toBeLessThan(72);
+});
+
 test.describe("mobile menu", () => {
   for (const width of [320, 390]) {
     test(`at ${width}px it opens, keeps focus in the header, and closes on Escape and on navigation`, async ({
@@ -252,7 +284,15 @@ test.describe("mobile menu", () => {
       for (let i = 0; i < stops + 2; i++) {
         await page.keyboard.press("Tab");
         expect(await inHeader()).toBe(true);
-        visited.add(await page.evaluate(() => document.activeElement?.textContent ?? ""));
+        // The icon buttons have no text, so each stop is told apart by its accessible name.
+        visited.add(
+          await page.evaluate(
+            () =>
+              document.activeElement?.getAttribute("aria-label") ??
+              document.activeElement?.textContent ??
+              "",
+          ),
+        );
       }
       expect(visited.size).toBe(stops);
       for (let i = 0; i < stops + 2; i++) {

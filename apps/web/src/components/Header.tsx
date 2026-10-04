@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { navLinks } from "@repo/shared";
 import { openDialog } from "~/lib/keys";
+import { CloseIcon, MenuIcon, SearchIcon } from "./Icons";
 import { ThemeToggle } from "./ThemeToggle";
 
 const NAV_ID = "site-nav";
@@ -66,7 +67,7 @@ export function Header() {
 
   return (
     <header ref={headerRef} className="font-sans">
-      <div className="wrap flex flex-wrap items-center gap-x-1 pt-2.5 min-[400px]:gap-x-2 pb-1.5 md:gap-x-7 md:py-6">
+      <div className="wrap flex flex-wrap items-center pt-2.5 pb-1.5 md:gap-x-5 md:py-6">
         <Link
           to="/"
           aria-label="Ryan Yogan, home"
@@ -76,17 +77,20 @@ export function Header() {
         </Link>
 
         {/* Before the buttons so the wide layout reads name, pages, controls; on a phone it
-            drops to its own row under them. */}
+            drops to its own row under them, between two hairlines. */}
         <nav
           ref={navRef}
           id={NAV_ID}
           aria-label="Primary"
-          className={`${open ? "block" : "hidden"} order-last w-full md:order-none md:block md:w-auto`}
+          className={`${open ? "block" : "hidden"} order-last mt-1.5 w-full border-y border-rule py-1 md:order-none md:mt-0 md:block md:w-auto md:border-0 md:py-0`}
         >
-          <ul className="-mx-3 flex flex-col pb-2 md:mx-0 md:flex-row md:gap-1 md:pb-0">
+          <ul className="-mx-3 flex flex-col md:mx-0 md:flex-row md:gap-1">
             {navLinks.map((link) => (
               <li key={link.href}>
-                <Link to={link.href} className="quiet w-full px-3 text-[0.9375rem] md:w-auto">
+                <Link
+                  to={link.href}
+                  className="quiet w-full px-3 text-[0.9375rem] max-md:min-h-12 max-md:text-[1.0625rem] max-md:text-ink md:w-auto"
+                >
                   {link.label}
                 </Link>
               </li>
@@ -94,29 +98,34 @@ export function Header() {
           </ul>
         </nav>
 
-        <button
-          type="button"
-          hidden={admin}
-          aria-haspopup="dialog"
-          aria-keyshortcuts="/ Control+K Meta+K"
-          className={`${admin ? "hidden" : "quiet"} px-2 text-[0.875rem]`}
-          onClick={() => openDialog("palette")}
-        >
-          Search
-        </button>
+        <div className="header-tools">
+          <button
+            type="button"
+            hidden={admin}
+            aria-label="Search"
+            aria-haspopup="dialog"
+            aria-keyshortcuts="/ Control+K Meta+K"
+            title="Search (press /)"
+            className={admin ? "hidden" : "quiet icon-btn"}
+            onClick={() => openDialog("palette")}
+          >
+            <SearchIcon />
+          </button>
 
-        <ThemeToggle />
+          <ThemeToggle />
 
-        <button
-          ref={buttonRef}
-          type="button"
-          className="quiet -mr-2 px-2 text-[0.875rem] md:hidden"
-          aria-expanded={open}
-          aria-controls={NAV_ID}
-          onClick={() => setOpen((value) => !value)}
-        >
-          Menu
-        </button>
+          <button
+            ref={buttonRef}
+            type="button"
+            className="quiet icon-btn md:hidden"
+            aria-label="Menu"
+            aria-expanded={open}
+            aria-controls={NAV_ID}
+            onClick={() => setOpen((value) => !value)}
+          >
+            {open ? <CloseIcon /> : <MenuIcon />}
+          </button>
+        </div>
       </div>
     </header>
   );

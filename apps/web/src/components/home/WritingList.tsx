@@ -19,14 +19,49 @@ function monthYear(date: string): string {
   });
 }
 
+/** The two newest posts sit under the hero; the list further down leaves them out. */
+const latest = writingPosts.slice(0, 2);
+
+function fullDate(date: string): string {
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+export function LatestWriting() {
+  return (
+    <section aria-labelledby="new-h" className="row latest">
+      <div className="gut">
+        <h2 id="new-h" className="lab">
+          Latest writing
+        </h2>
+      </div>
+      <ol className="col fresh">
+        {latest.map((post) => (
+          <li key={post.slug}>
+            <time dateTime={post.isoDate}>{fullDate(post.isoDate)}</time>
+            <Link to="/writing/$slug" params={{ slug: post.slug }} data-kb-item>
+              {post.title}
+            </Link>
+            <p>{post.excerpt}</p>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 export function WritingList() {
-  const posts = writingPosts.filter((post) => homeSlugs.has(post.slug));
+  const posts = writingPosts.filter((post) => homeSlugs.has(post.slug) && !latest.includes(post));
 
   return (
     <section aria-labelledby="wr-h" className="row">
       <div className="gut">
         <h2 id="wr-h" className="lab">
-          Writing
+          Earlier writing
         </h2>
         <p className="gnote">
           Build logs and what I learned running teams. <Link to="/writing">All writing</Link>
