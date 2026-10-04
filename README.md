@@ -177,6 +177,34 @@ machine where it does not start, run the two Chromium projects and leave WebKit 
 The HTML report is written to `apps/web/playwright-report`
 (`pnpm --filter @repo/web exec playwright show-report`).
 
+## Performance
+
+Two checks, both against the production build, neither on the Worker's dependency list.
+
+`pnpm perf:budget` is the gate: part of `validate` in CI, so it runs on every pull request and push. It
+loads each public page type from a `vite preview` it starts itself, sums what the page downloads (gzip)
+and fails when the JavaScript or CSS is over the budgets in `apps/web/scripts/perf-budget.mjs`, when a
+public page fetches the markdown parser or the highlighter, or when a script carries another post's body.
+`pnpm perf:budget --report` prints the table without failing.
+
+`pnpm perf` is the report: Lighthouse (mobile emulation, simulated Slow 4G, 4x CPU slowdown; median of
+three runs) for `/`, the longest post and one project page, against the lab budgets: LCP, CLS, TBT,
+transfer, request count and TTFB. INP and the cache-miss TTFB cannot be measured by a page-load run and
+are printed as such. Lab numbers are noisy on shared runners, so a line over budget is reported and
+only fails the script with `--strict`. It runs in `.github/workflows/perf.yml`, never on a push and not
+as a required check: every Monday against https://ryanyogan.com, and on demand:
+
+```sh
+gh workflow run perf.yml -f base_url=https://ryanyogan.com   # the live site
+gh workflow run perf.yml --ref my-branch                     # builds that ref, measures its preview
+```
+
+The table is in the run's summary. The preview does not compress, so there transfer is not judged and
+LCP reads high; the run against the deployed site is the one to trust. Locally it is
+`pnpm build && pnpm perf` (or `pnpm perf https://ryanyogan.com`, which needs no build); it needs Chrome
+installed and fetches the pinned Lighthouse with `pnpm dlx` on first use, so Lighthouse is not in
+`package.json` or the lockfile.
+
 ## CI
 
 `.github/workflows/ci.yml` has two jobs. `validate` runs on pull requests and on pushes to `master`:
