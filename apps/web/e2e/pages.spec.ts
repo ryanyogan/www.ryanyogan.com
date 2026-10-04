@@ -266,7 +266,7 @@ test("built HTML uses the hey.com contact address and never gmail.com", () => {
 test("pages rendered from D1 use the hey.com address, never gmail.com, and leak no draft", async ({
   request,
 }) => {
-  expect(projectSlugs.length).toBe(13);
+  expect(projectSlugs.length).toBe(17);
   for (const route of dynamicRoutes) {
     const response = await request.get(route);
     expect(response.status(), route).toBe(200);
@@ -291,6 +291,34 @@ test("/projects lists exactly the published projects", async ({ page }) => {
     `Showing ${projectSlugs.length} of ${projectSlugs.length}`,
   );
   await expect(page.getByText(draft.title)).toHaveCount(0);
+});
+
+test("/projects: a retired project says so, is in the status key, and shows only under All", async ({
+  page,
+}) => {
+  await page.goto("/projects");
+  const retired = page.locator("main article.proj", {
+    has: page.locator('span.st[data-status="retired"]'),
+  });
+  await expect(retired).toHaveCount(1);
+  await expect(retired.locator("span.st")).toHaveText("Retired");
+  await expect(page.locator("svg.marks")).toHaveAttribute(
+    "aria-label",
+    /[1-9]\d* dashed for private or retired/,
+  );
+
+  const filter = page.getByRole("group", { name: "Filter projects by status" });
+  for (const name of ["Running or live", "Prototype"]) {
+    const button = filter.getByRole("button", { name, exact: true });
+    // The first click can land before hydration: repeat until the button takes it.
+    await expect(async () => {
+      await button.click();
+      await expect(button).toHaveAttribute("aria-pressed", "true", { timeout: 1000 });
+    }).toPass();
+    await expect(retired).toHaveCount(0);
+  }
+  await filter.getByRole("button", { name: "All", exact: true }).click();
+  await expect(retired).toHaveCount(1);
 });
 
 test("an unpublished project's URL is a 404", async ({ page, consoleErrors }) => {
