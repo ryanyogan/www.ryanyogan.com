@@ -16,6 +16,7 @@ export function setTheme(theme: Theme) {
   const html = document.documentElement;
   html.classList.remove("dark", "light");
   if (theme !== "system") html.classList.add(theme);
+  syncThemeColor(theme);
   try {
     if (theme === "system") localStorage.removeItem("theme");
     else localStorage.setItem("theme", theme);
@@ -23,6 +24,25 @@ export function setTheme(theme: Theme) {
     // Storage can be unavailable (private mode); the class on <html> still applies.
   }
   window.dispatchEvent(new CustomEvent(THEME_EVENT, { detail: theme }));
+}
+
+/**
+ * The browser's theme colour is the chosen theme's --paper: that theme's meta applies whatever
+ * the OS says and the other never does. With "system" each follows the OS again. The inline
+ * script in routes/__root.tsx does the same before first paint.
+ */
+function syncThemeColor(theme: Theme) {
+  document.querySelectorAll('meta[name="theme-color"]').forEach((meta) => {
+    const scheme = meta.getAttribute("data-scheme");
+    meta.setAttribute(
+      "media",
+      theme === "system"
+        ? `(prefers-color-scheme: ${scheme})`
+        : theme === scheme
+          ? "all"
+          : "not all",
+    );
+  });
 }
 
 /** Flip between light and dark, starting from whatever is showing now. */
