@@ -234,9 +234,26 @@ for (const [size, viewport] of [
         };
         test.info().annotations.push({ type: "measure", description: JSON.stringify(measure) });
 
-        // The numbers above are the point; these only say the page was there to measure.
         expect(seen.frames.length, "the heading was seen").toBeGreaterThan(0);
-        expect(again.length, "the reload made requests").toBeGreaterThan(0);
+        // The page itself is asked for again; nothing with a hash in its name is
+        // (public/_headers), so the fonts and scripts are there before the first paint.
+        expect(measure.network[0]).toContain(`${route} 200`);
+        expect(
+          fromNetwork.filter((request) => new URL(request.url).pathname.startsWith("/assets/")),
+          "hashed files asked for again",
+        ).toEqual([]);
+        expect(measure.assetCache).toEqual(["public, max-age=31536000, immutable"]);
+        // No text drawn in a fallback face first, and nothing moves.
+        expect(measure.fallbackFrames, "frames drawn before the web font").toEqual([]);
+        expect(measure.drawn.h1.join(), "the heading's font").toContain("(web)");
+        expect(measure.shift, `layout shift, by ${measure.shifted.join(" ")}`).toBe(0);
+        expect(measure.moved, "px the heading and first paragraph moved").toEqual({ h1: 0, p: 0 });
+        // Every face on the first screen is one of the two preloaded files (styles/fonts.ts):
+        // the serif italic and semibold are not preloaded, so they may not be needed up here.
+        expect(
+          measure.faces.filter((face) => /italic$|^Source Serif 4 [6-9]00 /.test(face)),
+          "first-screen faces that are not preloaded",
+        ).toEqual([]);
       });
     }
   });
