@@ -169,7 +169,11 @@ plain("a database failure leaves the post intact, without a count", async ({ pag
   ]);
   expect(loaded?.status()).toBe(200);
   expect(failed.status()).toBe(503);
-  await page.waitForLoadState("networkidle");
+  // The answer has been read and React has had two frames to draw whatever it would draw.
+  await failed.finished();
+  await page.evaluate(
+    () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+  );
 
   await expect(page.locator("h1")).toBeVisible();
   await expect(page.locator(".post-meta time")).toBeVisible();
