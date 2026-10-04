@@ -1681,6 +1681,10 @@
   overflow-wrap: anywhere;
 }
 
+.prose a:visited {
+  color: var(--ink-soft);
+}
+
 .prose a:hover {
   color: var(--accent);
 }
@@ -1775,6 +1779,7 @@
   margin: 1.5em 0;
   padding: 0;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   background: var(--code-bg);
   color: var(--ink);
   font-family: var(--font-mono);
@@ -1835,6 +1840,7 @@
 .prose div:has(> table) {
   margin: 1.5em 0;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
 }
 
 .prose table {
@@ -1843,6 +1849,7 @@
   font-family: var(--font-sans);
   font-size: 0.9375rem;
   line-height: 1.5;
+  font-variant-numeric: tabular-nums;
 }
 
 .prose thead,
@@ -1863,6 +1870,19 @@
   font-weight: 600;
 }
 
+/* The renderer marks a column of figures, and one the source aligns, with data-align. */
+.prose [data-align="right"] {
+  text-align: right;
+}
+
+.prose [data-align="center"] {
+  text-align: center;
+}
+
+.prose :is(th, td):last-child {
+  padding-right: 0;
+}
+
 .prose figure {
   margin: 2em 0;
 }
@@ -1880,6 +1900,20 @@
   margin-top: 0.7em;
   font: 400 0.875rem/1.5 var(--font-sans);
   color: var(--muted);
+}
+
+/* On a phone a code block runs to both edges of the screen and its text keeps the column's
+   left edge. Only where the prose is the page column (.col), not in the admin's preview box. */
+@media (max-width: 640px) {
+  .prose.col > pre {
+    max-width: none;
+    margin-inline: calc(-1 * var(--page-gutter));
+    outline-offset: -2px;
+  }
+
+  .prose.col > pre code {
+    padding-inline: var(--page-gutter);
+  }
 }
 
 @media (max-width: 480px) {
