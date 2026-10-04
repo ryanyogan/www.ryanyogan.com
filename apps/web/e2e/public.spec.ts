@@ -311,6 +311,21 @@ test("each project page shows its status, group and links from the database", as
 
 // --- Drafts -------------------------------------------------------------------------------
 
+test("the work timeline opens with the current role and lists every role once", async ({
+  page,
+}) => {
+  await page.goto("/work");
+  const rows = page.locator("#work-timeline .tl li");
+  await expect(rows).toHaveCount(12);
+  await expect(rows.first().locator(".d")).toHaveText("Jun 2026 — Present");
+  await expect(rows.first().locator(".c")).toHaveText("ChromaticSenior Staff Engineer");
+  await expect(rows.last().locator(".d")).toHaveText("May 2006 — Oct 2009");
+  // Sonian is one company with two roles, one row after the other.
+  await expect(rows.filter({ hasText: "Sonian" })).toHaveCount(2);
+  await expect(rows.nth(6)).toContainText("VP of Research and Development");
+  await expect(rows.nth(7)).toContainText("Operations Engineer");
+});
+
 test("a draft is in no feed, sitemap, robots file or data response, and its URL is a 404", async ({
   request,
 }) => {
