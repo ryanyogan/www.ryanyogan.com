@@ -42,6 +42,10 @@ export default defineConfig({
     ["html", { open: "never" }],
     ["json", { outputFile: "e2e-results.json" }],
   ],
+  // e2e/visual.spec.ts: one committed picture per page, width and scheme, with no project
+  // or platform in the name. They are drawn by Chromium on the CI runner and nowhere else.
+  // `updateSnapshots` is left alone: a missing picture is written and fails the test.
+  expect: { toHaveScreenshot: { pathTemplate: "{testDir}/baselines/{arg}{ext}" } },
   use: {
     baseURL: `http://localhost:${PORT}`,
     colorScheme: "light",

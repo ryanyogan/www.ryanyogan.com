@@ -90,9 +90,14 @@ jobs:
       # PNGs of the public pages at 390 and 1280 wide, light and dark, from the same build and
       # database as the suite (apps/web/playwright.shots.config.ts). Also when a test above
       # failed, since that is when a picture helps. `gh run download <run> -n screenshots`.
+      #
+      # The same run redraws the committed pictures of e2e/visual.spec.ts that are missing
+      # or no longer match (apps/web/e2e/baselines), here in the runner's checkout only. The
+      # suite above has already failed on them; after a change that was meant to be seen,
+      # `gh run download <run> -n baselines -D apps/web/e2e/baselines` and commit.
       - name: Screenshots
         if: ${{ !cancelled() && github.event_name == 'pull_request' && steps.browsers.outcome == 'success' }}
-        run: pnpm --filter @repo/web exec playwright test --config playwright.shots.config.ts
+        run: pnpm --filter @repo/web exec playwright test --config playwright.shots.config.ts --update-snapshots=changed
 
       - name: Upload screenshots
         if: ${{ !cancelled() && github.event_name == 'pull_request' && steps.browsers.outcome == 'success' }}
@@ -100,6 +105,15 @@ jobs:
         with:
           name: screenshots
           path: apps/web/screenshots/*.png
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload baselines
+        if: ${{ !cancelled() && github.event_name == 'pull_request' && steps.browsers.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: baselines
+          path: apps/web/e2e/baselines/*.png
           if-no-files-found: ignore
           retention-days: 7
 
