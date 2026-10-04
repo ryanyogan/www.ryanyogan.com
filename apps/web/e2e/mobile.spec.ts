@@ -1,7 +1,7 @@
 import { expect, test } from "./fixtures";
 
-// Runs only in the "mobile" project (390x844, touch): the header collapses to a Menu button
-// (an icon, named "Menu").
+// Runs only in the "mobile" project (390x844, touch) and the "webkit" project (iPhone 14): the
+// header collapses to a Menu button (an icon, named "Menu").
 
 test("the mobile menu opens, moves focus in, and Escape closes it and restores focus", async ({
   page,

@@ -81,6 +81,7 @@ async function openTab(context: BrowserContext, errors: string[], route: string)
 // It only shows once React has hydrated, so a test that navigates on straight away sees it
 // some of the time. This one waits for hydration on every route, and first checks the cause
 // that needs no timing at all: markup the HTML parser has to repair (a <figure> inside a <p>).
+// Also runs in the "webkit" project, which picks it by its title (playwright.config.ts).
 test("every public route is valid HTML and hydrates without a mismatch", async ({
   page,
   context,
