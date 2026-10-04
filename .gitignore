@@ -42,6 +42,9 @@ e2e-results.json
 # `playwright.shots.config.ts` (CI uploads these; never committed)
 apps/web/screenshots/
 
+# `pnpm perf --detail`
+apps/web/perf-detail/
+
 # Internal agent handoff notes
 .handoff/
 

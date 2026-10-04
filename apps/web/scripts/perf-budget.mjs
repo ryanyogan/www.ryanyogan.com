@@ -6,7 +6,8 @@
 // response until the network is idle. Sizes are the gzip (level 9) of each response body:
 // the preview server does not compress, production does.
 //
-// Fails (exit 1) when a route is over a budget below, when a public route downloads the
+// Fails (exit 1) when a route is over a budget below (bytes, or how many requests it makes),
+// when a public route downloads the
 // markdown parser or the syntax highlighter, or when a script carries the body of a post
 // other than the one being read. Fonts have three budgets: the files the page preloads
 // (`<link rel="preload" as="font">`, from src/styles/fonts.ts), how many of those there
@@ -46,14 +47,20 @@ const CSS_BUDGET = 12 * KB;
 const FONT_PRELOAD_BUDGET = 70 * KB;
 const FONT_PRELOAD_FILES = 3;
 const FONT_BUDGET = 150 * KB;
+/**
+ * `requests` is a ceiling on everything the page asks for (document, scripts, fonts, its
+ * API call), two above what October 2026 measured: 7 or 6, 8 for a project page, 10 for a
+ * post. Before the shared modules were one chunk a page made 25 to 28. Production adds three
+ * this run does not see (the favicon and Cloudflare's analytics script and its beacon).
+ */
 const routes = [
-  { path: "/", js: JS_BUDGET },
-  { path: "/work", js: JS_BUDGET },
-  { path: "/now", js: JS_BUDGET },
-  { path: "/projects", js: JS_BUDGET },
-  { path: "/projects/lincoln-project", js: JS_BUDGET },
-  { path: "/writing", js: JS_BUDGET },
-  { path: `/writing/${longest.slug}`, js: JS_BUDGET, post: longest.slug },
+  { path: "/", js: JS_BUDGET, requests: 9 },
+  { path: "/work", js: JS_BUDGET, requests: 9 },
+  { path: "/now", js: JS_BUDGET, requests: 8 },
+  { path: "/projects", js: JS_BUDGET, requests: 8 },
+  { path: "/projects/lincoln-project", js: JS_BUDGET, requests: 10 },
+  { path: "/writing", js: JS_BUDGET, requests: 10 },
+  { path: `/writing/${longest.slug}`, js: JS_BUDGET, requests: 12, post: longest.slug },
 ];
 
 /** Strings that survive minification in unified, micromark and highlight.js. */
@@ -106,6 +113,10 @@ async function measure(browser, origin, route) {
   const preloadHrefs = await page.evaluate(() =>
     Array.from(document.querySelectorAll('link[rel="preload"][as="font"]'), (link) => link.href),
   );
+  // The stylesheet is inlined in the document (src/styles/inline.ts): it counts as CSS.
+  const inlineCss = await page.evaluate(() =>
+    Array.from(document.querySelectorAll("style"), (style) => style.textContent).join(""),
+  );
   const responses = await Promise.all(pending);
   await context.close();
 
@@ -150,7 +161,7 @@ async function measure(browser, origin, route) {
     requests: responses.length,
     external: responses.filter((r) => r.external).length,
     js: sum("js"),
-    css: sum("css"),
+    css: sum("css") + (inlineCss ? gzipSync(inlineCss, { level: 9 }).length : 0),
     font: sum("font"),
     preloads: preloads.length,
     fontPreload: preloads.reduce((total, p) => total + p.bytes, 0),
@@ -159,6 +170,9 @@ async function measure(browser, origin, route) {
   };
   if (result.js > route.js) {
     problems.push(`JS ${kb(result.js)} KB gzip is over the ${kb(route.js)} KB budget`);
+  }
+  if (result.requests > route.requests) {
+    problems.push(`${result.requests} requests; the ceiling is ${route.requests}`);
   }
   if (result.css > CSS_BUDGET) {
     problems.push(`CSS ${kb(result.css)} KB gzip is over the ${kb(CSS_BUDGET)} KB budget`);

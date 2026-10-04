@@ -26,6 +26,17 @@ function isDynamic(path: string): boolean {
   );
 }
 
+/**
+ * What every page runs before it can hydrate: React, the router and Start client, the router
+ * and its route definitions (src/router.tsx, src/start.ts) and the components shared between
+ * pages. Rolldown would give each module shared between the entry and a lazy route a chunk of
+ * its own, 16 small files the browser has to ask for one by one; as one group they are one
+ * request. The group also takes what these modules import (not what they import lazily:
+ * route components, the search index, the markdown renderer and the post bodies stay apart).
+ */
+const everyPage =
+  /[\\/]node_modules[\\/](@tanstack|react-dom)[\\/]|[\\/]src[\\/](router\.tsx|start\.ts|components[\\/][^\\/]+\.tsx)$/;
+
 export default defineConfig(({ command, isPreview }) => ({
   server: {
     port: 3000,
@@ -40,6 +51,17 @@ export default defineConfig(({ command, isPreview }) => ({
   },
   resolve: {
     tsconfigPaths: true,
+  },
+  environments: {
+    client: {
+      build: {
+        rolldownOptions: {
+          output: {
+            codeSplitting: { groups: [{ name: "app", test: everyPage }] },
+          },
+        },
+      },
+    },
   },
   plugins: [
     images,

@@ -191,7 +191,9 @@ Two checks, both against the production build, neither on the Worker's dependenc
 `pnpm perf:budget` is the gate: part of `validate` in CI, so it runs on every pull request and push. It
 loads each public page type from a `vite preview` it starts itself, sums what the page downloads (gzip)
 and fails when the JavaScript or CSS is over the budgets in `apps/web/scripts/perf-budget.mjs`, when a
-public page fetches the markdown parser or the highlighter, or when a script carries another post's body.
+page makes more requests than its ceiling there (6 to 10 today; the shared modules are one chunk and
+the stylesheet is inlined in the document), when a public page fetches the markdown parser or the
+highlighter, or when a script carries another post's body.
 `pnpm perf:budget --report` prints the table without failing.
 
 `pnpm perf` is the report: Lighthouse (mobile emulation, simulated Slow 4G, 4x CPU slowdown; median of
@@ -205,6 +207,13 @@ as a required check: every Monday against https://ryanyogan.com, and on demand:
 gh workflow run perf.yml -f base_url=https://ryanyogan.com   # the live site
 gh workflow run perf.yml --ref my-branch                     # builds that ref, measures its preview
 ```
+
+The workflow passes `--detail`: under the table, each page's requests (type, priority, size, whether
+it blocks rendering or is preloaded), the LCP element with its breakdown and the chain of critical
+requests; the same as JSON in the run's `perf-detail` artifact. `-f applied=true` (`--applied`) makes
+Chrome throttle for real instead of Lighthouse simulating: the simulation charges the paint with every
+request that finished before it in an unthrottled load, scripts and fonts included, so it reads about
+a second higher than a throttled load of this site; use it to see what actually holds the paint back.
 
 The table is in the run's summary. The preview does not compress, so there transfer is not judged and
 LCP reads high; the run against the deployed site is the one to trust. Locally it is
