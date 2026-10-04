@@ -196,9 +196,20 @@ async function hydrated(page: Page) {
 // failure for a stale build and reloads the page being left (lazyRouteComponent), and the
 // reload interrupts the goto. Chromium does not reject the import, so it never showed there.
 async function ready(page: Page, path: string) {
+  // The writing pages fill in view counts after hydration: measure them once the answer
+  // has been drawn, not at some moment before or after it.
+  const counts = path.startsWith("/writing")
+    ? page.waitForResponse((response) => new URL(response.url()).pathname.startsWith("/api/views"))
+    : undefined;
   await page.goto(path);
   await hydrated(page);
   await page.evaluate(() => document.fonts.ready);
+  if (counts) {
+    await (await counts).finished();
+    await page.evaluate(
+      () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+    );
+  }
 }
 
 test.describe("device matrix", () => {

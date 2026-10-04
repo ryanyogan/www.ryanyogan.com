@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { ViewCount, useViewCounts } from "~/components/ViewCount";
 import { writingPosts } from "~/lib/content";
 import type { WritingPost } from "~/lib/content";
 import { collectionNode, pageTitle, seo } from "~/lib/seo";
@@ -39,6 +40,8 @@ function monthDay(post: WritingPost): string {
 }
 
 function WritingPage() {
+  // One request for the whole list, after hydration; it counts nothing.
+  const counts = useViewCounts();
   return (
     <main id="main" className="wrap">
       <header className="row wr-head">
@@ -71,6 +74,7 @@ function WritingPage() {
                     {post.title}
                   </Link>
                 </h3>
+                <ViewCount views={counts[post.slug]} />
               </li>
             ))}
           </ol>
