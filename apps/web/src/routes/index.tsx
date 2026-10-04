@@ -4,7 +4,7 @@ import { LeadAndBuild } from "~/components/home/LeadAndBuild";
 import { OffTheClock } from "~/components/home/OffTheClock";
 import { OpenTo } from "~/components/home/OpenTo";
 import { ProjectIndex } from "~/components/home/ProjectIndex";
-import { LatestWriting, WritingList } from "~/components/home/WritingList";
+import { LatestWriting } from "~/components/home/WritingList";
 import { PROJECT_PAGE_CACHE, fetchProjects } from "~/lib/projects.functions";
 import { SITE_DESCRIPTION, SITE_TITLE, personNode, seo, websiteNode } from "~/lib/seo";
 import { staticOgImage } from "~/lib/og-images";
@@ -23,15 +23,17 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
+/** Every list on Home shows this many rows and one link to the rest. */
+const HOME_ROWS = 3;
+
 function HomePage() {
   const projects = Route.useLoaderData();
   return (
     <main id="main" className="wrap home">
       <Hero />
-      <LatestWriting />
-      <ProjectIndex projects={projects} />
+      <LatestWriting limit={HOME_ROWS} />
+      <ProjectIndex projects={projects} limit={HOME_ROWS} />
       <LeadAndBuild />
-      <WritingList />
       <OffTheClock />
       <OpenTo />
     </main>

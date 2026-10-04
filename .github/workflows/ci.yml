@@ -71,6 +71,7 @@ jobs:
       # Chromium for the whole suite, WebKit for the "webkit" project (public pages at iPhone
       # size). A browser already in the cache is not downloaded again.
       - name: Install Playwright Chromium and WebKit
+        id: browsers
         run: pnpm --filter @repo/web exec playwright install --with-deps chromium webkit
 
       # The same command as locally. It migrates and seeds throwaway local D1 databases
@@ -79,6 +80,23 @@ jobs:
       # any failed test, and writes the totals to the job summary.
       - name: End-to-end tests
         run: pnpm test:e2e
+
+      # Pull requests only, never a push to master (nothing here delays a deploy): full-page
+      # PNGs of the public pages at 390 and 1280 wide, light and dark, from the same build and
+      # database as the suite (apps/web/playwright.shots.config.ts). Also when a test above
+      # failed, since that is when a picture helps. `gh run download <run> -n screenshots`.
+      - name: Screenshots
+        if: ${{ !cancelled() && github.event_name == 'pull_request' && steps.browsers.outcome == 'success' }}
+        run: pnpm --filter @repo/web exec playwright test --config playwright.shots.config.ts
+
+      - name: Upload screenshots
+        if: ${{ !cancelled() && github.event_name == 'pull_request' && steps.browsers.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: apps/web/screenshots/*.png
+          if-no-files-found: ignore
+          retention-days: 7
 
       # What each public page type downloads from the build above, gzip, against the budgets
       # in apps/web/scripts/perf-budget.mjs. Also fails if a public page fetches the markdown

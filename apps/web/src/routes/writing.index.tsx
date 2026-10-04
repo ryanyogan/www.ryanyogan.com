@@ -62,18 +62,15 @@ function WritingPage() {
               {year}
             </h2>
           </div>
-          <ol className="col wr-list">
+          <ol className="col wlist">
             {posts.map((post) => (
               <li key={post.slug}>
                 <time dateTime={post.isoDate}>{monthDay(post)}</time>
-                <div>
-                  <h3>
-                    <Link to="/writing/$slug" params={{ slug: post.slug }} data-kb-item>
-                      {post.title}
-                    </Link>
-                  </h3>
-                  <p>{post.excerpt}</p>
-                </div>
+                <h3>
+                  <Link to="/writing/$slug" params={{ slug: post.slug }} data-kb-item>
+                    {post.title}
+                  </Link>
+                </h3>
               </li>
             ))}
           </ol>

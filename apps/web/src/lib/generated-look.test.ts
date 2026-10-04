@@ -164,9 +164,7 @@ const ALLOWED = [
   ...allow("arrow", [
     ["components/home/Hero.tsx", 1, "the figures (150 → 2,300); the owner has seen and kept it"],
     ["routes/work.tsx", 2, "the same figures, and the link to Projects"],
-    ["components/home/LeadAndBuild.tsx", 2, "the links to Work and Projects"],
-    ["components/home/OpenTo.tsx", 1, "the link to Work"],
-    ["components/home/ProjectIndex.tsx", 1, "the link to Projects"],
+    ["components/home/LeadAndBuild.tsx", 1, "the link to Work"],
     ["routes/projects.index.tsx", 1, "the link to what I am open to"],
     ["routes/projects.$slug.tsx", 4, "previous and next project, which point a direction"],
     ["routes/__root.tsx", 1, "the 404 page's link home"],
@@ -176,7 +174,6 @@ const ALLOWED = [
     ["routes/now.tsx", 1, "the updated line"],
     ["routes/writing.index.tsx", 1, "post count and RSS"],
     ["routes/writing.$slug.tsx", 2, "date, reading time and author under a post title"],
-    ["routes/projects.index.tsx", 1, "a project's tech list"],
     ["routes/projects.$slug.tsx", 1, "a project's tech list"],
     ["lib/seo.ts", 1, "the document title, page then site name"],
     ["lib/og/template.ts", 2, "the kicker on a share image"],

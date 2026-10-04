@@ -441,24 +441,22 @@
   }
 
   .else {
-    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 18px;
   }
 
   .else a {
     display: flex;
     align-items: center;
     min-height: 44px;
-    max-width: 13rem;
+    min-width: 44px;
     color: var(--ink-soft);
+    text-decoration: underline;
   }
 
   .else a:hover {
     color: var(--ink);
-  }
-
-  .else span {
-    margin-left: 0.6em;
-    color: var(--muted);
   }
 
   .hero {
@@ -520,10 +518,9 @@
     gap: 48px 64px;
   }
 
-  .grp {
-    border-bottom: 1px solid var(--rule);
-    padding-bottom: 10px;
-    margin-bottom: 6px;
+  /* On /projects the column is wide: keep a status within reach of its title. */
+  .plist {
+    max-width: 40rem;
   }
 
   .plist li {
@@ -542,7 +539,6 @@
   }
 
   .plist a:hover,
-  .fresh a:hover,
   .wlist a:hover {
     text-decoration: underline;
     text-decoration-color: var(--accent);
@@ -553,13 +549,6 @@
     font: 400 0.875rem/1.5 var(--font-sans);
     color: var(--muted);
     margin-top: -8px;
-  }
-
-  .idx .end {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 20px;
   }
 
   .graph {
@@ -610,50 +599,17 @@
     font-variant-numeric: tabular-nums;
   }
 
+  .wlist h3 {
+    font: inherit;
+    letter-spacing: 0;
+  }
+
   .wlist a {
     display: block;
     padding: 11px 0;
     font-size: 1.125rem;
     line-height: 1.4;
     max-width: 34em;
-  }
-
-  /* The newest posts, under the hero. */
-  .row.latest {
-    padding-bottom: 72px;
-  }
-
-  .fresh {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 24px 64px;
-  }
-
-  .fresh time {
-    display: block;
-    font: 400 0.8125rem var(--font-sans);
-    color: var(--muted);
-  }
-
-  .fresh a {
-    display: flex;
-    align-items: flex-start;
-    min-height: 44px;
-    padding: 8px 0 12px;
-    font: 500 1.125rem/1.3 var(--font-sans);
-    letter-spacing: -0.005em;
-    text-wrap: balance;
-  }
-
-  .fresh p {
-    font: 400 0.9375rem/1.5 var(--font-sans);
-    color: var(--muted);
-    max-width: 34em;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    overflow: hidden;
   }
 
   /* Off the clock */
@@ -737,10 +693,6 @@
       padding-bottom: 64px;
     }
 
-    .row.latest {
-      padding-bottom: 64px;
-    }
-
     .row.first .gut {
       display: none;
     }
@@ -757,7 +709,6 @@
   @media (max-width: 640px) {
     .hero,
     .idx,
-    .fresh,
     .twin,
     .wlist li {
       grid-template-columns: minmax(0, 1fr);
@@ -1093,8 +1044,7 @@
     padding-bottom: 36px;
   }
 
-  .prin > li:last-child,
-  .col > .proj:last-child {
+  .prin > li:last-child {
     padding-bottom: 0;
   }
 
@@ -1272,11 +1222,6 @@
     text-decoration-color: var(--accent);
   }
 
-  .proj {
-    padding-bottom: 40px;
-  }
-
-  .proj header,
   .pd-title {
     display: flex;
     align-items: baseline;
@@ -1284,37 +1229,10 @@
     gap: 16px;
   }
 
-  .proj h3 {
-    font: 500 1.1875rem/1.3 var(--font-sans);
-    letter-spacing: -0.01em;
-  }
-
-  .proj h3 a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-  }
-
-  .proj h3 a:hover,
   .pd-nav a:hover,
   .crumbs a:hover {
     text-decoration: underline;
     text-decoration-color: var(--accent);
-  }
-
-  .proj > p {
-    max-width: 34em;
-    color: var(--ink-soft);
-    font-size: 1.0625rem;
-  }
-
-  .proj .meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0 24px;
-    margin-top: 4px;
   }
 
   .tech {
@@ -1540,46 +1458,6 @@
     padding-bottom: var(--space-section);
   }
 
-  .wr-list li {
-    display: grid;
-    grid-template-columns: 6.5rem minmax(0, 1fr);
-    column-gap: 24px;
-    align-items: baseline;
-    padding-bottom: 18px;
-  }
-
-  .wr-list time {
-    font: 400 0.8125rem var(--font-sans);
-    color: var(--muted);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .wr-list h3 {
-    font: inherit;
-    letter-spacing: 0;
-    text-wrap: pretty;
-  }
-
-  .wr-list a {
-    display: block;
-    padding: 11px 0 6px;
-    font-size: 1.125rem;
-    line-height: 1.4;
-    max-width: 34em;
-  }
-
-  .wr-list a:hover {
-    text-decoration: underline;
-    text-decoration-color: var(--accent);
-  }
-
-  .wr-list p {
-    max-width: 36em;
-    font-size: 1rem;
-    line-height: 1.55;
-    color: var(--ink-soft);
-  }
-
   .post-head {
     padding-top: 52px;
     padding-bottom: 44px;
@@ -1678,17 +1556,6 @@
   }
 
   @media (max-width: 640px) {
-    .wr-list li {
-      grid-template-columns: minmax(0, 1fr);
-      padding-top: 6px;
-    }
-
-    .wr-list a {
-      padding: 2px 0 6px;
-      font-size: 1.0625rem;
-      min-height: 44px;
-    }
-
     .post {
       font-size: 1.125rem;
       line-height: 1.56;
@@ -2054,8 +1921,8 @@ summary {
   }
 }
 
-/* Anything pressed with a finger is 44px both ways: short words get the width, and a
-   one-line writing title the height. Desktop keeps its tighter text controls. */
+/* Anything pressed with a finger is 44px both ways: short words get the width. Desktop keeps
+   its tighter text controls. */
 @media (max-width: 1024px) {
   .pick button,
   footer .quiet {
@@ -2065,10 +1932,6 @@ summary {
 
   .wr-count a {
     min-width: 44px;
-  }
-
-  .wr-list a {
-    padding-bottom: 8px;
   }
 
   /* 16px or iOS zooms the page when the field takes focus. */
@@ -2082,13 +1945,11 @@ summary {
   .st,
   .nums dd,
   .wlist time,
-  .fresh time,
   .open li::before,
   .tl .d,
   .arc .when,
   .tech,
   .pd-nav span,
-  .wr-list time,
   .post-nav span {
     font-size: 0.875rem;
   }
@@ -2098,17 +1959,10 @@ summary {
   }
 
   /* With the reader's text enlarged (WCAG 1.4.4) a long word must not push the page wide:
-     the status drops under a title that has less than nine characters of room left, and
-     the email address may break. At the default size neither rule changes anything. */
-  .proj header,
+     on a project page the status may drop under the title, and the email address may break. At the default size neither rule changes anything. */
   .pd-title {
     flex-wrap: wrap;
     row-gap: 0;
-  }
-
-  .proj header > h3 {
-    flex: 1 1 0;
-    min-width: 9ch;
   }
 
   .mail {
@@ -2116,7 +1970,7 @@ summary {
     overflow-wrap: anywhere;
   }
 
-  /* Likewise: a figure such as "150 → 2,300" may break at its arrow, and on a Home row the
+  /* Likewise: a figure such as "150 → 2,300" may break at its arrow, and on a project row the
      status drops under the title once the title's longest word no longer fits beside it. */
   .nums dt,
   .figs dt {

@@ -13,5 +13,12 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["src", "e2e", "scripts", "playwright.config.ts", "worker-configuration.d.ts"]
+  "include": [
+    "src",
+    "e2e",
+    "scripts",
+    "playwright.config.ts",
+    "playwright.shots.config.ts",
+    "worker-configuration.d.ts"
+  ]
 }
