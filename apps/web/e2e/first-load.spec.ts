@@ -24,13 +24,21 @@ type Seen = {
   fcp?: number;
   /** Faces on the page at the first frame, and now. */
   faces: number[];
+  /** The last time a watched text was laid out but not drawn (WebKit, below), in ms. */
+  undrawn?: number;
 };
 type Watching = Window & { __seen: Seen; __watch: (element: Element) => void };
 
 // Runs in the page before any of its own scripts. On every frame it reads each watched
 // element: its box on the page and the widths of its text's line boxes. From the frame an
 // element is first inside the window, both must stay as they were.
-function watch() {
+//
+// `blocks` is WebKit: it gives an `optional` face 100 ms to arrive and until then draws no text
+// set in that face's family (the text is laid out, in other metrics, and left blank), then keeps
+// whichever face it has. So while such a face is loading the text is not on screen yet, though
+// other things are and the first paint is reported. Chromium draws the fallback at once, and
+// there a face that is loading hides nothing.
+function watch(blocks: boolean) {
   const seen: Seen = { frames: 0, changes: [], shift: 0, faces: [] };
   const first = new WeakMap<Element, { text: string; state: string }>();
   const extra: Element[] = [];
@@ -50,11 +58,27 @@ function watch() {
     "body > footer",
   ];
   const round = (n: number) => Math.round(n * 100) / 100;
+  const undrawn = (element: Element) => {
+    if (!blocks) return false;
+    const family = getComputedStyle(element).fontFamily;
+    return [...document.fonts].some(
+      (face) =>
+        face.status === "loading" &&
+        face.display === "optional" &&
+        family.includes(face.family.replace(/["']/g, "")),
+    );
+  };
   const read = (element: Element, what: string) => {
     const rect = element.getBoundingClientRect();
     if (rect.width === 0) return;
     const known = first.get(element);
     if (!known && (rect.bottom <= 0 || rect.top >= innerHeight)) return;
+    // Only before it has been seen: text that was drawn and then waits on a face is held to
+    // what it was.
+    if (!known && undrawn(element)) {
+      seen.undrawn = Math.round(performance.now());
+      return;
+    }
     const range = document.createRange();
     range.selectNodeContents(element);
     // A new page puts what it shares with the last one (the header, the footer) at another
@@ -104,6 +128,9 @@ function watch() {
     }).observe({ type: "paint", buffered: true });
   }
 }
+
+const watching = (page: Page, browserName: string) =>
+  page.addInitScript(watch, browserName === "webkit");
 
 /**
  * What the watcher saw. A change is one the reader saw only if it came after the first paint:
@@ -213,7 +240,7 @@ for (const route of routes) {
     browserName,
   }) => {
     const held = await slowFonts(page, FONT);
-    await page.addInitScript(watch);
+    await watching(page, browserName);
 
     await page.goto(route, { waitUntil: "commit" });
     await hydrated(page);
@@ -273,9 +300,10 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
 
   test("below the window they are added, and are there when the reader scrolls to them", async ({
     page,
+    browserName,
   }) => {
     await slowFonts(page, LATE);
-    await page.addInitScript(watch);
+    await watching(page, browserName);
     await page.goto("/work");
     await hydrated(page);
     const text = await lateText(page);
@@ -302,9 +330,10 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
 
   test("in the window they are not added: the text keeps the face it was drawn in", async ({
     page,
+    browserName,
   }) => {
     await slowFonts(page, LATE);
-    await page.addInitScript(watch);
+    await watching(page, browserName);
     await page.goto(post);
     await hydrated(page);
     const text = await lateText(page);
@@ -331,7 +360,7 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
     await frames(page, 6);
     const firstVisit = await lateFaces(page);
 
-    await page.addInitScript(watch);
+    await watching(page, browserName);
     await page.reload();
     await hydrated(page);
     await page.evaluate(() => document.fonts.ready);
@@ -339,6 +368,7 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
     await readThrough(page);
     const end = await seen(page);
     const secondVisit = await lateFaces(page);
+    const web = await drawnInWebFont(page);
     test.info().annotations.push({
       type: "measure",
       description: JSON.stringify({
@@ -346,6 +376,8 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
         secondVisit,
         atFirstFrame: end.faces[0] === end.faces[1],
         fcp: end.fcp,
+        undrawnUntil: end.undrawn,
+        web,
         changedBeforeFirstPaint: end.unseen.length,
         changes: end.changes.slice(0, 2),
       }),
