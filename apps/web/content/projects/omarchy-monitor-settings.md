@@ -10,7 +10,7 @@ github: "https://github.com/ryanyogan/omarchy-monitor-settings"
 group: desktop-tools
 status: live
 statusLabel: "Released"
-order: 1
+order: 3
 ---
 
 Monitor configuration for Hyprland, from the terminal. A TUI written in Go.

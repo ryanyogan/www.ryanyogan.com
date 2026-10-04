@@ -13,37 +13,31 @@ year: "2026"
 featured: true
 group: for-people-i-know
 status: prototype
-order: 2
+order: 4
 ---
 
-A prototype hockey training app with real-time pose detection. Uses MediaPipe in the browser at 30fps to analyze shots, track form, and provide Claude-powered coaching feedback. Born from a father's refusal to pay $150/hour for a shooting coach.
+A prototype hockey training app with real-time pose detection. It uses MediaPipe in the browser to detect shots, and a vision model for coaching feedback afterwards. Born from a father's refusal to pay $150/hour for a shooting coach.
 
-## Real-Time Pose Detection
+## Pose Detection in the Browser
 
-MediaPipe's Pose Landmarker runs entirely in the browser via WebGL, tracking 33 body landmarks at 30fps with no server round-trip. For hockey, we focus on shoulders (rotation/power), elbows (arm angle), wrists (hand position), hips (weight transfer), and knees (stance). Stick position is estimated from wrist landmarks and arm angle geometry.
+MediaPipe's Pose Landmarker runs in the browser, tracking 33 body landmarks at 30fps with no server round-trip. For hockey, the code reads the wrists, elbows, shoulders, hips and knees. Stick position is estimated from the hands.
 
-## Shot Detection Algorithm
+## Shot Detection
 
-The core challenge: distinguishing a real shot from a kid waving their stick around. The algorithm uses temporal validation requiring 4 consecutive frames:
-
-1. **Wind-up** — Wrist rises above shoulder, elbow angle opens, hip rotation begins
-2. **Downswing** — Wrist velocity exceeds threshold, shoulder rotation accelerates, projected stick drops toward contact zone
-3. **Contact** — Peak velocity detected, all signals converge at expected contact point
-4. **Follow-through** — Wrist crosses body midline, arms extend, hip rotation completes
-
-Multi-hand support detects both left and right-handed shooters automatically. Shot types (wrist, slap, snap, backhand) are classified from landmark signature patterns.
+The core challenge: distinguishing a real shot from a kid waving their stick around. A shot only counts when wrist velocity stays above a threshold for four consecutive frames and the estimated stick is moving too. The detector follows whichever wrist is faster, so it works for left and right-handed shooters.
 
 ## Claude Vision Integration
 
-After a session, captured shot events and selected video frames are sent to Claude Vision for analysis. Prompts are hockey-specific and age-aware: young players get encouragement and one improvement at a time; adults get technical feedback about weight transfer, blade angle, and momentum timing.
+After a session, selected video frames are sent to Claude Vision for analysis. The prompts are hockey-specific and written for the player's age: encouraging, simple language, what went well first.
 
-## Gamification Layer
+## Progress
 
-- **XP System** — Every shot earns XP, harder shots earn more, clean technique gets bonus XP
-- **Leveling** — "Garage Rookie" to "Sniper Elite" with an RPG-style progression curve
-- **Achievements** — "First Slapshot," "50 MPH Club," "Switch Shooter," and 20+ more
-- **Session Streaks** — Duolingo-style streak system that keeps kids practicing daily
+The data model has XP and levels, a practice-day streak, and achievements. The prototype seeds sixteen achievements.
 
-## The Road to Ice Projection
+## Where It Could Go
 
-The long-term vision: project coaching cues directly onto the ice during practice. A camera captures video from above, ML models analyze technique in real-time, and a projector overlays visual coaching cues where the player can see them. The browser-based version is the MVP. Every training session generates validation data for the next version.
+The long-term idea is to project coaching cues onto the ice during practice. The browser version is the first step.
+
+## Status
+
+A prototype. The repo has two commits and it is not deployed.

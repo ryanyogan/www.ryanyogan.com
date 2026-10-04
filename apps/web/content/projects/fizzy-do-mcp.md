@@ -16,38 +16,40 @@ statusLabel: "On npm"
 order: 1
 ---
 
-Open-source MCP server connecting AI assistants to the Fizzy kanban, published on npm as `fizzy-do-mcp`. 67 tools across 12 categories, including composite "project manager" tools. Version 0.5 deliberately simplified it to local-first. Turn your AI assistant into a full-featured project manager that can create, update, and organize work directly in Fizzy.
+Open-source MCP server connecting AI assistants to the Fizzy kanban, published on npm as `fizzy-do-mcp`. 67 tools across 12 categories, including composite "project manager" tools. Version 0.5 deliberately simplified it to local-first.
 
 Install it from npm: [fizzy-do-mcp](https://www.npmjs.com/package/fizzy-do-mcp).
 
 ## Tool Categories
 
-67 tools across 12 categories, including:
+67 tools across 12 categories:
 
-- **Boards** — List, create, update, delete, publish/unpublish, archive/unarchive, duplicate, reorder. Full board lifecycle management.
-- **Cards** — Create, update, delete, move, assign, set due dates, add labels, attach files, convert to subtasks. Full card lifecycle with bulk operations.
-- **Columns** — Create, rename, reorder, collapse/expand columns. Kanban workflow management.
-- **Comments** — Add, edit, delete comments on cards. Thread support with @mentions.
-- **Labels** — Create, update, delete custom labels. Color management and bulk assignment.
-- **Checklists** — Create checklists on cards, add/remove items, toggle completion, reorder.
-- **Attachments** — Upload, download, delete file attachments on cards.
-- **Project Manager** — AI-powered tools for daily standups (auto-generate standup summaries from card activity), sprint reporting (velocity, burndown, blockers), and workload analysis across team members.
-- **Search & Filter** — Full-text search across boards, cards, and comments. Filter by assignee, label, due date, and status.
+- **Cards** (18): list, get, create, update, delete, close, reopen, postpone, triage, tag, assign, watch, pin, mark golden
+- **Boards** (7): list, get, create, update, delete, publish, unpublish
+- **Reactions** (6): list, add and remove, on cards and on comments
+- **Webhooks** (6): list, get, create, update, delete, test
+- **Columns** (5): list, get, create, update, delete
+- **Comments** (5): list, get, create, update, delete
+- **Steps** (5): the checklist items inside a card. List, create, update, toggle, delete
+- **Notifications** (5): list, get, count, mark one read, mark all read
+- **Project manager** (5): actionable cards, project context, progress reports, and starting and ending a work session
+- **Identity** (2), **Users** (2), **Tags** (1): lookups
 
 ## CLI Commands
 
-Fizzy Do also ships with CLI commands for terminal-based workflows:
+The same package is the command line for setup:
 
 ```bash
-fizzy boards list           # List all boards
-fizzy cards create          # Interactive card creation
-fizzy standup               # Generate today's standup
+npx fizzy-do-mcp configure   # store the Fizzy token and configure installed editors
+npx fizzy-do-mcp whoami      # show the current identity
+npx fizzy-do-mcp status      # check the server configuration
+npx fizzy-do-mcp logout      # clear stored credentials
 ```
 
-## Built with Vite+ Toolchain
+## Built with the Vite+ Toolchain
 
-The MCP server is built using a modern TypeScript toolchain: Vite for bundling, Vitest for testing, and TSup for the production build. Hot module reloading during development means instant feedback when modifying tool implementations.
+The repo is a pnpm workspace built with Vite+: one tool for the build, the tests, linting and formatting. The docs site at [fizzy.yogan.dev](https://fizzy.yogan.dev) is VitePress.
 
 ## Supported Editors
 
-Works with any MCP-compatible editor: Claude Desktop, Cursor, VS Code (with Copilot MCP extension), Windsurf, Zed, and any other editor that supports the MCP protocol.
+The README has setup guides for Claude Desktop, Claude Code, Cursor, Windsurf, Continue and OpenCode.

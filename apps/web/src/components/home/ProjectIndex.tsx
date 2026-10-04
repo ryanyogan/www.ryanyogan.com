@@ -16,7 +16,16 @@ const words = [
   "Eight",
   "Nine",
   "Ten",
-].concat(["Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen"]);
+].concat([
+  "Eleven",
+  "Twelve",
+  "Thirteen",
+  "Fourteen",
+  "Fifteen",
+  "Sixteen",
+  "Seventeen",
+  "Eighteen",
+]);
 
 export function ProjectIndex({ projects: all }: { projects: Project[] }) {
   const groups = projectGroups

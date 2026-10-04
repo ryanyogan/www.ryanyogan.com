@@ -7,7 +7,7 @@ tech:
   - Validated model output
 github: "https://github.com/ryanyogan/perfumery"
 group: shipped
-status: prototype
+status: retired
 order: 2
 ---
 
@@ -17,4 +17,4 @@ The part worth looking at is the validation step: the model proposes a compositi
 
 ## Status
 
-A public prototype.
+Retired. It was a prototype and I have stopped working on it. The source is still public.

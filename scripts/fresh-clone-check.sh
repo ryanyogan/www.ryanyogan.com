@@ -5,12 +5,12 @@
 #                                               directory, install there, start dev, check
 #   sh scripts/fresh-clone-check.sh --in-place  start dev in this checkout and check (CI,
 #                                               where the checkout already is a fresh clone)
-# Passes when / and /projects answer 200, /projects links the 13 seeded projects and the
+# Passes when / and /projects answer 200, /projects links the 17 seeded projects and the
 # server log has no "no such table". PORT picks the dev port (default 3111).
 set -eu
 
 PORT="${PORT:-3111}"
-EXPECTED=13
+EXPECTED=17
 here=$(cd "$(dirname "$0")/.." && pwd)
 work=""
 pid=""
