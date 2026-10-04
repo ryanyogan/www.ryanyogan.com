@@ -374,6 +374,28 @@ test("404 responses are not cacheable; the prerendered and dynamic pages are", a
   }
 });
 
+test("an icon path is an empty 404, and every page tells the browser not to ask", async ({
+  request,
+}) => {
+  // No icon files exist. /favicon.ico used to be the whole rendered 404 page (56.8 KB).
+  for (const path of [
+    "/favicon.ico",
+    "/apple-touch-icon.png",
+    "/apple-touch-icon-precomposed.png",
+  ]) {
+    const response = await request.get(path);
+    expect(response.status(), path).toBe(404);
+    expect(response.headers()["cache-control"], path).toBe("no-store");
+    expect((await response.body()).length, path).toBe(0);
+  }
+  for (const path of [...routes, "/no-such-page"]) {
+    const html = await (await request.get(path)).text();
+    const icons = html.match(/<link\b[^>]*\srel="[^"]*icon[^"]*"[^>]*>/g) ?? [];
+    expect(icons, path).toHaveLength(1);
+    expect(icons[0], path).toContain('href="data:,"');
+  }
+});
+
 test("a database failure is a 500 that no cache may keep", async ({ request }) => {
   // BROKEN_ORIGIN is the same build on a D1 with no tables: every query throws.
   for (const path of ["/", "/projects", "/projects/lincoln-project"]) {
