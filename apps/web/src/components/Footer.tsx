@@ -10,7 +10,7 @@ export function Footer() {
   return (
     <footer className="font-sans text-[0.875rem] text-muted">
       <div className="wrap pb-[max(48px,env(safe-area-inset-bottom))]">
-        <div className="flex flex-wrap items-center gap-x-6 border-t border-rule pt-4">
+        <div className="flex flex-wrap items-center gap-x-6 border-t border-rule pt-4 max-sm:justify-between">
           <p className="order-last mt-3 w-full sm:order-none sm:mt-0 sm:mr-auto sm:w-auto">
             Ryan Yogan &middot; Chicago
           </p>

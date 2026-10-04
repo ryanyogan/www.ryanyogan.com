@@ -83,6 +83,7 @@
    there and is read outdoors (5.9:1 on paper, 6.4:1 in the dark theme; 5.0 and 5.3 above). */
 @media (max-width: 640px) {
   :root {
+    --space-section: 56px;
     --muted: #5c6060;
   }
 
@@ -94,12 +95,6 @@
     html:not(.light) {
       --muted: #a0a29e;
     }
-  }
-}
-
-@media (max-width: 480px) {
-  :root {
-    --space-section: 72px;
   }
 }
 
@@ -692,10 +687,31 @@
       grid-template-columns: minmax(0, 1fr);
     }
 
+    /* No gutter on a phone: a section opens with a hairline and its label in ink. */
+    section > .gut {
+      border-top: 1px solid var(--rule);
+      padding-top: 16px;
+      margin-bottom: 16px;
+    }
+
+    .gut .lab {
+      color: var(--ink);
+    }
+
     .lake,
     .graph,
+    .rink,
     .dim {
       display: none;
+    }
+
+    /* A heading sits nearer its own text than the text above it. */
+    .twin .h-m + * {
+      margin-top: 8px;
+    }
+
+    .off {
+      margin-top: 12px;
     }
 
     .lede {
@@ -1336,7 +1352,8 @@
   }
 
   @media (max-width: 640px) {
-    .marks {
+    .marks,
+    .loop {
       display: none;
     }
 
@@ -1363,10 +1380,6 @@
 
     .tl .c {
       margin: 2px 0 4px;
-    }
-
-    .loop {
-      width: 240px;
     }
   }
 }
@@ -1972,8 +1985,24 @@ summary {
   }
 }
 
+/* The key hint is for a keyboard: not on a touch screen, however wide. */
+@media (hover: none) and (pointer: coarse) {
+  [data-testid="keys-hint"] {
+    display: none;
+  }
+}
+
 /* Nothing a phone shows is under 14px. */
 @media (max-width: 640px) {
+  /* The footer's links span the column: the first word and the last sit on its two edges. */
+  footer a.quiet:first-of-type {
+    justify-content: flex-start;
+  }
+
+  footer a[href$=".xml"] {
+    justify-content: flex-end;
+  }
+
   .st,
   .nums dd,
   .wlist time,
