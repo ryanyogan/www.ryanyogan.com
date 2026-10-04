@@ -32,6 +32,43 @@ for (const route of routes) {
   });
 }
 
+test("Home links the newest posts above the project index, and no post twice", async ({ page }) => {
+  // The newest posts by the dates in their frontmatter, not by anything the page says.
+  const dir = new URL("../content/writing/", import.meta.url);
+  const newest = readdirSync(dir)
+    .filter((name) => name.endsWith(".md"))
+    .map((name) => ({
+      slug: name.replace(/\.md$/, ""),
+      time: Date.parse(/^date:\s*"?([^"\n]+)/m.exec(readFileSync(new URL(name, dir), "utf8"))![1]!),
+    }))
+    .sort((a, b) => b.time - a.time);
+  expect(Number.isNaN(newest[0]!.time)).toBe(false);
+
+  await page.goto("/");
+  const latest = page.getByRole("region", { name: "Latest writing" });
+  const links = latest.getByRole("link");
+  await expect(links).toHaveCount(2);
+  await expect(links.first()).toHaveAttribute("href", `/writing/${newest[0]!.slug}`);
+  // Each has its date and a line of description.
+  await expect(latest.locator("li time")).toHaveCount(2);
+  for (const line of await latest.locator("li p").allTextContents()) {
+    expect(line.trim()).not.toBe("");
+  }
+
+  const top = await links.first().boundingBox();
+  const hero = await page.locator("h1").boundingBox();
+  const index = await page.locator("#idx-h").boundingBox();
+  expect(top!.y).toBeGreaterThan(hero!.y);
+  expect(top!.y + top!.height).toBeLessThan(index!.y);
+
+  // The list further down carries on from there: no post is linked twice.
+  const hrefs = await page
+    .locator('main a[href^="/writing/"]')
+    .evaluateAll((anchors) => anchors.map((anchor) => anchor.getAttribute("href")));
+  expect(hrefs.length).toBeGreaterThan(2);
+  expect(new Set(hrefs).size).toBe(hrefs.length);
+});
+
 test("/rss.xml parses and has one item per post", async ({ page, request }) => {
   const response = await request.get("/rss.xml");
   expect(response.status()).toBe(200);

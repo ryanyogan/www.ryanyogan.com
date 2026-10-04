@@ -4,7 +4,7 @@ import { LeadAndBuild } from "~/components/home/LeadAndBuild";
 import { OffTheClock } from "~/components/home/OffTheClock";
 import { OpenTo } from "~/components/home/OpenTo";
 import { ProjectIndex } from "~/components/home/ProjectIndex";
-import { WritingList } from "~/components/home/WritingList";
+import { LatestWriting, WritingList } from "~/components/home/WritingList";
 import { PROJECT_PAGE_CACHE, fetchProjects } from "~/lib/projects.functions";
 import { SITE_DESCRIPTION, SITE_TITLE, personNode, seo, websiteNode } from "~/lib/seo";
 import { staticOgImage } from "~/lib/og-images";
@@ -28,6 +28,7 @@ function HomePage() {
   return (
     <main id="main" className="wrap home">
       <Hero />
+      <LatestWriting />
       <ProjectIndex projects={projects} />
       <LeadAndBuild />
       <WritingList />

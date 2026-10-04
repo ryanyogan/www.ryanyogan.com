@@ -78,6 +78,7 @@ const RESERVED_IDS = [
   "off-h",
   "open-h",
   "wr-h",
+  "new-h",
   "proj-h",
   "proj-open-h",
   "work-h",

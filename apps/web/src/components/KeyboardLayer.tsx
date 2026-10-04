@@ -6,6 +6,7 @@ import type { KeyboardDialog } from "~/lib/keys";
 import { toggleTheme } from "~/lib/theme";
 import { fetchProjects } from "~/lib/projects.functions";
 import type { SearchItem } from "~/lib/search";
+import { SearchIcon } from "./Icons";
 
 interface SearchIndex {
   search: typeof import("~/lib/search").search;
@@ -282,7 +283,7 @@ function Palette({ onClose }: { onClose: () => void }) {
   return (
     <>
       <div className="flex items-center gap-3 border-b border-rule px-4 py-3">
-        <SearchIcon className="flex-none text-muted" />
+        <SearchIcon size={15} className="flex-none text-muted" />
         <input
           data-autofocus
           type="text"
@@ -424,24 +425,5 @@ function Help({ onClose }: { onClose: () => void }) {
         ))}
       </dl>
     </div>
-  );
-}
-
-export function SearchIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      aria-hidden="true"
-      className={className}
-    >
-      <circle cx="7" cy="7" r="4.75" />
-      <path d="M10.6 10.6L14.5 14.5" />
-    </svg>
   );
 }

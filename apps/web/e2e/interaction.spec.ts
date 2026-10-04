@@ -72,6 +72,30 @@ test("? opens help", async ({ page }) => {
   await expect(help).toBeHidden();
 });
 
+for (const [stored, scheme, icon] of [
+  [null, "light", "t-system"],
+  [null, "dark", "t-system"],
+  ["dark", "light", "t-dark"],
+  ["light", "dark", "t-light"],
+] as const) {
+  test(`the theme button shows the ${icon} icon with theme ${stored ?? "unset"} on a ${scheme} system`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme: scheme });
+    if (stored) await page.addInitScript((theme) => localStorage.setItem("theme", theme), stored);
+    await page.goto("/work");
+    const toggle = page.getByRole("button", { name: /^Colour theme/ });
+    // CSS picks the icon from the class on <html>: one of the three, and the right one.
+    await expect(toggle.locator("svg:visible")).toHaveCount(1);
+    await expect(toggle.locator("svg:visible")).toHaveClass(new RegExp(`\\b${icon}\\b`));
+    await expect(toggle).toHaveAccessibleName(
+      new RegExp(`^Colour theme: ${stored ?? "system"}`, "i"),
+    );
+    const box = (await toggle.boundingBox())!;
+    expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
+  });
+}
+
 test("theme toggle switches the theme and it survives a reload", async ({ page }) => {
   await page.goto("/");
   const html = page.locator("html");
@@ -86,6 +110,7 @@ test("theme toggle switches the theme and it survives a reload", async ({ page }
     await expect(html).toHaveClass(/\bdark\b/, { timeout: 1000 });
   });
   await expect(toggle).toHaveAccessibleName(/^Colour theme: Dark/);
+  await expect(toggle.locator("svg:visible")).toHaveClass(/\bt-dark\b/);
 
   await page.reload();
   await expect(html).toHaveClass(/\bdark\b/);
