@@ -20,9 +20,14 @@ import { expect, test } from "./fixtures";
 // Home is the whole page: it is short, and it is the page that changes. The post is its first
 // screen only (heading, meta line with the view count, the start of the body): a whole post is
 // over a megabyte per picture, and what its body looks like is prose.spec.ts's to hold.
+//
+// The file name sorts last on purpose: these tests are slow (each loads its page twice or
+// more), and cache.spec.ts expects to run within a minute of the suite's first requests.
 
 const WIDTHS = [320, 393, 768, 1280];
 const HEIGHT = 900;
+/** The window while the page loads: too short to have any body text in it. See the test. */
+const LOADING_HEIGHT = 32;
 const POST = "lincoln-six-months-later";
 /** What the stubbed /api/views answers: the real count grows with every test that opens a post. */
 const VIEWS = 1204;
@@ -110,8 +115,15 @@ for (const colorScheme of ["light", "dark"] as const) {
           );
 
           // The first load puts every font file in the cache (the script in styles/fonts.ts
-          // notes it once its two are there). A reload then has them all before its first
+          // notes it once its two are there). A reload then has the romans before its first
           // frame; one that does not, on a busy machine, is loaded again.
+          //
+          // The italic and semibold join a page whenever none of their text is in the window,
+          // and otherwise only if they beat the first frame, which a cached file does on some
+          // loads and not on others. So the page loads in a window that shows none of its
+          // text, and is given its real height afterwards: always the faces themselves, as a
+          // returning reader has them, never the roman slanted or thickened by the browser.
+          await page.setViewportSize({ width, height: LOADING_HEIGHT });
           await page.goto(path);
           await page.waitForFunction(() => localStorage.getItem("fonts") !== null);
           let loads = 1;
@@ -127,6 +139,7 @@ for (const colorScheme of ["light", "dark"] as const) {
           });
           test.info().annotations.push({ type: "measure", description: `loads: ${loads}` });
 
+          await page.setViewportSize({ width, height: HEIGHT });
           await hydrated(page);
           if (!fullPage) {
             await expect(page.locator(".post-meta .views")).toHaveText(

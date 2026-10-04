@@ -91,7 +91,7 @@ jobs:
       # database as the suite (apps/web/playwright.shots.config.ts). Also when a test above
       # failed, since that is when a picture helps. `gh run download <run> -n screenshots`.
       #
-      # The same run redraws the committed pictures of e2e/baselines.spec.ts that are missing
+      # The same run redraws the committed pictures of e2e/visual.spec.ts that are missing
       # or no longer match (apps/web/e2e/baselines), here in the runner's checkout only. The
       # suite above has already failed on them; after a change that was meant to be seen,
       # `gh run download <run> -n baselines -D apps/web/e2e/baselines` and commit.
