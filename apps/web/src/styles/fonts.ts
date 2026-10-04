@@ -97,7 +97,7 @@ shown=true}
 function go(){
 var R=document.fonts.ready;
 if(!shown){
-document.fonts.forEach(function(f){if(f.family.indexOf(family)>=0&&/^U\\+0+-/i.test(f.unicodeRange))rf=f});
+document.fonts.forEach(function(f){if(f.family.replace(/["']/g,"")===family&&/^U\\+0+-/i.test(f.unicodeRange))rf=f});
 if(rf){R=rf.load().then(0,function(){});requestAnimationFrame(tick)}else shown=true}
 Promise.all([faces[0].load(),faces[1].load(),R]).then(function(){
 try{localStorage.setItem("${LATE_FONTS_KEY}",key)}catch(e){}

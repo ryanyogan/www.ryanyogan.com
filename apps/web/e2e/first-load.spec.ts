@@ -389,7 +389,10 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
       const find = () => {
         if (rf) return rf;
         for (const face of document.fonts) {
-          if (face.family.includes("Source Serif 4") && /^U\+0+-/i.test(face.unicodeRange)) {
+          if (face.family.replace(/["']/g, "") !== "Source Serif 4") continue;
+          if (!rec.found)
+            rec[`face ${face.unicodeRange.slice(0, 9)}`] ??= `${now()} ${face.status}`;
+          if (!rf && /^U\+0+-/i.test(face.unicodeRange)) {
             rf = face;
             rec.found = now();
             rec.statusWhenFound = face.status;
