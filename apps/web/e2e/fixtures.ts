@@ -73,11 +73,11 @@ export function pngSize(body: Buffer): { width: number; height: number } {
 export const OG_MAX_BYTES = 300 * 1024;
 
 /**
- * The ids of the admin server functions, read from the client chunk that calls them
- * (`/_serverFn/<id>`).
+ * The ids of the admin server functions (`/_serverFn/<id>`), read from the Worker's chunks
+ * of admin.functions.ts: the client build has that module inside the chunk every page loads.
  */
 export function adminFunctionIds(): string[] {
-  const assets = `${CLIENT_DIR}/assets`;
+  const assets = fileURLToPath(new URL("../dist/server/assets", import.meta.url));
   const ids = new Set<string>();
   for (const name of readdirSync(assets)) {
     if (!/^admin\.functions-.*\.js$/.test(name)) continue;
