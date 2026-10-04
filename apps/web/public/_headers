@@ -1,3 +1,7 @@
 # Preview images drawn at build time: the file name carries a hash of the image.
 /og/*
   Cache-Control: public, max-age=31536000, immutable
+
+# Prose images encoded at build time: the file name carries a hash of the bytes.
+/images/opt/*
+  Cache-Control: public, max-age=31536000, immutable

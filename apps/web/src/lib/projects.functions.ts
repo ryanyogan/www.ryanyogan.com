@@ -71,10 +71,13 @@ export const fetchProject = createServerFn({ method: "GET" })
     );
     if (!project) return null;
     // Imported on first use: the parser and highlighter stay out of the Worker's startup.
-    const { renderMarkdown } = await import("./markdown");
+    const [{ renderMarkdown }, { default: images }] = await Promise.all([
+      import("./markdown"),
+      import("virtual:prose-images"),
+    ]);
     const { content, ...rest } = project;
     const siblings = all
       .filter((p) => p.group === project.group)
       .map((p) => ({ slug: p.slug, title: p.title }));
-    return { project: { ...rest, html: renderMarkdown(content) }, siblings };
+    return { project: { ...rest, html: renderMarkdown(content, images) }, siblings };
   });

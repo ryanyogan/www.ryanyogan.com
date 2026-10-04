@@ -584,9 +584,11 @@ function BodyPreview({ markdown }: { markdown: string }) {
   const [html, setHtml] = useState("");
   useEffect(() => {
     let current = true;
-    void import("~/lib/markdown").then(({ renderMarkdown }) => {
-      if (current) setHtml(renderMarkdown(markdown));
-    });
+    void Promise.all([import("~/lib/markdown"), import("virtual:prose-images")]).then(
+      ([{ renderMarkdown }, { default: images }]) => {
+        if (current) setHtml(renderMarkdown(markdown, images));
+      },
+    );
     return () => {
       current = false;
     };

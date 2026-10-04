@@ -3,10 +3,12 @@ import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import { proseImages } from "./vite-plugin-images";
 import { ogImages } from "./vite-plugin-og";
 import { posts } from "./vite-plugin-posts";
 
 const localStateDir = process.env.LOCAL_STATE_DIR;
+const images = proseImages();
 
 function isDynamic(path: string): boolean {
   const clean = path.split(/[?#]/)[0].replace(/\/$/, "");
@@ -40,7 +42,8 @@ export default defineConfig(({ command, isPreview }) => ({
     tsconfigPaths: true,
   },
   plugins: [
-    posts(),
+    images,
+    posts(images.manifest),
     ogImages(),
     cloudflare({
       viteEnvironment: { name: "ssr" },

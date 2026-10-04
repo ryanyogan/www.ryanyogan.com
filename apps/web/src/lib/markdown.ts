@@ -51,11 +51,60 @@ const el = (tagName: string, properties: Properties, children: ElementContent[])
   children,
 });
 
+/**
+ * A file in public/images as the build measured and encoded it (vite-plugin-images.ts):
+ * its own size, and a `srcset` of the AVIF and WebP copies.
+ */
+export interface ProseImage {
+  width: number;
+  height: number;
+  avif: string;
+  webp: string;
+}
+export type ProseImages = Record<string, ProseImage>;
+
+/** The reading column is about 608px at most (.post, .read); under that an image fills the screen. */
+const SIZES = "(min-width: 680px) 608px, 100vw";
+
 const text = (value: unknown): string | undefined =>
   typeof value === "string" ? value : undefined;
 
-function style(node: Element): Element {
-  const children = node.children.map((child) => (child.type === "element" ? style(child) : child));
+/**
+ * `width` and `height` reserve the image's box before it loads. A file the build knows gets
+ * them from the build, with its AVIF and WebP copies in a <picture>. Any other image (a
+ * project body is typed in the admin and may point anywhere) can state them as its title:
+ * `![alt](https://example.com/a.png "1200x800")`. Without either there is nothing to reserve.
+ * `lead` is the image that opens the body, the only one that can be the largest paint of the
+ * first screen: it loads at once. Every other image waits until it is near the viewport.
+ */
+function image(node: Element, images: ProseImages, lead: boolean): Element {
+  const src = text(node.properties.src);
+  const known = src && Object.hasOwn(images, src) ? images[src] : undefined;
+  const stated = text(node.properties.title)?.match(/^(\d{1,5})x(\d{1,5})$/);
+  const size = known ?? (stated ? { width: Number(stated[1]), height: Number(stated[2]) } : null);
+  const img = el(
+    "img",
+    {
+      src,
+      alt: text(node.properties.alt) ?? "",
+      ...(size ? { width: size.width, height: size.height } : {}),
+      ...(lead ? { fetchPriority: "high" } : { loading: "lazy" }),
+      decoding: "async",
+    },
+    [],
+  );
+  if (!known) return img;
+  return el("picture", {}, [
+    el("source", { type: "image/avif", srcSet: known.avif, sizes: SIZES }, []),
+    el("source", { type: "image/webp", srcSet: known.webp, sizes: SIZES }, []),
+    img,
+  ]);
+}
+
+function style(node: Element, images: ProseImages, lead = false): Element {
+  const children = node.children.map((child) =>
+    child.type === "element" ? style(child, images) : child,
+  );
   const tag = node.tagName;
 
   if (tag === "p") {
@@ -64,7 +113,7 @@ function style(node: Element): Element {
     const only = node.children.length === 1 ? node.children[0] : undefined;
     if (only?.type === "element" && only.tagName === "img") {
       const alt = text(only.properties.alt) ?? "";
-      const img = el("img", { src: text(only.properties.src), alt, loading: "lazy" }, []);
+      const img = image(only, images, lead);
       const caption = alt ? [el("figcaption", {}, [{ type: "text", value: alt }])] : [];
       return el("figure", {}, [img, ...caption]);
     }
@@ -99,15 +148,7 @@ function style(node: Element): Element {
       return el("div", { tabIndex: 0 }, [el(tag, {}, children)]);
     case "img":
       // An image inside other content (text, a link, a list item) stays phrasing content.
-      return el(
-        tag,
-        {
-          src: text(node.properties.src),
-          alt: text(node.properties.alt) ?? "",
-          loading: "lazy",
-        },
-        [],
-      );
+      return image(node, images, false);
     default:
       return { ...node, children };
   }
@@ -125,8 +166,13 @@ function rawAsText(node: Root | Element): void {
 
 const rehypeRawAsText = () => (tree: Root) => rawAsText(tree);
 
-const rehypeProseStyle = () => (tree: Root) => {
-  tree.children = tree.children.map((child) => (child.type === "element" ? style(child) : child));
+// The caller's image record travels with the file being processed (renderMarkdown below).
+const rehypeProseStyle = () => (tree: Root, file: { data: object }) => {
+  const images = (file.data as { images?: ProseImages }).images ?? {};
+  const first = tree.children.find((child) => child.type === "element");
+  tree.children = tree.children.map((child) =>
+    child.type === "element" ? style(child, images, child === first) : child,
+  );
 };
 
 function build() {
@@ -151,10 +197,13 @@ function build() {
 
 let processor: ReturnType<typeof build> | undefined;
 
-/** GitHub-flavoured markdown as sanitised, highlighted HTML. Synchronous. */
-export function renderMarkdown(markdown: string): string {
+/**
+ * GitHub-flavoured markdown as sanitised, highlighted HTML. Synchronous.
+ * `images` is the build's record of public/images; without it images are plain `<img>`.
+ */
+export function renderMarkdown(markdown: string, images: ProseImages = {}): string {
   // Built on first use: registering the highlighter's grammars is not free, and the Worker
   // should not pay for it at startup.
   processor ??= build();
-  return String(processor.processSync(markdown));
+  return String(processor.processSync({ value: markdown, data: { images } }));
 }

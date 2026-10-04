@@ -4,6 +4,12 @@ declare module "virtual:og-images" {
   export default images;
 }
 
+// What the build knows about the files in public/images (vite-plugin-images.ts).
+declare module "virtual:prose-images" {
+  const images: import("../markdown").ProseImages;
+  export default images;
+}
+
 // A binary file bundled with the Worker as an ArrayBuffer (the Cloudflare Vite plugin).
 declare module "*.bin" {
   const data: ArrayBuffer;

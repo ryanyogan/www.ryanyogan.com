@@ -2,21 +2,70 @@ import type { Element, Root } from "hast";
 import rehypeParse from "rehype-parse";
 import { unified } from "unified";
 import { describe, expect, it } from "vitest";
-import { renderMarkdown } from "./markdown";
+import { type ProseImages, renderMarkdown } from "./markdown";
+
+// What the build hands over for a file in public/images (vite-plugin-images.ts).
+const images: ProseImages = {
+  "/images/nexus.png": {
+    width: 1098,
+    height: 921,
+    avif: "/images/opt/nexus.720.aaaa.avif 720w, /images/opt/nexus.1098.bbbb.avif 1098w",
+    webp: "/images/opt/nexus.720.cccc.webp 720w, /images/opt/nexus.1098.dddd.webp 1098w",
+  },
+};
 
 describe("renderMarkdown: structure the prose styles rely on", () => {
   it("renders an image alone in a paragraph as a figure, not inside a <p>", () => {
     const html = renderMarkdown("Before.\n\n![Nexus brain](/images/nexus.png)\n\nAfter.");
     expect(html).toContain(
-      '<figure><img src="/images/nexus.png" alt="Nexus brain" loading="lazy"><figcaption>Nexus brain</figcaption></figure>',
+      '<figure><img src="/images/nexus.png" alt="Nexus brain" loading="lazy" decoding="async"><figcaption>Nexus brain</figcaption></figure>',
     );
     expect(html).not.toMatch(/<p[^>]*>\s*<figure/);
   });
 
   it("keeps an image among other content inline", () => {
     const html = renderMarkdown("See ![icon](/i.png) here.");
-    expect(html).toContain('<img src="/i.png" alt="icon" loading="lazy">');
+    expect(html).toContain('<img src="/i.png" alt="icon" loading="lazy" decoding="async">');
     expect(html).not.toContain("<figure");
+  });
+
+  it("gives an image the build knows its size and its AVIF and WebP copies", () => {
+    const html = renderMarkdown("Before.\n\n![Nexus brain](/images/nexus.png)\n\nAfter.", images);
+    const sizes = 'sizes="(min-width: 680px) 608px, 100vw"';
+    expect(html).toContain(
+      "<figure><picture>" +
+        `<source type="image/avif" srcset="${images["/images/nexus.png"].avif}" ${sizes}>` +
+        `<source type="image/webp" srcset="${images["/images/nexus.png"].webp}" ${sizes}>` +
+        '<img src="/images/nexus.png" alt="Nexus brain" width="1098" height="921" loading="lazy" decoding="async">' +
+        "</picture><figcaption>Nexus brain</figcaption></figure>",
+    );
+    expect(html).not.toMatch(/<p[^>]*>\s*<(figure|picture)/);
+  });
+
+  it("takes the size of any other image from a WIDTHxHEIGHT title", () => {
+    const html = renderMarkdown('Text.\n\n![Chart](https://example.com/c.png "1200x800")', images);
+    expect(html).toContain(
+      '<img src="https://example.com/c.png" alt="Chart" width="1200" height="800" loading="lazy" decoding="async">',
+    );
+    expect(html).not.toContain("<picture");
+    // Any other title is dropped, and a name that is not a file of the build is not looked up.
+    const plain = renderMarkdown('Text.\n\n![a](/a.png "A chart") ![b](constructor)', images);
+    expect(plain).toContain('<img src="/a.png" alt="a" loading="lazy" decoding="async">');
+    expect(plain).toContain('<img src="constructor" alt="b" loading="lazy" decoding="async">');
+    expect(plain).not.toMatch(/title=|width=/);
+  });
+
+  it("loads the image that opens the body at once, and every later one lazily", () => {
+    const html = renderMarkdown(
+      "![Lead](/images/nexus.png)\n\nText.\n\n![Later](/images/nexus.png)",
+      images,
+    );
+    const tags = html.match(/<img[^>]*>/g) ?? [];
+    expect(tags).toHaveLength(2);
+    expect(tags[0]).toContain('fetchpriority="high"');
+    expect(tags[0]).not.toContain("loading=");
+    expect(tags[1]).toContain('loading="lazy"');
+    expect(tags[1]).not.toContain("fetchpriority");
   });
 
   it("opens external links in a new tab and leaves internal ones alone", () => {
