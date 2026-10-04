@@ -18,6 +18,20 @@ export const CACHE_STATUS_HEADER = "x-cache";
 const STORED_AT = "x-page-cached-at";
 const STORED_CACHE_CONTROL = "x-page-cache-control";
 
+// Set when the Worker is built (`define` in vite.config.ts): the commit in CI, the build time
+// anywhere else. It is part of every key, so a version never reads a copy another version
+// stored: that copy's HTML names the other build's hashed scripts, which answer 404 once it
+// is replaced, and the page would not hydrate. Copies of a replaced version are never asked
+// for again and expire with their TTL.
+declare const __BUILD_ID__: string;
+export const BUILD_ID = __BUILD_ID__;
+/** Not a tracking parameter, so no request can carry it into a key (see `cacheKeyFor`). */
+const BUILD_PARAM = "__b";
+
+function keyFor(origin: string, path: string, build: string): string {
+  return `${origin}${path}?${BUILD_PARAM}=${encodeURIComponent(build)}`;
+}
+
 const ACCESS_JWT_HEADER = "cf-access-jwt-assertion";
 const ACCESS_COOKIE = "CF_Authorization";
 
@@ -39,8 +53,8 @@ function hasAccessToken(headers: Headers): boolean {
 }
 
 /**
- * The cache key (a canonical absolute URL) for a request, or null when the request must not
- * touch the cache at all:
+ * The cache key (a canonical absolute URL, plus the build) for a request, or null when the
+ * request must not touch the cache at all:
  * - anything but GET;
  * - a request carrying the Cloudflare Access cookie or JWT header (the signed-in owner
  *   always gets a fresh render, and nothing rendered for them is stored);
@@ -51,7 +65,7 @@ function hasAccessToken(headers: Headers): boolean {
  * One trailing slash is dropped and tracking parameters are stripped, so
  * `/projects/?utm_source=x` and `/projects` share a key.
  */
-export function cacheKeyFor(request: Request): string | null {
+export function cacheKeyFor(request: Request, build = BUILD_ID): string | null {
   if (request.method !== "GET") return null;
   if (hasAccessToken(request.headers)) return null;
   const url = new URL(request.url);
@@ -61,19 +75,19 @@ export function cacheKeyFor(request: Request): string | null {
   for (const name of url.searchParams.keys()) {
     if (!TRACKING_PARAM.test(name) && !(image && name === "v")) return null;
   }
-  return `${url.origin}${path}`;
+  return keyFor(url.origin, path, build);
 }
 
 /**
  * Every key an admin write to `slugs` can have changed: the two lists, the sitemap, and each
- * project's page and preview image.
+ * project's page and preview image. The keys of this build, as `cacheKeyFor` writes them.
  */
-export function purgeKeysFor(origin: string, slugs: readonly string[]): string[] {
-  const keys = [`${origin}/`, `${origin}/projects`, `${origin}/sitemap.xml`];
+export function purgeKeysFor(origin: string, slugs: readonly string[], build = BUILD_ID): string[] {
+  const paths = ["/", "/projects", "/sitemap.xml"];
   for (const slug of new Set(slugs)) {
-    if (slug) keys.push(`${origin}/projects/${slug}`, `${origin}/og/projects/${slug}.png`);
+    if (slug) paths.push(`/projects/${slug}`, `/og/projects/${slug}.png`);
   }
-  return keys;
+  return paths.map((path) => keyFor(origin, path, build));
 }
 
 /**
