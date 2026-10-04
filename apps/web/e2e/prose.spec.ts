@@ -240,12 +240,12 @@ for (const theme of ["light", "dark"] as const) {
       expect(m.outside).toEqual([]);
       expect(m.twice).toEqual([]);
 
-      // Paragraphs: one line of space, no indent, ragged right, hyphens on a phone only.
+      // Paragraphs: one line of space, no indent, ragged right, hyphens on the narrowest phones only.
       expect(m.p.gap).toBeGreaterThanOrEqual(0.9);
       expect(m.p.gap).toBeLessThanOrEqual(1.1);
       expect(m.p.indent).toBe(0);
       expect(["left", "start"]).toContain(m.p.align);
-      expect(m.p.hyphens).toBe(width <= 480 ? "auto" : "manual");
+      expect(m.p.hyphens).toBe(width <= 360 ? "auto" : "manual");
 
       // Lists keep their markers and their semantics.
       expect(m.list.ul).toBe("disc");
