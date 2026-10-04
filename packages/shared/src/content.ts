@@ -5,21 +5,54 @@ export const workBio =
   "Principal-level engineer with 20+ years building distributed systems, leading high-performing teams, and shipping production software at scale. Scaled Procore's UI engineering org from 8 to 65+ through hypergrowth and IPO; spent the last four years independently building production systems across AI, developer tooling, and edge infrastructure. I write code I'm proud of, hire people who get better than me, and champion empathy and curiosity.";
 
 /**
- * Roles in the order of the owner's live Work page. `summary` is the one line
- * the timeline shows; `description`, `highlights` and `tags` are kept as data.
+ * Roles as the owner's LinkedIn lists them (checked 2026-10-04): same company,
+ * title and dates, newest first by end date. Overlapping dates are his own.
+ * `summary` is the one line the timeline shows; `description`, `highlights`
+ * and `tags` are kept as data.
  */
 export const workSections: WorkSection[] = [
   {
-    label: "Executive & Leadership",
+    label: "Experience",
     roles: [
       {
+        company: "Chromatic",
+        title: "Senior Staff Engineer",
+        type: "Full-time",
+        dates: "Jun 2026 — Present",
+        location: "Remote",
+        // LinkedIn gives this role no description, and the site says no more than this.
+        description: "",
+        summary: "That work stays off this site.",
+        highlights: [],
+        tags: [],
+      },
+      {
+        company: "Yogan Dot Dev",
+        title: "Founder & Lead Engineer",
+        type: "Freelance",
+        dates: "Mar 2022 — Jun 2026",
+        location: "Austin, TX",
+        // Client names are omitted on purpose: these engagements are under NDA.
+        description:
+          "Enterprise consulting, startup engineering, and independent R&D across AI, real-time systems, and embedded hardware. Enterprise engagements remain under NDA.",
+        summary:
+          "Enterprise consulting, startup engineering, and independent R&D. Clients under NDA.",
+        highlights: [
+          "Built high-throughput Elixir/Phoenix data pipelines for an enterprise client — fault-tolerant event processing, OTP supervision trees",
+          "Full-stack engineering for multiple startups: Next.js, TypeScript, authentication, Stripe billing, AI-powered features",
+          "AI integration engagements: RAG pipelines, agentic workflows, MCP servers shipped into production systems",
+          "Edge infrastructure migrations to Cloudflare Workers, D1, R2, and Durable Objects",
+        ],
+        tags: ["Elixir", "Phoenix", "TypeScript", "Next.js", "AI/LLM", "Cloudflare"],
+      },
+      {
         company: "Avant",
-        title: "Principal Architect & Engineering Lead",
+        title: "Engineering Lead",
         type: "Full-time",
         dates: "Jun 2025 — Jan 2026",
         location: "Chicago, IL",
         description:
-          "Re-architected front-end strategy across the organization, including 200K+ line TypeScript refactors that shipped without freezing feature work.",
+          "Principal Architect and Engineering Lead. Re-architected front-end strategy across the organization, including 200K+ line TypeScript refactors that shipped without freezing feature work.",
         summary: "Re-architected front-end strategy across the organization.",
         highlights: [
           "Built internal AI-powered UI generation tooling tuned to Avant's design system and constraints",
@@ -30,11 +63,11 @@ export const workSections: WorkSection[] = [
         tags: ["Architecture", "AI Tooling", "A11y", "Three.js", "Design Systems"],
       },
       {
-        company: "Stealth AI Startup (Construction Procurement)",
-        title: "Co-Founder & CTO",
+        company: "Stealth AI Startup",
+        title: "Co-Founder / CTO",
         type: "Full-time",
         dates: "Jan 2024 — Jun 2025",
-        location: "Remote",
+        location: "New York, NY",
         description:
           "Co-founded an AI-powered procurement automation platform for the construction industry. Owned all technical decisions, built and led an engineering team of 8.",
         summary: "Owned all technical decisions; built and led an engineering team of 8.",
@@ -48,7 +81,7 @@ export const workSections: WorkSection[] = [
       },
       {
         company: "HG Insights",
-        title: "Senior Engineering Manager",
+        title: "Senior Software Engineering Manager",
         type: "Full-time",
         dates: "Aug 2021 — Sep 2022",
         location: "Santa Barbara, CA",
@@ -86,6 +119,24 @@ export const workSections: WorkSection[] = [
         ],
       },
       {
+        company: "Sonian (acquired by Barracuda)",
+        title: "VP of Research and Development",
+        type: "Full-time",
+        dates: "Apr 2014 — Aug 2016",
+        location: "Remote",
+        description:
+          "Promoted from Operations Engineer to VP in 4 months; managed R&D budget, resource allocation, and presented research findings to the executive team.",
+        summary: "Moved 900+ EC2 instances to a Lambda architecture, reducing costs by 40%+.",
+        highlights: [
+          "Built direct partnership with AWS as Lambda early-access participant",
+          "Transitioned 900+ EC2 instances to stream-based Lambda architecture, reducing costs by 40%+",
+          "Worked alongside IBM during SoftLayer acquisition, integrating Object Store into IBM's IAM service",
+          "Modernized front-end stack from Angular 1.x to ClojureScript/React",
+        ],
+        tags: ["R&D Leadership", "AWS Partnership", "Clojure", "Cost Optimization"],
+      },
+      // Not on LinkedIn, and inside the Sonian dates above. Kept until the owner says otherwise.
+      {
         company: "Montway Auto Transport",
         title: "Director of Engineering",
         type: "Full-time",
@@ -103,47 +154,29 @@ export const workSections: WorkSection[] = [
       },
       {
         company: "Sonian (acquired by Barracuda)",
-        title: "VP of Research and Development",
-        type: "Full-time",
-        dates: "Apr 2014 — Nov 2015",
+        title: "Operations Engineer",
+        type: "",
+        dates: "Dec 2013 — May 2014",
         location: "Boston, MA",
-        description:
-          "Promoted from Operations Engineer to VP in 4 months; managed R&D budget, resource allocation, and presented research findings to the executive team.",
-        summary: "Moved 900+ EC2 instances to a Lambda architecture, reducing costs by 40%+.",
-        highlights: [
-          "Built direct partnership with AWS as Lambda early-access participant",
-          "Transitioned 900+ EC2 instances to stream-based Lambda architecture, reducing costs by 40%+",
-          "Worked alongside IBM during SoftLayer acquisition, integrating Object Store into IBM's IAM service",
-          "Modernized front-end stack from Angular 1.x to ClojureScript/React",
-        ],
-        tags: ["R&D Leadership", "AWS Partnership", "Clojure", "Cost Optimization"],
+        description: "",
+        summary: "Promoted to VP of Research and Development in four months.",
+        highlights: [],
+        tags: [],
       },
-    ],
-  },
-  {
-    label: "Technical & IC",
-    roles: [
+      // LinkedIn gives the next role no description, so it has no summary line.
       {
-        company: "Independent Engineer",
-        title: "Contractor & Consultant",
-        type: "Consulting",
-        dates: "Mar 2022 — Present",
-        location: "Chicago, IL",
-        // Client names are omitted on purpose: these engagements are under NDA.
-        description:
-          "Enterprise consulting, startup engineering, and independent R&D across AI, real-time systems, and embedded hardware. Enterprise engagements remain under NDA.",
-        summary:
-          "Enterprise consulting, startup engineering, and independent R&D. Clients under NDA.",
-        highlights: [
-          "Built high-throughput Elixir/Phoenix data pipelines for an enterprise client — fault-tolerant event processing, OTP supervision trees",
-          "Full-stack engineering for multiple startups: Next.js, TypeScript, authentication, Stripe billing, AI-powered features",
-          "AI integration engagements: RAG pipelines, agentic workflows, MCP servers shipped into production systems",
-          "Edge infrastructure migrations to Cloudflare Workers, D1, R2, and Durable Objects",
-        ],
-        tags: ["Elixir", "Phoenix", "TypeScript", "Next.js", "AI/LLM", "Cloudflare"],
+        company: "BradsDeals.com",
+        title: "Sr. Software Engineer",
+        type: "",
+        dates: "Feb 2012 — Mar 2013",
+        location: "",
+        description: "",
+        summary: "",
+        highlights: [],
+        tags: [],
       },
       {
-        company: "PEAK6 Investments",
+        company: "PEAK6 Investments LP",
         title: "Sr. Software Engineer",
         type: "Full-time",
         dates: "Nov 2009 — Sep 2011",
@@ -156,6 +189,18 @@ export const workSections: WorkSection[] = [
           "Designed real-time delta anomaly detection using three-node token-ring consensus pattern",
         ],
         tags: ["JavaScript", "C++", "High-Frequency Trading", "Real-time Systems"],
+      },
+      // No description on LinkedIn here either.
+      {
+        company: "linkedFA",
+        title: "Software Engineer",
+        type: "",
+        dates: "2008 — 2010",
+        location: "",
+        description: "",
+        summary: "",
+        highlights: [],
+        tags: [],
       },
       {
         company: "Broward Center for the Performing Arts",

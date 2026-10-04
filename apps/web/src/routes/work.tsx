@@ -234,7 +234,7 @@ function WorkPage() {
                     {role.company}
                     <span>{role.title}</span>
                   </span>
-                  <span className="s">{role.summary}</span>
+                  {role.summary && <span className="s">{role.summary}</span>}
                 </li>
               ))}
             </ol>
