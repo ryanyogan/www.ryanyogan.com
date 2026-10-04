@@ -593,7 +593,8 @@
     align-items: baseline;
   }
 
-  .wlist time {
+  .wlist time,
+  .wlist .views {
     font: 400 0.8125rem var(--font-sans);
     color: var(--muted);
     font-variant-numeric: tabular-nums;
@@ -1494,6 +1495,28 @@
     flex: none;
   }
 
+  /* The writing index: each row ends in its post's count, in the date's type and on the
+     row's baseline. Home's rows have no count and keep their two columns. */
+  .wr-year .wlist li {
+    grid-template-columns: 6.5rem minmax(0, 1fr) auto;
+  }
+
+  .wr-year .views {
+    justify-content: flex-end;
+    gap: 0;
+    min-height: 0;
+  }
+
+  /* A zero-width space: an empty box has no baseline of its own, and would sit lower in
+     the row than a filled one. It also makes the box one line tall. */
+  .wr-year .views::before {
+    content: "\200b";
+  }
+
+  .wr-year .views svg {
+    margin-right: 5px;
+  }
+
   .post-body {
     padding-bottom: 72px;
   }
@@ -1563,6 +1586,19 @@
 
     .post-nav .older {
       text-align: left;
+    }
+
+    /* The count shares the date's line, at its right end; the title keeps the full width. */
+    .wr-year .wlist li {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .wr-year .wlist h3 {
+      grid-area: 2 / 1 / auto / -1;
+    }
+
+    .wr-year .views {
+      grid-area: 1 / 2;
     }
   }
 }
@@ -1945,6 +1981,7 @@ summary {
   .st,
   .nums dd,
   .wlist time,
+  .wlist .views,
   .open li::before,
   .tl .d,
   .arc .when,

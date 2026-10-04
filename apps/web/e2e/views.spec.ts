@@ -1,7 +1,8 @@
 import { test as plain, type Page, type Response } from "@playwright/test";
 import { BROKEN_ORIGIN, expect, postSlugs, test } from "./fixtures";
 
-// The view count on a writing post (src/components/ViewCount.tsx, POST /api/views/<slug>).
+// The view count on a writing post (src/components/ViewCount.tsx, POST /api/views/<slug>)
+// and on the rows of the writing index (GET /api/views).
 // It runs in all three projects, which share one database, and other specs open posts at
 // the same time: a count is only ever compared with an earlier one ("more than"), never
 // with a fixed number. That one load adds exactly one is the unit test's job
@@ -12,6 +13,16 @@ const api = (post: string) => `/api/views/${post}`;
 const isCount = (response: Response) =>
   response.request().method() === "POST" &&
   new URL(response.url()).pathname.startsWith("/api/views/");
+
+const isList = (response: Response) => new URL(response.url()).pathname === "/api/views";
+/** A post's row on the writing index. */
+const row = (page: Page, post: string) =>
+  page.locator(".wlist li").filter({ has: page.locator(`a[href="/writing/${post}"]`) });
+/** Two frames, so React has drawn whatever an answer makes it draw. */
+const drawn = (page: Page) =>
+  page.evaluate(
+    () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+  );
 
 /** The paths of the counting requests the page makes from now on, in order. */
 function countRequests(page: Page): string[] {
@@ -116,6 +127,100 @@ test("the count's space is reserved: nothing moves when the number arrives", asy
   }
 });
 
+test("the writing index shows each post's count, from one request that counts nothing", async ({
+  page,
+  request,
+}) => {
+  const counted = ((await (await request.post(api(slug))).json()) as { views: number }).views;
+  const requests: string[] = [];
+  page.on("request", (made) => {
+    const { pathname } = new URL(made.url());
+    if (pathname.startsWith("/api/views")) requests.push(`${made.method()} ${pathname}`);
+  });
+  const [response] = await Promise.all([page.waitForResponse(isList), page.goto("/writing")]);
+  expect(response.status()).toBe(200);
+  const all = ((await response.json()) as { views: Record<string, number> }).views;
+  expect(all[slug]).toBeGreaterThanOrEqual(counted);
+
+  // Every row has the box; a post nobody has opened yet keeps it empty.
+  await expect(page.locator(".wlist .views")).toHaveCount(postSlugs.length);
+  for (const post of postSlugs) {
+    const count = row(page, post).locator(".views");
+    if (all[post] === undefined) await expect(count).toBeEmpty();
+    else await expect(count).toHaveText(`${all[post].toLocaleString("en-US")} views`);
+  }
+  await expect(row(page, slug).locator(".views svg")).toHaveAttribute("aria-hidden", "true");
+  // Idle, so a request per row or a counting one would have been made by now.
+  await page.waitForLoadState("networkidle");
+  expect(requests).toEqual(["GET /api/views"]);
+});
+
+test("the writing index reserves the counts' space: no row moves when they arrive", async ({
+  page,
+  request,
+}) => {
+  expect((await request.post(api(slug))).status()).toBe(200);
+  let release = () => {};
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route(
+    (url) => url.pathname === "/api/views",
+    async (route) => {
+      await held;
+      await route.continue();
+    },
+  );
+  const requested = page.waitForRequest((made) => new URL(made.url()).pathname === "/api/views");
+  await page.goto("/writing");
+  await requested;
+  await page.evaluate(() => document.fonts.ready);
+
+  const count = row(page, slug).locator(".views");
+  await expect(count).toBeEmpty();
+  // Every row, and in it the date, the title's link and the count's box.
+  const boxes = () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll(".wlist li")].map((item) =>
+        [item, ...item.querySelectorAll("time, a, .views")].map((element) => {
+          const { x, y, width, height } = element.getBoundingClientRect();
+          return { x, y, width, height };
+        }),
+      ),
+    );
+  const before = await boxes();
+  expect(before).toHaveLength(postSlugs.length);
+  for (const [item, date, , views] of before) {
+    expect(views.width).toBeGreaterThan(40);
+    // One line of the date's type, and inside the row at its right end.
+    expect(views.height).toBeGreaterThan(13);
+    expect(views.height).toBeLessThanOrEqual(date.height + 1);
+    expect(Math.abs(views.x + views.width - (item.x + item.width))).toBeLessThan(1);
+    expect(views.x).toBeGreaterThan(date.x + date.width);
+  }
+
+  const measuresShift = await page.evaluate(() => {
+    if (!PerformanceObserver.supportedEntryTypes.includes("layout-shift")) return false;
+    const state = window as unknown as { shift: number };
+    state.shift = 0;
+    new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        state.shift += (entry as unknown as { value: number }).value;
+      }
+    }).observe({ type: "layout-shift" });
+    return true;
+  });
+
+  release();
+  await expect(count).toHaveText(/^[\d,]+ views$/);
+  await expect(count.locator("svg")).toBeVisible();
+  await drawn(page);
+  expect(await boxes()).toEqual(before);
+  if (measuresShift) {
+    expect(await page.evaluate(() => (window as unknown as { shift: number }).shift)).toBe(0);
+  }
+});
+
 test("only a real post can be counted, and only by POST", async ({ request }) => {
   const counted = await request.post(api(slug));
   expect(counted.status()).toBe(200);
@@ -182,5 +287,29 @@ plain("a database failure leaves the post intact, without a count", async ({ pag
   const count = page.locator(".post-meta .views");
   await expect(count).toBeEmpty();
   await expect(count.locator("svg")).toHaveCount(0);
+  expect(pageErrors).toEqual([]);
+});
+
+plain("a database failure leaves the writing index intact, without counts", async ({ page }) => {
+  const pageErrors: string[] = [];
+  page.on("pageerror", (error) => pageErrors.push(String(error)));
+  const [failed, loaded] = await Promise.all([
+    page.waitForResponse(isList),
+    page.goto(`${BROKEN_ORIGIN}/writing`),
+  ]);
+  expect(loaded?.status()).toBe(200);
+  expect(failed.status()).toBe(503);
+  await failed.finished();
+  await drawn(page);
+
+  await expect(page.locator("h1")).toBeVisible();
+  await expect(page.locator(".wlist li")).toHaveCount(postSlugs.length);
+  for (const post of postSlugs) {
+    await expect(row(page, post).locator("time")).toBeVisible();
+    await expect(row(page, post).locator("a")).toBeVisible();
+    // The reserved box stays empty: no number, no icon, no message.
+    await expect(row(page, post).locator(".views")).toBeEmpty();
+  }
+  await expect(page.locator(".wlist .views svg")).toHaveCount(0);
   expect(pageErrors).toEqual([]);
 });
