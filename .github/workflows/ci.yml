@@ -59,8 +59,19 @@ jobs:
       - name: Fresh clone dev check
         run: sh scripts/fresh-clone-check.sh --in-place
 
-      - name: Install Playwright Chromium
-        run: pnpm --filter @repo/web exec playwright install --with-deps chromium
+      # The browser downloads, kept between runs. The key changes with the lockfile, so a new
+      # Playwright version downloads its own builds. The system packages are not cached: the
+      # install step below still runs apt for them.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      # Chromium for the whole suite, WebKit for the "webkit" project (public pages at iPhone
+      # size). A browser already in the cache is not downloaded again.
+      - name: Install Playwright Chromium and WebKit
+        run: pnpm --filter @repo/web exec playwright install --with-deps chromium webkit
 
       # The same command as locally. It migrates and seeds throwaway local D1 databases
       # (miniflare, under apps/web/.wrangler; no account, token or --remote), runs Playwright

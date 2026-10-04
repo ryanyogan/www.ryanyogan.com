@@ -3,13 +3,15 @@ import { fileURLToPath } from "node:url";
 import type { Page } from "@playwright/test";
 import { ADMIN_ORIGIN, expect, test } from "./fixtures";
 
-// The device matrix. Runs in the "chromium" project only: one test per viewport, one page per
-// test, resized with setViewportSize and walked over every public route. That is 9 tabs and
-// about 60 page loads, not a project per device (which would multiply the whole suite).
+// The device matrix. Runs in the "chromium" and "webkit" projects: one test per viewport, one
+// page per test, resized with setViewportSize and walked over every public route. That is 9
+// tabs and about 60 page loads per engine, not a project per device (which would multiply the
+// whole suite).
 //
-// These are emulated viewports in desktop Chromium. They catch layout, type size and target
-// size regressions; they are not iOS Safari or Android Chrome (toolbars, safe areas, font
-// rendering and momentum scrolling are only seen on real devices).
+// These are emulated viewports in desktop Chromium and in Playwright's WebKit build. They
+// catch layout, type size and target size regressions, and WebKit adds Safari's engine (font
+// metrics, hyphenation, dvh); they are not iOS Safari or Android Chrome (toolbars, safe areas
+// and momentum scrolling are only seen on real devices).
 
 const VIEWPORTS = [
   { name: "small phone", width: 320, height: 568 },

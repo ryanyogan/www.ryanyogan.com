@@ -10,6 +10,8 @@ async function seriousViolations(page: Page) {
     .map((v) => `${v.id} (${v.impact}): ${v.nodes.map((n) => n.target.join(" ")).join(" | ")}`);
 }
 
+// The public routes also run in the "webkit" project, which picks them by title: every title
+// in this file begins with its path, and only the admin ones with "/admin".
 for (const theme of ["light", "dark"] as const) {
   for (const route of [...routes, "/no-such-page"]) {
     test(`${route} has no serious accessibility violation (${theme})`, async ({

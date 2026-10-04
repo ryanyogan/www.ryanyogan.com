@@ -152,7 +152,10 @@ AI draft (prompt assembly, answer validation, error mapping; the model is stubbe
 
 ## Smoke tests
 
-A small Playwright suite (Chromium only) in `apps/web/e2e` runs against the built site. It starts two
+A small Playwright suite in `apps/web/e2e` runs against the built site, in three projects: `chromium`
+(everything, desktop size), `mobile` (Chromium at 390px: the page tests and the mobile menu) and `webkit`
+(Safari's engine as an iPhone 14, public pages only: the device matrix in `viewports.spec.ts`, the mobile
+menu, the page tests, the hydration check and axe on the public routes). It starts two
 `vite preview` servers itself and refuses to reuse ones already running, so stop any `pnpm preview`
 first: port 4173 is the public site with no admin settings (so `/admin` must be closed), port 4174 is the
 same build with the admin bypass on, for the admin tests. `pnpm test:e2e` first rebuilds two throwaway
@@ -162,10 +165,14 @@ deletes `dist/server/.dev.vars` (the build's copy of your `.dev.vars`) so the te
 rebuild before using `pnpm preview` with the admin again.
 
 ```sh
-pnpm --filter @repo/web exec playwright install chromium   # once
-pnpm build                                                 # the tests read apps/web/dist
+pnpm --filter @repo/web exec playwright install chromium webkit   # once
+pnpm build                                                        # the tests read apps/web/dist
 pnpm test:e2e
 ```
+
+Playwright's WebKit build needs system libraries it only packages for Ubuntu, Debian and macOS. On a
+machine where it does not start, run the two Chromium projects and leave WebKit to CI:
+`pnpm test:e2e --project=chromium --project=mobile`.
 
 The HTML report is written to `apps/web/playwright-report`
 (`pnpm --filter @repo/web exec playwright show-report`).
@@ -174,7 +181,8 @@ The HTML report is written to `apps/web/playwright-report`
 
 `.github/workflows/ci.yml` has two jobs. `validate` runs on pull requests and on pushes to `master`:
 format check, lint, build, typecheck, unit tests, the fresh-clone check, `pnpm test:e2e` (the same script
-as locally: local D1 migrate and seed, Playwright, a summary) and the transfer budget. `deploy` runs only
+as locally: local D1 migrate and seed, Playwright in Chromium and WebKit, a summary) and the transfer
+budget. The browser downloads are cached between runs, keyed on `pnpm-lock.yaml`. `deploy` runs only
 for a push to `master` in this repository, after `validate` passed for that commit; on a pull request
 (and in a fork) it shows as skipped.
 
