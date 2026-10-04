@@ -1460,6 +1460,20 @@
     flex: none;
   }
 
+  /* The number is the one thing on a public page that is not in the server's HTML. It fades
+     into its box over 180ms, opacity only, so that it arrives rather than pops. */
+  @media (prefers-reduced-motion: no-preference) {
+    .views > * {
+      animation: views-in 180ms ease-out;
+    }
+  }
+
+  @keyframes views-in {
+    from {
+      opacity: 0;
+    }
+  }
+
   /* The writing index: each row ends in its post's count, in the date's type and on the
      row's baseline. Home's rows have no count and keep their two columns. */
   .wr-year .wlist li {

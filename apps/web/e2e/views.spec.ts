@@ -125,6 +125,16 @@ test("the count's space is reserved: nothing moves when the number arrives", asy
   if (measuresShift) {
     expect(await page.evaluate(() => (window as unknown as { shift: number }).shift)).toBe(0);
   }
+
+  // It fades in, by opacity alone, and under reduced motion it does not.
+  const fade = () =>
+    count.locator("svg").evaluate((icon) => {
+      const style = getComputedStyle(icon);
+      return [style.animationName, style.animationDuration, style.transform];
+    });
+  expect(await fade()).toEqual(["views-in", "0.18s", "none"]);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  expect((await fade())[0]).toBe("none");
 });
 
 test("the writing index shows each post's count, from one request that counts nothing", async ({

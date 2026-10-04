@@ -178,7 +178,13 @@ const ALLOWED = [
     ["lib/seo.ts", 1, "the document title, page then site name"],
     ["lib/og/template.ts", 2, "the kicker on a share image"],
   ]),
-  ...allow("motion", [["styles/app.css", 2, "the search dialog's 140ms entrance"]]),
+  ...allow("motion", [
+    [
+      "styles/app.css",
+      4,
+      "the search dialog's 140ms entrance (2); a view count's 180ms fade in, opacity only, asked for by the owner (2)",
+    ],
+  ]),
   ...allow("mono", [["styles/app.css", 3, "inline code, code blocks, the admin code field"]]),
 ];
 
