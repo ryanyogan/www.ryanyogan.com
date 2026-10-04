@@ -48,9 +48,10 @@ pnpm db:seed:generate
 pnpm exec wrangler d1 execute DB --remote --file db/seed.sql
 ```
 
-A deploy that adds a migration (0002, `deleted_seed_slugs`, is not applied remotely yet) needs the first
-command run before `pnpm run deploy`: the admin's delete and slug change write to that table, and the
-generated seed reads it.
+CI runs these three on every deploy (see [Deploy from CI](#deploy-from-ci)), always before the new code
+goes live. A deploy by hand that adds a migration (0002, `deleted_seed_slugs`, is applied by the first CI
+deploy) needs the first command run before `pnpm run deploy`: the admin's delete and slug change write to
+that table, and the generated seed reads it.
 
 Local D1 files are keyed by `database_id`; when that id changes, the next `pnpm dev` sets the new local
 database up.
@@ -87,17 +88,18 @@ plain `vars` in `apps/web/wrangler.jsonc` (`ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`; n
 third setting, `ADMIN_EMAIL`, is a secret and is never written to a file. The Worker reads all three from
 `env` the same way, var or secret. Until `ADMIN_EMAIL` is set, the deployed /admin answers 403.
 
-What is left, from `apps/web`:
+The secret is set once, by hand, from `apps/web`; a deploy (from CI or by hand) never reads, sets or
+removes it:
 
 ```sh
 pnpm exec wrangler secret put ADMIN_EMAIL   # prompts; enter the owner's Cloudflare Access email
-pnpm run deploy
 ```
 
 If the Worker has never been deployed, `secret put` asks whether to create it first; answer yes, or
 deploy first and set the secret afterwards (a secret takes effect at once, no second deploy).
 
-After the deploy, check in this order:
+Code is deployed by CI on every green push to `master` ([Deploy from CI](#deploy-from-ci)). CI's smoke
+check does not sign in, so after a deploy that touches the admin, check in this order:
 
 1. Signed out, `curl -i https://ryanyogan.com/admin` must not return the admin (an Access login redirect,
    or 401/403 from the Worker).
@@ -170,5 +172,87 @@ The HTML report is written to `apps/web/playwright-report`
 
 ## CI
 
-`.github/workflows/ci.yml` runs format check, lint, typecheck, unit tests, build, and `pnpm test:e2e` (the same script as locally: local D1 migrate and seed, Playwright, a summary) on pull requests
-and on pushes to `master`. It only validates; deploys are run by hand with `pnpm deploy`.
+`.github/workflows/ci.yml` has two jobs. `validate` runs on pull requests and on pushes to `master`:
+format check, lint, build, typecheck, unit tests, the fresh-clone check, `pnpm test:e2e` (the same script
+as locally: local D1 migrate and seed, Playwright, a summary) and the transfer budget. `deploy` runs only
+for a push to `master` in this repository, after `validate` passed for that commit; on a pull request
+(and in a fork) it shows as skipped.
+
+### Deploy from CI
+
+Merging to `master` deploys. The `deploy` job checks out the commit that was validated and, from
+`apps/web`:
+
+1. Fails at once, before anything is changed, if either repository secret below is missing.
+2. Builds (`pnpm build`), then checks the token with a read-only call (`wrangler deployments status`).
+3. Applies pending D1 migrations to the remote database (`wrangler d1 migrations apply DB --remote`;
+   Wrangler skips its confirmation in CI). This comes before the deploy so the new code never runs
+   against a schema that lacks its tables. Write migrations the old code can live with (add, do not
+   rename or drop, in the same deploy): the old version keeps serving until step 5.
+4. Generates and applies the project seed (`pnpm db:seed:generate`,
+   `wrangler d1 execute DB --remote --file db/seed.sql`), so an edit to `content/projects/*.md` reaches
+   production with the deploy. The seed only writes a row that is still an untouched seed row and whose
+   file changed; projects edited, reordered, deleted or renamed in `/admin` are left alone. A seed change
+   purges no cached page: it shows within 6 minutes.
+5. `wrangler deploy --message "CI <sha>"` to the Worker `ryanyogan-com`. The custom domain and the
+   Worker's secrets are not in `wrangler.jsonc`, and a deploy keeps both.
+6. Runs `scripts/deploy-smoke.sh`: `/`, `/projects` and `/sitemap.xml` on https://ryanyogan.com must
+   answer 200, rendered by the Worker (a query parameter keeps the page cache out of it), and `/` must
+   name this build's entry script and stylesheet, whose file names carry a content hash. Six tries, ten
+   seconds apart. If it fails, the new version is live and wrong: roll back. A commit that changes only
+   server code leaves both file names as they were; for that commit the check proves the site is up,
+   not which version answered.
+
+Runs on `master` go one at a time and are never cancelled once started, so a deploy cannot be cut off
+halfway. A push that lands while a run is in progress waits; if several wait, only the newest is kept
+(the others show as cancelled) and it deploys everything before it. Re-running an old run from the
+Actions page deploys that old commit again.
+
+The job needs two repository secrets (Settings, Secrets and variables, Actions). It never prints them,
+and only the steps that call Wrangler receive them.
+
+- `CLOUDFLARE_ACCOUNT_ID`: the account that owns the Worker and the database (`wrangler whoami`, or the
+  dashboard's account overview).
+- `CLOUDFLARE_API_TOKEN`: an API token limited to that account, with these permissions:
+  - Account, Workers Scripts, Edit (upload the Worker and its assets)
+  - Account, D1, Edit (migrations and the seed)
+  - Account, Account Settings, Read
+
+  Cloudflare's guide for GitHub Actions starts from the "Edit Cloudflare Workers" template; that template
+  is wider than this site needs (KV, R2, Pages, routes on every zone), so a custom token with the three
+  rows above is the better choice. If you do use the template, add D1 Edit to it. No zone permission is
+  needed: the workflow adds no routes and the custom domain is already attached.
+
+  Checked against Cloudflare's documentation on 2026-10-04: the secret names and the template name
+  ([GitHub Actions](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/)) and
+  the permission names, listed there as Workers Scripts Write, D1 Write and Account Settings Read; the
+  dashboard labels Write as Edit
+  ([API token permissions](https://developers.cloudflare.com/fundamentals/api/reference/permissions/)).
+  Not confirmed by a real run: that these three are enough for this Worker (it has a Workers AI
+  binding), and that the template lacks D1. If a step answers "Authentication error [code: 10000]", the
+  token is missing the permission for that step.
+
+### Deploy by hand
+
+If CI is down, from `apps/web`, on a clean checkout of the commit to deploy and after
+`pnpm exec wrangler login`:
+
+```sh
+pnpm exec wrangler d1 migrations apply DB --remote   # only when there is a new migration
+pnpm db:seed:generate                                # only when content/projects changed
+pnpm exec wrangler d1 execute DB --remote --file db/seed.sql
+pnpm run deploy                                      # pnpm build && wrangler deploy
+sh ../../scripts/deploy-smoke.sh                     # the same check CI runs
+```
+
+### Roll back
+
+From `apps/web`:
+
+```sh
+pnpm exec wrangler deployments list          # recent deployments; CI's carry "CI <commit>"
+pnpm exec wrangler rollback <version-id>     # the version id of the last good one
+```
+
+A rollback takes effect at once and changes the code only: D1 keeps its migrations and data. Then
+revert the commit on `master`, or the next green push deploys the bad code again.

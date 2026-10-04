@@ -8,9 +8,13 @@ on:
 permissions:
   contents: read
 
+# One run per ref at a time. A newer push to a pull request cancels the run in progress. A
+# run on master is never cancelled once it has started (it may be halfway through a deploy):
+# a newer push waits for it, and of several waiting only the newest is kept, so master
+# deploys one commit at a time, in push order.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   validate:
@@ -82,3 +86,101 @@ jobs:
             apps/web/e2e-results.json
           if-no-files-found: ignore
           retention-days: 7
+
+  # Production (the Worker `ryanyogan-com`, https://ryanyogan.com): only for a push to master
+  # in this repository, never a pull request or a fork, and only after `validate` passed for
+  # the same commit. See "Deploy from CI" in the README.
+  deploy:
+    needs: validate
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && github.repository == 'ryanyogan/www.ryanyogan.com' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Its own group as well: whatever starts another run, a deploy is never cancelled halfway
+    # and two never overlap.
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    env:
+      CI: "true"
+      WRANGLER_SEND_METRICS: "false"
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      # github.sha: the commit `validate` just checked, not whatever master points at by now.
+      - uses: actions/checkout@v4
+
+      # Before anything is installed or changed. Only the names are printed, never a value.
+      - name: Check deploy credentials
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          missing=""
+          [ -n "$CLOUDFLARE_API_TOKEN" ] || missing="$missing CLOUDFLARE_API_TOKEN"
+          [ -n "$CLOUDFLARE_ACCOUNT_ID" ] || missing="$missing CLOUDFLARE_ACCOUNT_ID"
+          if [ -n "$missing" ]; then
+            echo "::error title=Deploy credentials missing::Repository secret(s) not set:$missing. Nothing was migrated or deployed. Add them (README, Deploy from CI) and re-run this job."
+            exit 1
+          fi
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Before the database is touched, so a build that fails leaves production as it was.
+      # No credentials here: the build reaches nothing remote.
+      - name: Build
+        run: pnpm build
+
+      # Read-only: fails here, with nothing changed, when the token is wrong, expired or for
+      # another account.
+      - name: Check Cloudflare access
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm exec wrangler deployments status
+
+      # Before the deploy: the new code may read a table the old schema does not have (the
+      # admin's delete writes `deleted_seed_slugs`, and the seed below reads it). Wrangler
+      # skips its confirmation when there is no terminal; with nothing pending it is a no-op.
+      - name: Apply D1 migrations
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm exec wrangler d1 migrations apply DB --remote
+
+      # content/projects/*.md into D1. Safe on every deploy (scripts/seed-projects.ts): it
+      # only writes a row that is still an untouched seed row and whose file changed, never
+      # changes `published`, and skips slugs deleted or renamed in /admin.
+      - name: Seed projects
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          pnpm db:seed:generate
+          pnpm exec wrangler d1 execute DB --remote --yes --file db/seed.sql
+
+      # The build above, to the Worker named in wrangler.jsonc. The custom domain and the
+      # Worker's secrets (ADMIN_EMAIL) are not in the config and a deploy leaves them alone.
+      - name: Deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm exec wrangler deploy --message "CI ${GITHUB_SHA}"
+
+      # /, /projects and /sitemap.xml must answer 200 and / must name this build's hashed
+      # entry script and stylesheet; 6 tries, 10 seconds apart. A failure here means the new
+      # version is live and wrong: roll back (README, Roll back).
+      - name: Smoke check
+        working-directory: .
+        run: sh scripts/deploy-smoke.sh https://ryanyogan.com
+
+      - name: Summary
+        run: echo "Deployed \`${GITHUB_SHA}\` to https://ryanyogan.com" >> "$GITHUB_STEP_SUMMARY"

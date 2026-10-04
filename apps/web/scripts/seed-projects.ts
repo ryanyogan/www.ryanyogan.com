@@ -83,13 +83,15 @@ const rows = readdirSync(contentDir)
 // Re-running is safe: a row is only overwritten while it is still an untouched
 // seed row (source = 'seed'), `published` is left as it is, and a slug the owner deleted
 // or renamed away in /admin (table `deleted_seed_slugs`, migration 0002) is skipped.
-const updates = columns
-  .filter((column) => !["slug", "published", "source"].includes(column))
-  .map((column) => `  ${column} = excluded.${column}`);
+// A row whose content file has not changed is not written at all, so `updated_at` (the
+// sitemap's lastmod) only moves when the content did: CI runs the seed on every deploy.
+const seeded = columns.filter((column) => !["slug", "published", "source"].includes(column));
+const updates = seeded.map((column) => `  ${column} = excluded.${column}`);
+const changed = seeded.map((column) => `projects.${column} IS NOT excluded.${column}`);
 
 const statements = rows.map(
   ({ slug, values }) =>
-    `INSERT INTO projects (${columns.join(", ")})\nSELECT ${values}\nWHERE NOT EXISTS (SELECT 1 FROM deleted_seed_slugs WHERE slug = ${sql(slug)})\nON CONFLICT (slug) DO UPDATE SET\n${updates.join(",\n")},\n  updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')\nWHERE projects.source = 'seed';`,
+    `INSERT INTO projects (${columns.join(", ")})\nSELECT ${values}\nWHERE NOT EXISTS (SELECT 1 FROM deleted_seed_slugs WHERE slug = ${sql(slug)})\nON CONFLICT (slug) DO UPDATE SET\n${updates.join(",\n")},\n  updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')\nWHERE projects.source = 'seed'\n  AND (${changed.join(" OR ")});`,
 );
 
 mkdirSync(fileURLToPath(new URL("../db", import.meta.url)), { recursive: true });
