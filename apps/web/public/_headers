@@ -5,3 +5,10 @@
 # Prose images encoded at build time: the file name carries a hash of the bytes.
 /images/opt/*
   Cache-Control: public, max-age=31536000, immutable
+
+# What the build emits (scripts, the stylesheet, fonts): Vite puts a hash of the contents in
+# every file name under /assets, so a changed file is a new URL and a reload need not ask.
+# Nothing else is listed here: pages, feeds, /robots.txt and the images under /images keep
+# the asset server's default (ask again every time), since their URLs do not change.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
