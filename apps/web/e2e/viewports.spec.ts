@@ -181,8 +181,23 @@ async function audit(page: Page, options: { post: boolean }): Promise<string[]> 
   }, options);
 }
 
+/** React has attached to the heading and the footer: the route's scripts have all arrived. */
+async function hydrated(page: Page) {
+  await page.waitForFunction(() => {
+    const attached = (element: Element | null) =>
+      Boolean(element && Object.keys(element).some((key) => key.startsWith("__reactFiber$")));
+    return attached(document.querySelector("h1")) && attached(document.querySelector("footer"));
+  });
+}
+
+// Waits for hydration, so the page measured is the one a reader ends up with, and so the next
+// goto does not leave a page whose route chunk is still on its way. WebKit cancels that import
+// when a navigation starts ("Importing a module script failed"), TanStack Router takes the
+// failure for a stale build and reloads the page being left (lazyRouteComponent), and the
+// reload interrupts the goto. Chromium does not reject the import, so it never showed there.
 async function ready(page: Page, path: string) {
   await page.goto(path);
+  await hydrated(page);
   await page.evaluate(() => document.fonts.ready);
 }
 
@@ -423,6 +438,8 @@ test("admin on a phone: no overflow, and every field is 16px so iOS does not zoo
   await page.setViewportSize({ width: 320, height: 568 });
   for (const path of ["/admin", "/admin/projects/lincoln-project"]) {
     await page.goto(`${ADMIN_ORIGIN}${path}`);
+    // Hydrated before the next goto, for the reason given at ready().
+    await expect(page.locator('main[data-hydrated="true"]')).toBeVisible();
     await expect(page.locator("h1")).toBeVisible();
     const result = await page.evaluate(() => ({
       scroll: document.documentElement.scrollWidth,
