@@ -169,28 +169,8 @@ plain("a database failure leaves the post intact, without a count", async ({ pag
   ]);
   expect(loaded?.status()).toBe(200);
   expect(failed.status()).toBe(503);
-  // TEMPORARY diagnostic: why Chromium never reports this answer as finished.
-  const late = (label: string) =>
-    new Promise<string>((resolve) => setTimeout(() => resolve(`${label}: still pending`), 3000));
-  console.log(
-    "VIEWS-DIAG",
-    JSON.stringify(await failed.allHeaders()),
-    await Promise.race([failed.finished().then((e) => `finished: ${String(e)}`), late("finished")]),
-    await Promise.race([failed.text().then((t) => `text: ${t}`), late("text")]),
-    await page.evaluate(
-      async (url) => {
-        const started = performance.now();
-        const response = await fetch(url, { method: "POST" });
-        const text = await Promise.race([
-          response.text(),
-          new Promise<string>((resolve) => setTimeout(() => resolve("TEXT PENDING"), 3000)),
-        ]);
-        return `in-page: ${response.status} ${text} ${Math.round(performance.now() - started)}ms`;
-      },
-      `${BROKEN_ORIGIN}${api(slug)}`,
-    ),
-  );
-  // React has had two frames to draw whatever it would draw.
+  // The request has ended, and React has had two frames to draw whatever it would draw.
+  await failed.finished();
   await page.evaluate(
     () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
   );

@@ -35,10 +35,10 @@ export function PostViews({ slug }: { slug: string }) {
 async function fetchJson(url: string, method: "GET" | "POST"): Promise<unknown> {
   try {
     const response = await fetch(url, { method });
-    if (response.ok) return await response.json();
-    // An unread body keeps the request open; nothing here wants an error's text.
-    await response.body?.cancel();
-    return undefined;
+    // Read before the status is looked at: Chromium keeps a request open until its body
+    // has been read, an error's too.
+    const body: unknown = await response.json();
+    return response.ok ? body : undefined;
   } catch {
     // Offline, blocked or not JSON: the count is decoration, the page goes without it.
     return undefined;
