@@ -8,7 +8,10 @@
 //
 // Fails (exit 1) when a route is over a budget below, when a public route downloads the
 // markdown parser or the syntax highlighter, or when a script carries the body of a post
-// other than the one being read. `--report` prints the table and never fails.
+// other than the one being read. Fonts have three budgets: the files the page preloads
+// (`<link rel="preload" as="font">`, from src/styles/fonts.ts), how many of those there
+// are, and every font file the page ends up fetching. `--report` prints the table and
+// never fails.
 import { readdirSync, readFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import { chromium } from "@playwright/test";
@@ -39,6 +42,10 @@ const longest = posts.reduce((a, b) => (b.length > a.length ? b : a));
 /** Budgets in gzip bytes. Set from the measurements of October 2026 plus about 10%. */
 const JS_BUDGET = 130 * KB;
 const CSS_BUDGET = 12 * KB;
+/** Font budgets are the specification's (R1.17), in bytes as served: woff2 is not gzipped. */
+const FONT_PRELOAD_BUDGET = 70 * KB;
+const FONT_PRELOAD_FILES = 3;
+const FONT_BUDGET = 150 * KB;
 const routes = [
   { path: "/", js: JS_BUDGET },
   { path: "/work", js: JS_BUDGET },
@@ -96,6 +103,9 @@ async function measure(browser, origin, route) {
   // Idle-time work (hydration, lazy chunks) gets one more quiet period.
   await page.waitForTimeout(500);
   await page.waitForLoadState("networkidle");
+  const preloadHrefs = await page.evaluate(() =>
+    Array.from(document.querySelectorAll('link[rel="preload"][as="font"]'), (link) => link.href),
+  );
   const responses = await Promise.all(pending);
   await context.close();
 
@@ -123,9 +133,16 @@ async function measure(browser, origin, route) {
       );
     }
   }
+  const preloads = [...new Set(preloadHrefs)].map((href) => {
+    const response = responses.find((r) => r.url === href && r.status < 400);
+    // Without this a preload that fetched nothing would count as zero bytes.
+    if (!response) problems.push(`preloaded font was not fetched: ${href}`);
+    return { url: href, bytes: response?.bytes ?? 0 };
+  });
   if (process.env.PERF_DEBUG) {
     for (const r of responses.filter((r) => r.kind === "js" || r.kind === "font")) {
-      console.log(`  ${route.path} ${kb(r.bytes)} ${r.url.split("/").pop()}`);
+      const preloaded = preloads.some((p) => p.url === r.url) ? " (preloaded)" : "";
+      console.log(`  ${route.path} ${kb(r.bytes)} ${r.url.split("/").pop()}${preloaded}`);
     }
   }
   const result = {
@@ -135,6 +152,8 @@ async function measure(browser, origin, route) {
     js: sum("js"),
     css: sum("css"),
     font: sum("font"),
+    preloads: preloads.length,
+    fontPreload: preloads.reduce((total, p) => total + p.bytes, 0),
     html: sum("html"),
     problems,
   };
@@ -143,6 +162,17 @@ async function measure(browser, origin, route) {
   }
   if (result.css > CSS_BUDGET) {
     problems.push(`CSS ${kb(result.css)} KB gzip is over the ${kb(CSS_BUDGET)} KB budget`);
+  }
+  if (result.fontPreload > FONT_PRELOAD_BUDGET) {
+    problems.push(
+      `preloaded fonts ${kb(result.fontPreload)} KB are over the ${kb(FONT_PRELOAD_BUDGET)} KB budget`,
+    );
+  }
+  if (result.preloads > FONT_PRELOAD_FILES) {
+    problems.push(`${result.preloads} fonts are preloaded; the limit is ${FONT_PRELOAD_FILES}`);
+  }
+  if (result.font > FONT_BUDGET) {
+    problems.push(`fonts ${kb(result.font)} KB are over the ${kb(FONT_BUDGET)} KB budget`);
   }
   return result;
 }
@@ -157,10 +187,12 @@ try {
   for (const route of routes) results.push(await measure(browser, origin, route));
   await browser.close();
 
-  console.log("route | requests (third-party) | JS gz KB | CSS gz KB | fonts KB | HTML gz KB");
+  console.log(
+    "route | requests (third-party) | JS gz KB | CSS gz KB | fonts KB | preloaded fonts KB (files) | HTML gz KB",
+  );
   for (const r of results) {
     console.log(
-      `${r.path} | ${r.requests} (${r.external}) | ${kb(r.js)} | ${kb(r.css)} | ${kb(r.font)} | ${kb(r.html)}`,
+      `${r.path} | ${r.requests} (${r.external}) | ${kb(r.js)} | ${kb(r.css)} | ${kb(r.font)} | ${kb(r.fontPreload)} (${r.preloads}) | ${kb(r.html)}`,
     );
   }
   for (const r of results) {
