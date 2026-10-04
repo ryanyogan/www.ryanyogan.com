@@ -4,8 +4,6 @@ name: Performance
 # gate: it never runs on a push, is not a required check, and a line over budget does not fail
 # the run. No secrets: it reads the public site, or builds and serves this ref locally.
 on:
-  # TEMPORARY, removed before merge: a workflow can only be dispatched once it is on master.
-  pull_request:
   workflow_dispatch:
     inputs:
       base_url:
@@ -23,13 +21,9 @@ jobs:
   lighthouse:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        url: ["", "https://ryanyogan.com"]
     env:
       CI: "true"
-      BASE_URL: ${{ matrix.url }}
+      BASE_URL: ${{ github.event_name == 'schedule' && 'https://ryanyogan.com' || inputs.base_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -51,12 +45,11 @@ jobs:
         run: pnpm build
 
       # The runner's own Google Chrome; Lighthouse (the version pinned in perf.mjs) is
-      # fetched here so the time and size of that show on their own line.
+      # fetched here so the time that takes shows on its own line.
       - name: Fetch Lighthouse
         run: |
           google-chrome --version
           pnpm dlx lighthouse@13.5.0 --version
-          du -sh ~/.cache/pnpm/dlx || ls ~/.cache ~/.cache/pnpm
 
       - name: Lighthouse
         run: pnpm perf "$BASE_URL"
