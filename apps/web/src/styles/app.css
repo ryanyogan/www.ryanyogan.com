@@ -1915,12 +1915,12 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 360px) {
   .prose p,
   .prose li {
     hyphens: auto;
     /* Words of eight letters or more, at least four on each side of the break (the -webkit
-       pair is Safari's spelling): fewer chopped lines in a 30-character column. */
+       pair is Safari's spelling): fewer chopped lines in a 28-character column. A wider phone breaks between words. */
     hyphenate-limit-chars: 8 4 4;
     -webkit-hyphenate-limit-before: 4;
     -webkit-hyphenate-limit-after: 4;
