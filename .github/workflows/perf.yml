@@ -51,5 +51,14 @@ jobs:
           google-chrome --version
           pnpm dlx lighthouse@13.5.0 --version
 
+      # --detail: the request table, LCP breakdown and request chain per page, in the summary
+      # and as JSON in the artifact.
       - name: Lighthouse
-        run: pnpm perf "$BASE_URL"
+        run: pnpm perf "$BASE_URL" --detail
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: perf-detail
+          path: apps/web/perf-detail
+          if-no-files-found: ignore

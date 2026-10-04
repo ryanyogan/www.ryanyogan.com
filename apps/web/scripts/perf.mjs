@@ -1,4 +1,4 @@
-// `pnpm perf [base URL] [--runs=3] [--strict]`: Lighthouse (mobile emulation, simulated Slow
+// `pnpm perf [base URL] [--runs=3] [--strict] [--detail]`: Lighthouse (mobile emulation, simulated Slow
 // 4G, 4x CPU slowdown: its defaults) for the home page, the longest post and one project
 // page, against the budgets of SPEC-seo-perf-reading section 1.9. Prints one line per metric
 // with the median of the runs, the budget and pass or FAIL; in GitHub Actions the table also
@@ -9,13 +9,27 @@
 // printed but not judged there (`pnpm perf:budget` holds the gzip budgets) and LCP, which the
 // simulation derives from the bytes, reads high. Against a deployed site every line counts.
 //
+// `--detail` adds, per page, what the numbers are made of (from the run with the median LCP):
+// every request with its type, priority, size and timing, whether it blocks rendering and
+// whether the document preloads it; the LCP element and where its time goes; the chain of
+// critical requests. The same data goes to `perf-detail/<page>.json` for `jq`.
+//
 // Lab numbers move from run to run, more so on a shared CI runner, so a failed budget only
 // fails the script (exit 1) with `--strict`.
 //
 // Lighthouse is not a dependency: `pnpm dlx` fetches the pinned version on first use. It
 // drives the Chrome installed on the machine (or CHROME_PATH).
 import { spawnSync } from "node:child_process";
-import { appendFileSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import {
+  appendFileSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startPreview } from "./preview.mjs";
@@ -26,6 +40,8 @@ const KB = 1024;
 
 const args = process.argv.slice(2);
 const strict = args.includes("--strict");
+const detail = args.includes("--detail");
+const DETAIL_DIR = "perf-detail";
 const runs = Number(args.find((arg) => arg.startsWith("--runs="))?.slice(7) ?? 3);
 const baseUrl = args.find((arg) => arg && !arg.startsWith("--"))?.replace(/\/$/, "");
 if (!Number.isInteger(runs) || runs < 1) throw new Error("--runs takes a whole number above 0");
@@ -93,7 +109,90 @@ function lighthouse(url) {
     transfer: requests.reduce((total, item) => total + item.transferSize, 0),
     score: categories.performance.score * 100,
     versions: `Lighthouse ${lighthouseVersion}, Chrome ${environment.hostUserAgent.match(/Chrome\/(\d+)/)?.[1] ?? "unknown"}`,
+    // The audits `--detail` reads; the whole result is megabytes.
+    audits: detail
+      ? Object.fromEntries(DETAIL_AUDITS.map((id) => [id, audits[id]?.details ?? null]))
+      : null,
   };
+}
+
+const DETAIL_AUDITS = [
+  "network-requests",
+  "metrics",
+  "lcp-breakdown-insight",
+  "lcp-discovery-insight",
+  "render-blocking-insight",
+  "network-dependency-tree-insight",
+  "font-display-insight",
+];
+
+/** Every object inside a Lighthouse `details` value, depth first. */
+function* walk(value) {
+  if (!value || typeof value !== "object") return;
+  yield value;
+  for (const child of Object.values(value)) yield* walk(child);
+}
+
+function shortUrl(url) {
+  const { pathname, search } = new URL(url);
+  return (pathname.startsWith("/assets/") ? pathname.slice(8) : pathname) + search;
+}
+
+/** The critical request chains as indented lines: file, when its response ended, size. */
+function chainLines(chains, depth = 1) {
+  return Object.values(chains ?? {}).flatMap((node) => [
+    `${"  ".repeat(depth)}${shortUrl(node.url)} (ends ${millis(node.navStartToEndTime ?? 0)}, ${kb(node.transferSize ?? 0)})`,
+    ...chainLines(node.children, depth + 1),
+  ]);
+}
+
+/**
+ * What one run's numbers are made of, as lines of text. `html` is the document as served: a
+ * request counts as preloaded when a `<link rel="preload">` or `modulepreload` names it.
+ */
+function describe(page, run, html) {
+  const a = run.audits;
+  const preloaded = new Set(
+    (html.match(/<link\b[^>]*>/g) ?? [])
+      .filter((tag) => /rel="(module)?preload"/.test(tag))
+      .map((tag) => tag.match(/href="([^"]+)"/)?.[1]),
+  );
+  const blocking = new Set(
+    [...walk(a["render-blocking-insight"])]
+      .filter((o) => typeof o.url === "string")
+      .map((o) => o.url),
+  );
+  const requests = a["network-requests"].items.filter((item) => /^https?:/.test(item.url));
+  const lines = [
+    `${page.path}: ${requests.length} requests, ${kb(run.transfer)} transferred`,
+    "type | priority | transfer | size | start to end (observed) | blocks render | preloaded | file",
+    ...requests.map((r) =>
+      [
+        r.resourceType,
+        r.priority,
+        kb(r.transferSize),
+        kb(r.resourceSize),
+        `${millis(r.networkRequestTime)} to ${millis(r.networkEndTime)}`,
+        blocking.has(r.url) ? "yes" : "-",
+        preloaded.has(new URL(r.url).pathname) ? "yes" : "-",
+        shortUrl(r.url),
+      ].join(" | "),
+    ),
+  ];
+  const m = a.metrics?.items?.[0] ?? {};
+  lines.push(
+    `FCP ${millis(m.firstContentfulPaint)} simulated (${millis(m.observedFirstContentfulPaint)} observed), ` +
+      `LCP ${millis(m.largestContentfulPaint)} simulated (${millis(m.observedLargestContentfulPaint)} observed)`,
+  );
+  const lcp = [...walk(a["lcp-breakdown-insight"])];
+  const node = lcp.find((o) => o.type === "node");
+  lines.push(`LCP element: ${node ? `${node.selector} ${node.snippet}` : "not reported"}`);
+  for (const part of lcp.filter((o) => o.subpart && typeof o.duration === "number")) {
+    lines.push(`  ${part.label ?? part.subpart}: ${millis(part.duration)} (observed)`);
+  }
+  const tree = [...walk(a["network-dependency-tree-insight"])].find((o) => o.chains);
+  lines.push("Critical request chain:", ...chainLines(tree?.chains));
+  return lines;
 }
 
 function median(values) {
@@ -137,6 +236,7 @@ if (!baseUrl) {
 const origin = baseUrl ?? preview.origin;
 
 const table = [];
+const details = [];
 let versions = "";
 try {
   for (const page of pages) {
@@ -165,6 +265,14 @@ try {
       ]),
     );
     table.push(...rows(page, medians, Boolean(baseUrl)));
+    if (detail) {
+      const run = results.toSorted((x, y) => x.lcp - y.lcp)[Math.floor((runs - 1) / 2)];
+      const html = await (await fetch(url)).text();
+      details.push(describe(page, run, html));
+      mkdirSync(DETAIL_DIR, { recursive: true });
+      const name = page.path.replace(/\W+/g, "-").replace(/^-|-$/g, "") || "home";
+      writeFileSync(join(DETAIL_DIR, `${name}.json`), JSON.stringify({ url, html, ...run }));
+    }
   }
 } finally {
   preview?.stop();
@@ -191,6 +299,7 @@ const outcome = failures
 console.log(`\n${title}\n${header.join(" | ")}`);
 for (const row of table) console.log(row.join(" | "));
 console.log(`${notes.join("\n")}\n${outcome}`);
+for (const lines of details) console.log(`\n${lines.join("\n")}`);
 
 if (process.env.GITHUB_STEP_SUMMARY) {
   const line = (cells) => `| ${cells.join(" | ")} |`;
@@ -207,6 +316,7 @@ if (process.env.GITHUB_STEP_SUMMARY) {
       "",
       outcome,
       "",
+      ...details.flatMap((lines) => ["```", ...lines, "```", ""]),
     ].join("\n"),
   );
 }
