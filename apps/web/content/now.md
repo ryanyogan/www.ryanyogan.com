@@ -5,9 +5,9 @@ place: "Chicago"
 
 ## Working on
 
-By day I lead AI engineering. That work stays off this site.
+By day I lead AI engineering at Chromatic, and I build too: AI, MCP and core services.
 
-Two apps for my household: one for coordination, and Noodle, for the budget. Noodle is a week old. Both are agent-driven builds: I write the tickets and the decision records.
+Two apps for my household: one for coordination, and [Noodle](/projects/noodle), for the budget. Noodle is a week old. Both are agent-driven builds: I write the tickets and the decision records.
 
 I rebuilt this site again. It is quieter now.
 

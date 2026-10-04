@@ -7,7 +7,9 @@ export function LeadAndBuild() {
         <h2 id="both-h" className="lab">
           Lead and build
         </h2>
-        <p className="gnote">By day I lead AI engineering. That work stays off this site.</p>
+        <p className="gnote">
+          By day I lead AI engineering at Chromatic, and I build too: AI, MCP and core services.
+        </p>
       </div>
       <div className="col twin">
         <div>

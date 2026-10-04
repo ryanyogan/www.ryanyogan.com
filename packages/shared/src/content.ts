@@ -20,9 +20,10 @@ export const workSections: WorkSection[] = [
         type: "Full-time",
         dates: "Jun 2026 — Present",
         location: "Remote",
-        // LinkedIn gives this role no description, and the site says no more than this.
+        // LinkedIn gives this role no description. The summary is the owner's own words
+        // (2026-10-04), and the site says no more than this.
         description: "",
-        summary: "That work stays off this site.",
+        summary: "Lead AI engineering and build too: AI, MCP and core services.",
         highlights: [],
         tags: [],
       },

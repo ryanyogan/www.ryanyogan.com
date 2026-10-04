@@ -56,9 +56,9 @@ describe("work timeline", () => {
     ]);
   });
 
-  it("says nothing about the current role beyond what the site already says", () => {
+  it("says only what the owner has said about the current role", () => {
     expect(roles[0]).toMatchObject({
-      summary: "That work stays off this site.",
+      summary: "Lead AI engineering and build too: AI, MCP and core services.",
       description: "",
       highlights: [],
     });
