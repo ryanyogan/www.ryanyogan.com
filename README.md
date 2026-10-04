@@ -31,6 +31,13 @@ pnpm build
   handled the write (elsewhere a copy lives out its 6 minutes at most), and a change made straight to D1
   (`wrangler d1 execute`, the seed) purges nothing. Never cached: anything but a 200, any request carrying
   the Access cookie or token, `/admin`, server functions. `vite dev` does not cache at all.
+- View counts of the writing posts are in the table `post_views` (migration 0003): one row per post slug,
+  made on the first view. A post is a static file, so its page asks for the count after it has loaded:
+  `POST /api/views/<slug>` adds one in a single statement and answers with the new total; `GET /api/views`
+  lists every post's total. Neither is cached, and only the slug of a real post is counted. The number is
+  raw page loads: a refresh counts again, and so does any bot that runs JavaScript. If the database fails
+  the post shows no count. To reset a post, delete its row (from `apps/web`):
+  `pnpm exec wrangler d1 execute DB --remote --command "DELETE FROM post_views WHERE slug = '<slug>'"`.
 
 Local dev, `vite preview` and the tests use a local D1 (miniflare, under `apps/web/.wrangler`); none of them
 needs a Cloudflare account. `pnpm typecheck` runs `wrangler types` first to generate the `Env` types
@@ -153,9 +160,9 @@ AI draft (prompt assembly, answer validation, error mapping; the model is stubbe
 ## Smoke tests
 
 A small Playwright suite in `apps/web/e2e` runs against the built site, in three projects: `chromium`
-(everything, desktop size), `mobile` (Chromium at 390px: the page tests and the mobile menu) and `webkit`
-(Safari's engine as an iPhone 14, public pages only: the device matrix in `viewports.spec.ts`, the mobile
-menu, the page tests and the hydration check). It starts two
+(everything, desktop size), `mobile` (Chromium at 390px: the page tests, the mobile menu and the view
+count) and `webkit` (Safari's engine as an iPhone 14, public pages only: the device matrix in
+`viewports.spec.ts`, the mobile menu, the page tests, the view count and the hydration check). It starts two
 `vite preview` servers itself and refuses to reuse ones already running, so stop any `pnpm preview`
 first: port 4173 is the public site with no admin settings (so `/admin` must be closed), port 4174 is the
 same build with the admin bypass on, for the admin tests. `pnpm test:e2e` first rebuilds two throwaway
