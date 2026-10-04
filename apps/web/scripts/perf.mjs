@@ -1,4 +1,4 @@
-// `pnpm perf [base URL] [--runs=3] [--strict] [--detail]`: Lighthouse (mobile emulation, simulated Slow
+// `pnpm perf [base URL] [--runs=3] [--strict] [--detail] [--applied]`: Lighthouse (mobile emulation, simulated Slow
 // 4G, 4x CPU slowdown: its defaults) for the home page, the longest post and one project
 // page, against the budgets of SPEC-seo-perf-reading section 1.9. Prints one line per metric
 // with the median of the runs, the budget and pass or FAIL; in GitHub Actions the table also
@@ -42,6 +42,10 @@ const args = process.argv.slice(2);
 const strict = args.includes("--strict");
 const detail = args.includes("--detail");
 const DETAIL_DIR = "perf-detail";
+// `--applied`: Chrome really throttles the network and CPU to the same figures, instead of
+// Lighthouse estimating from an unthrottled load. Slower and noisier; for diagnosis, since
+// the estimate counts every request that finished before the paint in the unthrottled load.
+const throttling = args.includes("--applied") ? "devtools" : "simulate";
 const runs = Number(args.find((arg) => arg.startsWith("--runs="))?.slice(7) ?? 3);
 const baseUrl = args.find((arg) => arg && !arg.startsWith("--"))?.replace(/\/$/, "");
 if (!Number.isInteger(runs) || runs < 1) throw new Error("--runs takes a whole number above 0");
@@ -85,7 +89,7 @@ function lighthouse(url) {
       "--quiet",
       "--only-categories=performance",
       "--form-factor=mobile",
-      "--throttling-method=simulate",
+      `--throttling-method=${throttling}`,
       "--output=json",
       `--output-path=${file}`,
       // Chrome's sandbox needs privileges a CI runner does not give it.
@@ -279,7 +283,7 @@ try {
 }
 
 const header = ["page", "metric", "measured", "budget", "result"];
-const title = `Lighthouse, mobile on Slow 4G: ${baseUrl ?? "local preview of this build"}`;
+const title = `Lighthouse, mobile on Slow 4G${throttling === "devtools" ? " (applied throttling)" : ""}: ${baseUrl ?? "local preview of this build"}`;
 const notes = [
   `${versions}, median of ${runs} run(s) per page. Simulated throttling: 150 ms round trip, 1.6 Mbps, 4x CPU slowdown.`,
   "INP needs a real interaction, so a page-load run cannot measure it; TBT is its lab proxy.",
