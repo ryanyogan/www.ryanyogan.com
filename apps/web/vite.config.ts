@@ -34,10 +34,18 @@ function isDynamic(path: string): boolean {
  * request. The group also takes what these modules import (not what they import lazily:
  * route components, the search index, the markdown renderer and the post bodies stay apart).
  */
+// Part of every page-cache key (src/lib/page-cache.ts), so a deploy never serves a copy the
+// version before it stored. The commit in GitHub Actions; elsewhere the time of this build,
+// since a build by hand may be of uncommitted work.
+const buildId = process.env.GITHUB_SHA?.slice(0, 12) || `t${Date.now().toString(36)}`;
+
 const everyPage =
   /[\\/]node_modules[\\/](@tanstack|react-dom)[\\/]|[\\/]src[\\/](router\.tsx|start\.ts|components[\\/][^\\/]+\.tsx)$/;
 
 export default defineConfig(({ command, isPreview }) => ({
+  define: {
+    __BUILD_ID__: JSON.stringify(buildId),
+  },
   server: {
     port: 3000,
   },

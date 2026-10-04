@@ -4,6 +4,8 @@ import { defineConfig } from "vitest/config";
 // Cloudflare and TanStack Start plugins are not loaded; the browser tests are Playwright's.
 export default defineConfig({
   resolve: { tsconfigPaths: true },
+  // vite.config.ts sets it for a build (src/lib/page-cache.ts reads it).
+  define: { __BUILD_ID__: JSON.stringify("test") },
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"],

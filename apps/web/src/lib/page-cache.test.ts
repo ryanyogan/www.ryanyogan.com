@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  BUILD_ID,
   cacheKeyFor,
   FRESH_SECONDS,
   isStorable,
@@ -7,11 +8,17 @@ import {
   purgePages,
   servePage,
   STALE_SECONDS,
+  toStored,
   type PageCache,
 } from "./page-cache";
 
 const ORIGIN = "https://example.com";
 const POLICY = "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
+
+/** The key this build (vitest.config.ts: "test") gives a path. */
+function key(path: string, build = BUILD_ID): string {
+  return `${ORIGIN}${path}?__b=${build}`;
+}
 
 function get(path: string, headers: Record<string, string> = {}): Request {
   return new Request(`${ORIGIN}${path}`, { headers });
@@ -63,17 +70,15 @@ async function serve(
 
 describe("cacheKeyFor", () => {
   it("keys the three public pages on their canonical URL", () => {
-    expect(cacheKeyFor(get("/"))).toBe(`${ORIGIN}/`);
-    expect(cacheKeyFor(get("/projects"))).toBe(`${ORIGIN}/projects`);
-    expect(cacheKeyFor(get("/projects/"))).toBe(`${ORIGIN}/projects`);
-    expect(cacheKeyFor(get("/projects/lincoln-project/"))).toBe(
-      `${ORIGIN}/projects/lincoln-project`,
-    );
+    expect(cacheKeyFor(get("/"))).toBe(key("/"));
+    expect(cacheKeyFor(get("/projects"))).toBe(key("/projects"));
+    expect(cacheKeyFor(get("/projects/"))).toBe(key("/projects"));
+    expect(cacheKeyFor(get("/projects/lincoln-project/"))).toBe(key("/projects/lincoln-project"));
   });
 
   it("strips tracking parameters and refuses any other query", () => {
-    expect(cacheKeyFor(get("/?utm_source=x&utm_medium=y&fbclid=1&gclid=2"))).toBe(`${ORIGIN}/`);
-    expect(cacheKeyFor(get("/projects/?ref=hn"))).toBe(`${ORIGIN}/projects`);
+    expect(cacheKeyFor(get("/?utm_source=x&utm_medium=y&fbclid=1&gclid=2"))).toBe(key("/"));
+    expect(cacheKeyFor(get("/projects/?ref=hn"))).toBe(key("/projects"));
     expect(cacheKeyFor(get("/projects?page=2"))).toBeNull();
     expect(cacheKeyFor(get("/?utm_source=x&q=1"))).toBeNull();
   });
@@ -101,11 +106,49 @@ describe("cacheKeyFor", () => {
     expect(cacheKeyFor(get("/", { cookie: "a=1; CF_Authorization=tok" }))).toBeNull();
     expect(cacheKeyFor(get("/projects", { cookie: "CF_Authorization=" }))).toBeNull();
     expect(cacheKeyFor(get("/", { "Cf-Access-Jwt-Assertion": "tok" }))).toBeNull();
-    expect(cacheKeyFor(get("/", { cookie: "theme=dark; other=CF_Authorization" }))).toBe(
-      `${ORIGIN}/`,
-    );
+    expect(cacheKeyFor(get("/", { cookie: "theme=dark; other=CF_Authorization" }))).toBe(key("/"));
     expect(cacheKeyFor(new Request(`${ORIGIN}/`, { method: "POST" }))).toBeNull();
     expect(cacheKeyFor(new Request(`${ORIGIN}/`, { method: "HEAD" }))).toBeNull();
+  });
+});
+
+describe("the build in the key", () => {
+  it("is this build's by default, and the key is still a URL of the same page", () => {
+    expect(BUILD_ID).toBe("test");
+    const url = new URL(String(cacheKeyFor(get("/projects/a/?utm_source=x"))));
+    expect(url.origin + url.pathname).toBe(`${ORIGIN}/projects/a`);
+    expect([...url.searchParams]).toEqual([["__b", "test"]]);
+  });
+
+  it("gives two builds different keys for the same request", () => {
+    for (const path of ["/", "/projects", "/projects/a", "/sitemap.xml", "/og/projects/a.png"]) {
+      expect(cacheKeyFor(get(path), "aaa"), path).toBe(key(path, "aaa"));
+      expect(cacheKeyFor(get(path), "aaa"), path).not.toBe(cacheKeyFor(get(path), "bbb"));
+    }
+  });
+
+  it("cannot be chosen by the request", () => {
+    expect(cacheKeyFor(get("/?__b=other"))).toBeNull();
+    expect(cacheKeyFor(get("/projects?__b=test"))).toBeNull();
+  });
+
+  it("purges exactly the keys the same build writes, and none of another build's", () => {
+    const paths = ["/", "/projects", "/sitemap.xml", "/projects/a", "/og/projects/a.png"];
+    const written = (build?: string) => paths.map((path) => cacheKeyFor(get(path), build));
+    expect(purgeKeysFor(ORIGIN, ["a"])).toEqual(written());
+    expect(purgeKeysFor(ORIGIN, ["a"], "aaa")).toEqual(written("aaa"));
+    for (const other of written("bbb"))
+      expect(purgeKeysFor(ORIGIN, ["a"], "aaa")).not.toContain(other);
+  });
+
+  it("does not serve a copy that another build stored", async () => {
+    const { cache, entries } = fakeCache();
+    // Stored a second ago, so its own build would answer HIT with it.
+    entries.set(key("/", "previous"), toStored(html("old build"), T0 - 1000));
+    const result = await serve(cache, get("/"), async () => html("this build"));
+    expect(result.status).toBe("MISS");
+    expect(result.body).toBe("this build");
+    expect([...entries.keys()]).toEqual([key("/", "previous"), key("/")]);
   });
 });
 
@@ -123,9 +166,9 @@ describe("isStorable", () => {
 
 describe("a project's preview image", () => {
   it("has one key whatever its `v`, and no key for any other query or spelling", () => {
-    const key = `${ORIGIN}/og/projects/lincoln-project.png`;
-    expect(cacheKeyFor(get("/og/projects/lincoln-project.png"))).toBe(key);
-    expect(cacheKeyFor(get("/og/projects/lincoln-project.png?v=1x2y&utm_source=a"))).toBe(key);
+    const image = key("/og/projects/lincoln-project.png");
+    expect(cacheKeyFor(get("/og/projects/lincoln-project.png"))).toBe(image);
+    expect(cacheKeyFor(get("/og/projects/lincoln-project.png?v=1x2y&utm_source=a"))).toBe(image);
     expect(cacheKeyFor(get("/og/projects/lincoln-project.png?w=600"))).toBeNull();
     expect(cacheKeyFor(get("/og/projects/Lincoln.png"))).toBeNull();
     expect(cacheKeyFor(get("/og/projects/lincoln-project"))).toBeNull();
@@ -153,13 +196,13 @@ describe("a project's preview image", () => {
 describe("purgeKeysFor", () => {
   it("lists both index pages and each distinct project page", () => {
     expect(purgeKeysFor(ORIGIN, ["old", "new", "old", ""])).toEqual([
-      `${ORIGIN}/`,
-      `${ORIGIN}/projects`,
-      `${ORIGIN}/sitemap.xml`,
-      `${ORIGIN}/projects/old`,
-      `${ORIGIN}/og/projects/old.png`,
-      `${ORIGIN}/projects/new`,
-      `${ORIGIN}/og/projects/new.png`,
+      key("/"),
+      key("/projects"),
+      key("/sitemap.xml"),
+      key("/projects/old"),
+      key("/og/projects/old.png"),
+      key("/projects/new"),
+      key("/og/projects/new.png"),
     ]);
   });
 });
@@ -182,7 +225,7 @@ describe("servePage", () => {
     expect(second.response.headers.get("x-page-cache-control")).toBeNull();
     expect(renders).toBe(1);
     // The stored copy outlives the fresh window so it can be served stale.
-    expect(entries.get(`${ORIGIN}/projects`)?.headers.get("cache-control")).toBe(
+    expect(entries.get(key("/projects"))?.headers.get("cache-control")).toBe(
       `public, s-maxage=${FRESH_SECONDS + STALE_SECONDS}`,
     );
   });
@@ -294,7 +337,7 @@ describe("purgePages", () => {
     }
     version = 2;
     await purgePages(cache, ORIGIN, ["a"]);
-    expect([...entries.keys()]).toEqual([`${ORIGIN}/projects/b`]);
+    expect([...entries.keys()]).toEqual([key("/projects/b")]);
 
     for (const path of ["/", "/projects", "/projects/a"]) {
       const result = await serve(cache, get(path), render, 1000);
