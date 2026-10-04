@@ -48,11 +48,17 @@ export const LATE_FONTS_KEY = "fonts";
  *
  * On a first visit the files are fetched after the load event, clear of the first paint. Once
  * they are cached (noted in localStorage, by file name, so a new build starts over) they are
- * asked for at once: they come from the cache before the first frame, and Chromium holds that
- * frame for an `optional` face loaded this way as it does for a preloaded one. (Only then
+ * asked for at once, and usually come from the cache before the first frame. No browser holds
+ * that frame for them: on a load where they come after it, the rule above decides. (Only then
  * are they `optional`: WebKit gives up on such a face unless it is there at once, and if it
- * does the note is dropped and the next load starts over.) If the roman
- * itself missed the first paint the page is in the fallback face and these stay out of it.
+ * does the note is dropped and the next load starts over.)
+ *
+ * They join only a page drawn in the web roman, on every path. The roman is `optional`: if it
+ * missed the first paint the page is in the fallback face for the visit, and these stay out of
+ * it. `roman()` asks the layout which face it uses, and its answer is final only once no face
+ * is still loading; when these are ready before the roman's fate is known (a cached load whose
+ * roman is slow: e2e/first-load.spec.ts holds it), the script waits for the page's fonts and
+ * asks again.
  */
 export const lateFontsScript = `(function(F){
 if(!window.FontFace||!document.fonts)return;
@@ -66,7 +72,7 @@ s.style.cssText="position:absolute;visibility:hidden;white-space:nowrap;font:100
 s.textContent="The quick brown fox";
 document.body.appendChild(s);
 var a=s.offsetWidth;s.style.fontFamily='"'+family+'",monospace';var b=s.offsetWidth;
-s.remove();return a!==b}
+s.remove();return a!==b&&document.fonts.status!=="loading"}
 function seen(){
 var all=document.body.getElementsByTagName("*");
 for(var i=0;i<all.length;i++){var el=all[i],text=false;
@@ -80,8 +86,8 @@ return false}
 function go(){
 Promise.all([faces[0].load(),faces[1].load()]).then(function(){
 try{localStorage.setItem("${LATE_FONTS_KEY}",key)}catch(e){}
-return framed?document.fonts.ready:0}).then(function(){
-if(framed&&(!roman()||seen()))return;
+return roman()?0:document.fonts.ready}).then(function(){
+if(!roman()||(framed&&seen()))return;
 faces.forEach(function(f){document.fonts.add(f)})},function(){try{localStorage.removeItem("${LATE_FONTS_KEY}")}catch(e){}})}
 if(warm)go();else if(document.readyState==="complete")setTimeout(go);else addEventListener("load",function(){setTimeout(go)})
 }(${JSON.stringify(lateFaces)}))`;

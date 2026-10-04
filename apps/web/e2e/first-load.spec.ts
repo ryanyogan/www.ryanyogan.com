@@ -416,8 +416,8 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
       description: JSON.stringify({ firstVisit, visits }),
     });
     expect(firstVisit, "faces added on the first visit").toBe(0);
-    // Chromium holds the first frame for an `optional` face loaded from a script, so the
-    // faces are in it. Another engine may draw first, and then leaves them out again.
+    // In Chromium the cached files are back before the first frame on an ordinary load, so
+    // the faces are in it. Another engine may draw first, and then leaves them out again.
     if (browserName === "chromium") {
       expect(inFirstFrame, "a cached load with the faces in its first frame").toBe(true);
     }
@@ -435,7 +435,10 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
     await page.evaluate(() => document.fonts.ready);
 
     // That next load, with only the romans late: the page is in the fallback roman for the
-    // visit, and the web italic and semibold must not be set beside it.
+    // visit, and the web italic and semibold must not be set beside it. (Seen in CI before the
+    // script asked, run 37240200047, Chromium: all four in the first frame, roman fallback.
+    // WebKit does not get that far here: with a route installed its late files are not there
+    // at once, it gives up on them and the note is dropped; `noted` in the measure says so.)
     const held = await slowFonts(page, ROMAN);
     await watching(page, browserName);
     await page.reload({ waitUntil: "commit" });
