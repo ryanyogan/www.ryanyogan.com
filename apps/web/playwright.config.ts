@@ -67,15 +67,15 @@ export default defineConfig({
     },
     // Safari's engine at iPhone size, for what Chromium emulation cannot show (font metrics,
     // hyphenation, dvh, focus). Public pages only: the device matrix, the mobile menu and the
-    // page smoke tests, plus two tests picked by title: the hydration check (public.spec.ts)
-    // and axe on the public routes (a11y.spec.ts; its admin titles begin "/admin"). The admin
-    // tests and the rest, which mostly only make requests, stay in Chromium. `grep` is matched
-    // against "<file name> <title>".
+    // page smoke tests, plus one test picked by its title: the hydration check in
+    // public.spec.ts. The admin tests, axe (it reads the DOM and computed colours, which do
+    // not differ by engine) and the rest, which mostly only make requests, stay in Chromium.
+    // `grep` is matched against "<file name> <title>".
     {
       name: "webkit",
       use: { ...devices["iPhone 14"] },
-      testMatch: /(viewports|mobile|pages|public|a11y)\.spec\.ts$/,
-      grep: /(viewports|mobile|pages)\.spec\.ts|hydrates without a mismatch|a11y\.spec\.ts \/(?!admin)/,
+      testMatch: /(viewports|mobile|pages|public)\.spec\.ts$/,
+      grep: /(viewports|mobile|pages)\.spec\.ts|hydrates without a mismatch/,
     },
   ],
   webServer: [
