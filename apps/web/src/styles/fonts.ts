@@ -42,9 +42,10 @@ export const LATE_FONTS_KEY = "fonts";
 
 /**
  * Text never changes face while a reader can see it, so these faces are added only when
- * nothing they would redraw has been shown: before the first frame, or when no serif italic
- * or semibold text is at or above the bottom of the window. Otherwise the page keeps what it
- * drew (the roman, slanted or thickened by the browser) until the next full load.
+ * nothing they would redraw has been shown: before the first frame that can have the web roman
+ * in it, or when no serif italic or semibold text is at or above the bottom of the window.
+ * Otherwise the page keeps what it drew (the roman, slanted or thickened by the browser) until
+ * the next full load.
  *
  * On a first visit the files are fetched after the load event, clear of the first paint. Once
  * they are cached (noted in localStorage, by file name, so a new build starts over) they are
@@ -57,16 +58,21 @@ export const LATE_FONTS_KEY = "fonts";
  * missed the first paint the page is in the fallback face for the visit, and these stay out of
  * it. `roman()` asks the layout which face it uses, which is not settled while the roman is on
  * its way, so the script waits for the roman as it does for its own two files and asks then.
- * (Not for `document.fonts.ready`: that comes after the first frame even when every file was
- * there before it. And a cached load whose roman is slow had all four beside the fallback roman
- * when the script did not ask: e2e/first-load.spec.ts holds both.)
+ * (A cached load whose roman is slow had all four beside the fallback roman when the script
+ * did not ask; `document.fonts.ready` is no use for the wait, it comes after the first frame
+ * even when every file was there before it. e2e/first-load.spec.ts holds both.)
+ *
+ * "Shown" on that cached load is the first frame after the roman has settled, not the first
+ * frame: a page in the web roman has drawn no serif text before it. Chromium uses an
+ * `optional` face only if it has it by its first paint, and WebKit runs frames while the roman
+ * is on its way but leaves the text blank until it has it (or gives up on it, and then
+ * `roman()` says no).
  */
 export const lateFontsScript = `(function(F){
 if(!window.FontFace||!document.fonts)return;
-var family="Source Serif 4",key=F[0][0]+F[1][0],warm=false,framed=false;
+var family="Source Serif 4",key=F[0][0]+F[1][0],warm=false,shown=true;
 try{warm=localStorage.getItem("${LATE_FONTS_KEY}")===key}catch(e){}
 var faces=F.map(function(f,i){return new FontFace(family,'url("'+f[0]+'") format("woff2")',{style:f[1],weight:f[2],unicodeRange:f[3],display:warm||i>1?"optional":"swap"})});
-requestAnimationFrame(function(){framed=true});
 function roman(){
 var s=document.createElement("span");
 s.style.cssText="position:absolute;visibility:hidden;white-space:nowrap;font:100px monospace";
@@ -85,9 +91,11 @@ var r=el.getBoundingClientRect();
 if(r.width&&r.top<innerHeight)return true}
 return false}
 function go(){
-Promise.all([faces[0].load(),faces[1].load(),document.fonts.load('1em "'+family+'"').then(0,function(){})]).then(function(){
+var R=document.fonts.load('1em "'+family+'"').then(0,function(){});
+R.then(function(){requestAnimationFrame(function(){shown=true})});
+Promise.all([faces[0].load(),faces[1].load(),R]).then(function(){
 try{localStorage.setItem("${LATE_FONTS_KEY}",key)}catch(e){}
-if(!roman()||(framed&&seen()))return;
+if(!roman()||(shown&&seen()))return;
 faces.forEach(function(f){document.fonts.add(f)})},function(){try{localStorage.removeItem("${LATE_FONTS_KEY}")}catch(e){}})}
-if(warm)go();else if(document.readyState==="complete")setTimeout(go);else addEventListener("load",function(){setTimeout(go)})
+if(warm)shown=false,go();else if(document.readyState==="complete")setTimeout(go);else addEventListener("load",function(){setTimeout(go)})
 }(${JSON.stringify(lateFaces)}))`;
