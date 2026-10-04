@@ -18,6 +18,7 @@
     "test": "pnpm --filter @repo/web test",
     "test:e2e": "pnpm --filter @repo/web test:e2e",
     "perf:budget": "pnpm --filter @repo/web perf:budget",
+    "perf": "pnpm --filter @repo/web perf",
     "test:fresh-clone": "sh scripts/fresh-clone-check.sh"
   },
   "devDependencies": {

@@ -1,0 +1,62 @@
+name: Performance
+
+# Lighthouse against the section 1.9 budgets (apps/web/scripts/perf.mjs). A report, not a
+# gate: it never runs on a push, is not a required check, and a line over budget does not fail
+# the run. No secrets: it reads the public site, or builds and serves this ref locally.
+on:
+  # TEMPORARY, removed before merge: a workflow can only be dispatched once it is on master.
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Site to measure, e.g. https://ryanyogan.com. Empty: build this ref and measure its local preview."
+        required: false
+        default: ""
+  # Mondays 06:17 UTC, against production.
+  schedule:
+    - cron: "17 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        url: ["", "https://ryanyogan.com"]
+    env:
+      CI: "true"
+      BASE_URL: ${{ matrix.url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # Only the local preview needs the workspace installed and built; measuring a deployed
+      # site needs the script and Lighthouse alone.
+      - name: Install dependencies
+        if: ${{ env.BASE_URL == '' }}
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        if: ${{ env.BASE_URL == '' }}
+        run: pnpm build
+
+      # The runner's own Google Chrome; Lighthouse (the version pinned in perf.mjs) is
+      # fetched here so the time and size of that show on their own line.
+      - name: Fetch Lighthouse
+        run: |
+          google-chrome --version
+          pnpm dlx lighthouse@13.5.0 --version
+          du -sh "$(pnpm store path)"
+
+      - name: Lighthouse
+        run: pnpm perf "$BASE_URL"

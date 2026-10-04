@@ -9,13 +9,12 @@
 // Fails (exit 1) when a route is over a budget below, when a public route downloads the
 // markdown parser or the syntax highlighter, or when a script carries the body of a post
 // other than the one being read. `--report` prints the table and never fails.
-import { spawn } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import { chromium } from "@playwright/test";
+import { startPreview } from "./preview.mjs";
 
 const PORT = 4178;
-const ORIGIN = `http://127.0.0.1:${PORT}`;
 const reportOnly = process.argv.includes("--report");
 const KB = 1024;
 
@@ -57,19 +56,7 @@ const LIBRARY_SIGNATURES = [
   ["syntax highlighter (highlight.js)", /Language definition for|classPrefix:\s*["']hljs-/],
 ];
 
-async function waitForServer() {
-  for (let i = 0; i < 120; i++) {
-    try {
-      if ((await fetch(`${ORIGIN}/work`)).ok) return;
-    } catch {
-      // not listening yet
-    }
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
-  throw new Error("vite preview did not start within 60s");
-}
-
-async function measure(browser, route) {
+async function measure(browser, origin, route) {
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   const page = await context.newPage();
   const pending = [];
@@ -97,7 +84,7 @@ async function measure(browser, route) {
           url: url.href,
           kind,
           status: response.status(),
-          external: url.origin !== ORIGIN,
+          external: url.origin !== origin,
           // Fonts are already compressed.
           bytes: kind === "font" ? body.length : gzipSync(body, { level: 9 }).length,
           text: kind === "js" ? body.toString("utf8") : "",
@@ -105,7 +92,7 @@ async function measure(browser, route) {
       })(),
     );
   });
-  await page.goto(ORIGIN + route.path, { waitUntil: "networkidle" });
+  await page.goto(origin + route.path, { waitUntil: "networkidle" });
   // Idle-time work (hydration, lazy chunks) gets one more quiet period.
   await page.waitForTimeout(500);
   await page.waitForLoadState("networkidle");
@@ -162,31 +149,12 @@ async function measure(browser, route) {
 
 const kb = (bytes) => (bytes / KB).toFixed(1);
 
-const server = spawn("pnpm", ["exec", "vite", "preview", "--port", String(PORT), "--strictPort"], {
-  stdio: "ignore",
-  detached: true,
-  env: {
-    ...process.env,
-    LOCAL_STATE_DIR: ".wrangler/e2e",
-    E2E_NO_INSPECTOR: "1",
-    CLOUDFLARE_INCLUDE_PROCESS_ENV: "false",
-    ADMIN_DEV_BYPASS: "",
-  },
-});
-const stop = () => {
-  try {
-    process.kill(-server.pid, "SIGTERM");
-  } catch {
-    // already gone
-  }
-};
-
+const { origin, stop } = await startPreview(PORT);
 let failed = false;
 try {
-  await waitForServer();
   const browser = await chromium.launch();
   const results = [];
-  for (const route of routes) results.push(await measure(browser, route));
+  for (const route of routes) results.push(await measure(browser, origin, route));
   await browser.close();
 
   console.log("route | requests (third-party) | JS gz KB | CSS gz KB | fonts KB | HTML gz KB");
