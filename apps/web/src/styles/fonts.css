@@ -7,13 +7,21 @@
  * Hanken Grotesk (headings and interface) is one variable file covering 400 to 600.
  * Source Serif 4 (body) is three static files: 400, 600 and 400 italic. There is no mono
  * web font; code uses the system monospace.
+ *
+ * No text changes face while it is on screen. The faces here are `optional` and preloaded: a
+ * browser holds the first paint a moment for them, and one that has not arrived by then is
+ * not used for that page load at all (the fallback at the foot of this file stays; in-app
+ * navigation keeps the document, so it stays until the next full load, which has the file in
+ * its cache). The serif 600 and italic are not preloaded and so have no rule here: a rule
+ * would be used or not by a race on every load. fonts.ts adds them from a script, at a moment
+ * the reader cannot see; until then the browser slants or thickens the roman above.
  */
 
 @font-face {
   font-family: "Hanken Grotesk";
   font-style: normal;
   font-weight: 400 600;
-  font-display: swap;
+  font-display: optional;
   src: url("./fonts/hanken-grotesk-latin-ext-wght-normal.woff2") format("woff2");
   unicode-range:
     U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
@@ -25,7 +33,7 @@
   font-family: "Hanken Grotesk";
   font-style: normal;
   font-weight: 400 600;
-  font-display: swap;
+  font-display: optional;
   src: url("./fonts/hanken-grotesk-latin-wght-normal.woff2") format("woff2");
   unicode-range:
     U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
@@ -36,7 +44,7 @@
   font-family: "Source Serif 4";
   font-style: normal;
   font-weight: 400;
-  font-display: swap;
+  font-display: optional;
   src: url("./fonts/source-serif-4-latin-ext-400-normal.woff2") format("woff2");
   unicode-range:
     U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
@@ -48,65 +56,18 @@
   font-family: "Source Serif 4";
   font-style: normal;
   font-weight: 400;
-  font-display: swap;
+  font-display: optional;
   src: url("./fonts/source-serif-4-latin-400-normal.woff2") format("woff2");
   unicode-range:
     U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
     U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-@font-face {
-  font-family: "Source Serif 4";
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("./fonts/source-serif-4-latin-ext-600-normal.woff2") format("woff2");
-  unicode-range:
-    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
-    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
-    U+A720-A7FF;
-}
-
-@font-face {
-  font-family: "Source Serif 4";
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url("./fonts/source-serif-4-latin-600-normal.woff2") format("woff2");
-  unicode-range:
-    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
-    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
-@font-face {
-  font-family: "Source Serif 4";
-  font-style: italic;
-  font-weight: 400;
-  font-display: swap;
-  src: url("./fonts/source-serif-4-latin-ext-400-italic.woff2") format("woff2");
-  unicode-range:
-    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
-    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
-    U+A720-A7FF;
-}
-
-@font-face {
-  font-family: "Source Serif 4";
-  font-style: italic;
-  font-weight: 400;
-  font-display: swap;
-  src: url("./fonts/source-serif-4-latin-400-italic.woff2") format("woff2");
-  unicode-range:
-    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
-    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
 /*
- * Shown until the web font arrives (font-display: swap, kept: the typeface always shows, and
- * with the two preloads and a year's cache on the files it is there at the first paint of
- * every view but a slow first one). A system face scaled to the web font's metrics, so that
- * swap moves the text as little as possible. The values are worked out from the font files
- * the Capsize way (frequency-weighted average glyph width against the fallback's).
+ * Shown for the whole page load when a web font misses the first paint (a slow first visit).
+ * A system face scaled to the web font's metrics, so that the page is set the same way either
+ * way. The values are worked out from the font files the Capsize way (frequency-weighted
+ * average glyph width against the fallback's).
  *
  * local() takes a face's real name only, and Linux and Android have neither Arial nor
  * Georgia, so each source list also names the faces found there. Liberation Sans and Arimo

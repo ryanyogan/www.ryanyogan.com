@@ -14,7 +14,7 @@ import {
   imageMeta,
 } from "~/lib/seo";
 import { APP_CSS_ID, appCssHref, appCssText, inlineAppCss } from "~/styles/inline";
-import { fontPreloads } from "~/styles/fonts";
+import { fontPreloads, lateFontsScript } from "~/styles/fonts";
 
 export const Route = createRootRoute({
   notFoundComponent: NotFound,
@@ -109,6 +109,8 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
             __html: `(function(){try{var t=localStorage.getItem("theme");if(t==="dark"||t==="light"){document.documentElement.classList.add(t);document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.setAttribute("media",m.getAttribute("data-scheme")===t?"all":"not all")})}}catch(e){}}())`,
           }}
         />
+        {/* The serif italic and semibold, added when no reader can see the change (styles/fonts.ts). */}
+        <script dangerouslySetInnerHTML={{ __html: lateFontsScript }} />
         <a
           href="#main"
           className="absolute -top-20 left-4 z-50 bg-ink px-4 py-3.5 font-sans text-[0.9375rem] font-medium text-paper focus:top-3"
