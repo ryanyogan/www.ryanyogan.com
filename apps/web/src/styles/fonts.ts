@@ -58,19 +58,20 @@ export const LATE_FONTS_KEY = "fonts";
  * missed the first paint the page is in the fallback face for the visit, and these stay out of
  * it. `roman()` asks the layout which face it uses, which is not settled while the roman is on
  * its way, so the script waits for the roman as it does for its own two files and asks then.
- * (A cached load whose roman is slow had all four beside the fallback roman when the script
- * did not ask; `document.fonts.ready` is no use for the wait, it comes after the first frame
- * even when every file was there before it. e2e/first-load.spec.ts holds both.)
+ * (A cached load whose roman was slow had all four beside the fallback roman when the script
+ * did not ask: e2e/first-load.spec.ts holds that.)
  *
- * "Shown" on that cached load is the first frame after the roman has settled, not the first
- * frame: a page in the web roman has drawn no serif text before it. Chromium uses an
- * `optional` face only if it has it by its first paint, and WebKit runs frames while the roman
- * is on its way but leaves the text blank until it has it (or gives up on it, and then
- * `roman()` says no).
+ * On the cached load the wait is for the roman's own face (`rf`, the Latin one), and "shown"
+ * is the first frame that finds that face settled, not the first frame: a page in the web
+ * roman has drawn no serif text before it. Chromium uses an `optional` face only if it has it
+ * by its first paint; WebKit runs frames while the roman is on its way but leaves the text
+ * blank until it has it (or gives up on it, and then `roman()` says no). Waiting for
+ * `document.fonts.ready` or `document.fonts.load()` there was measured and is too late: the
+ * first comes after the first frame in both browsers, the second long after it in WebKit.
  */
 export const lateFontsScript = `(function(F){
 if(!window.FontFace||!document.fonts)return;
-var family="Source Serif 4",key=F[0][0]+F[1][0],warm=false,shown=true;
+var family="Source Serif 4",key=F[0][0]+F[1][0],warm=false,shown=true,rf;
 try{warm=localStorage.getItem("${LATE_FONTS_KEY}")===key}catch(e){}
 var faces=F.map(function(f,i){return new FontFace(family,'url("'+f[0]+'") format("woff2")',{style:f[1],weight:f[2],unicodeRange:f[3],display:warm||i>1?"optional":"swap"})});
 function roman(){
@@ -90,9 +91,14 @@ if(s.fontFamily.indexOf(family)<0||(s.fontStyle!=="italic"&&s.fontWeight<600))co
 var r=el.getBoundingClientRect();
 if(r.width&&r.top<innerHeight)return true}
 return false}
+function tick(){
+if(/un|ing/.test(rf.status)&&performance.now()<5e3)return requestAnimationFrame(tick);
+shown=true}
 function go(){
-var R=document.fonts.load('1em "'+family+'"').then(0,function(){});
-R.then(function(){requestAnimationFrame(function(){shown=true})});
+var R=document.fonts.ready;
+if(!shown){
+document.fonts.forEach(function(f){if(f.family.indexOf(family)>=0&&/^U\\+0+-/i.test(f.unicodeRange))rf=f});
+if(rf){R=rf.load().then(0,function(){});requestAnimationFrame(tick)}else shown=true}
 Promise.all([faces[0].load(),faces[1].load(),R]).then(function(){
 try{localStorage.setItem("${LATE_FONTS_KEY}",key)}catch(e){}
 if(!roman()||(shown&&seen()))return;
