@@ -7,6 +7,7 @@ import {
   SITE_URL,
   draft,
   expect,
+  fromCache,
   pngSize,
   postSlugs,
   projectSlugs,
@@ -227,7 +228,7 @@ test("there is exactly one sitemap, and the Worker renders it", async ({ request
     expect((await request.get(path)).status(), path).toBe(404);
   }
   await request.get("/sitemap.xml");
-  expect((await request.get("/sitemap.xml")).headers()["x-cache"]).toBe("HIT");
+  expect((await fromCache(request, "/sitemap.xml")).headers()["x-cache"]).toBe("HIT");
 });
 
 test("with the database down the sitemap is a 503 no cache may keep, never a partial list", async ({
@@ -328,7 +329,7 @@ test("every public route names a 1200x630 PNG preview image that exists", async 
 test("a project image is cached, and exists only for a published project", async ({ request }) => {
   const path = "/og/projects/lincoln-project.png";
   const first = await request.get(path);
-  const second = await request.get(`${path}?v=anything`);
+  const second = await fromCache(request, `${path}?v=anything`);
   expect(second.headers()["x-cache"]).toBe("HIT");
   expect((await second.body()).equals(await first.body())).toBe(true);
   // Any other query is drawn again, not stored.
