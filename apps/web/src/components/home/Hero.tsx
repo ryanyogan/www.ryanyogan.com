@@ -16,12 +16,12 @@ export function Hero() {
         </p>
         <ul className="else">
           <li>
-            <a href="https://github.com/ryanyogan">
+            <a href="https://github.com/ryanyogan" rel="me">
               GitHub <span>ryanyogan</span>
             </a>
           </li>
           <li>
-            <a href="https://linkedin.com/in/ryanyogan">
+            <a href="https://linkedin.com/in/ryanyogan" rel="me">
               LinkedIn <span>in/ryanyogan</span>
             </a>
           </li>

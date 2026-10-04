@@ -2,7 +2,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { contactEmail, workSections } from "@repo/shared";
 import type { ReactNode } from "react";
 import { AgentLoop } from "~/components/PageArt";
-import { WEBSITE_ID, absoluteUrl, pageTitle, personNode, seo } from "~/lib/seo";
+import { PERSON_BIO, WEBSITE_ID, absoluteUrl, pageTitle, personNode, seo } from "~/lib/seo";
 import { staticOgImage } from "~/lib/og-images";
 
 export const Route = createFileRoute("/work")({
@@ -240,6 +240,10 @@ function WorkPage() {
             </ol>
           </div>
         ))}
+        {/* In the third person on purpose: a sentence a search engine can quote as it stands. */}
+        <p className="after" data-testid="bio">
+          {PERSON_BIO}
+        </p>
       </Chapter>
     </main>
   );

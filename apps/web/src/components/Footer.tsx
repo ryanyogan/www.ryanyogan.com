@@ -29,7 +29,8 @@ export function Footer() {
               className="quiet link"
               href={link.href}
               target="_blank"
-              rel="noopener noreferrer"
+              // "me": these profiles are the same person as this site (XFN, IndieAuth).
+              rel="me noopener noreferrer"
             >
               {link.label}
             </a>

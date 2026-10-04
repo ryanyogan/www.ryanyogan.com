@@ -6,6 +6,8 @@ export const SITE_TITLE = "Ryan Yogan. Leads engineering teams, builds agent sys
 export const SITE_DESCRIPTION =
   "Ryan Yogan leads engineering teams and builds agent systems himself. Twenty years of scaling orgs; the last two spent deep in agent memory, MCP, and durable AI workflows.";
 export const SITE_LOCALE = "en_US";
+/** The third-person paragraph /work shows: the description above, and the city from the footer. */
+export const PERSON_BIO = `${SITE_DESCRIPTION} He is based in Chicago.`;
 
 /**
  * The one URL form of the site: no trailing slash, except the root. Canonicals, Open Graph,

@@ -422,6 +422,67 @@ test("theme-color is the page background in each colour scheme", async ({ browse
   }
 });
 
+// --- Being found by name -------------------------------------------------------------------
+
+const textOf = (markup: string) =>
+  markup
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+test("Home says the name before its h1, as the first words of the page's content", async ({
+  request,
+}) => {
+  const body = await html(request, "/");
+  expect(attr(body, /<title>([^<]*)<\/title>/g)[0]).toMatch(/^Ryan Yogan\b/);
+  expect(body.match(/<h1[\s>]/g)).toHaveLength(1);
+  // The h1 is a sentence without the name; the line above it in the same section is the name.
+  const main = body.indexOf("<main");
+  const above = body.slice(main, body.indexOf("<h1", main));
+  expect(above).toContain("<b>Ryan Yogan</b>");
+  expect(textOf(above.slice(above.indexOf(">") + 1)).startsWith("Ryan Yogan")).toBe(true);
+});
+
+test('the profile links say rel="me" on every page, and are the JSON-LD sameAs', async ({
+  request,
+}) => {
+  const profiles = ["https://github.com/ryanyogan", "https://linkedin.com/in/ryanyogan"];
+  for (const route of ["/", "/work", "/projects", "/writing", `/writing/${postSlugs[0]}`]) {
+    const body = await html(request, route);
+    const footer = body.slice(body.indexOf("<footer"), body.indexOf("</footer>"));
+    const me = (footer.match(/<a [^>]*>/g) ?? [])
+      .filter((tag) => /\srel="(?:[^"]* )?me(?: [^"]*)?"/.test(tag))
+      .map((tag) => /\shref="([^"]*)"/.exec(tag)?.[1]);
+    expect(me, route).toEqual(profiles);
+    // No other link on the page claims to be the person: not a project, not a post's source.
+    const all = (body.match(/<a [^>]*>/g) ?? [])
+      .filter((tag) => /\srel="(?:[^"]* )?me(?: [^"]*)?"/.test(tag))
+      .map((tag) => /\shref="([^"]*)"/.exec(tag)?.[1]);
+    expect([...new Set(all)].sort(), route).toEqual(profiles);
+  }
+  const person = nodeOf(graphOf(await html(request, "/"), "/"), "Person", "/");
+  expect(person.sameAs).toEqual(profiles);
+});
+
+test("/work has one paragraph about the person that can be quoted as it stands", async ({
+  request,
+}) => {
+  const body = await html(request, "/work");
+  const found = attr(body, /<p [^>]*data-testid="bio"[^>]*>([\s\S]*?)<\/p>/g);
+  expect(found).toHaveLength(1);
+  const bio = textOf(found[0]);
+  // Third person, with the name, the role, what he builds, the years and the city.
+  expect(bio.startsWith("Ryan Yogan leads engineering teams")).toBe(true);
+  expect(bio).toMatch(/agent systems/);
+  expect(bio).toMatch(/Twenty years/);
+  expect(bio).toMatch(/Chicago/);
+  expect(bio).not.toMatch(/\b(I|my|me)\b/i);
+  expect(bio.length).toBeLessThan(400);
+  // It says what the description of the person in the JSON-LD says, and nothing else.
+  const profile = nodeOf(graphOf(body, "/work"), "ProfilePage", "/work");
+  expect(bio.startsWith(String((profile.mainEntity as Node).description))).toBe(true);
+});
+
 // --- JSON-LD ------------------------------------------------------------------------------
 
 test("Home describes the site and the person", async ({ request }) => {

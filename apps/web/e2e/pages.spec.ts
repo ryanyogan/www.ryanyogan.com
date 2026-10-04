@@ -54,6 +54,114 @@ test("/rss.xml parses and has one item per post", async ({ page, request }) => {
   expect([...feed.links].sort()).toEqual(postSlugs.map((slug) => `${SITE_URL}/writing/${slug}`));
 });
 
+// What the W3C feed validator checks, read with a real XML parser and a real HTML parser.
+test("/rss.xml carries each post in full, with absolute addresses and valid dates", async ({
+  page,
+  request,
+}) => {
+  const xml = await (await request.get("/rss.xml")).text();
+  await page.goto("/");
+  const feed = await page.evaluate((source) => {
+    const ATOM = "http://www.w3.org/2005/Atom";
+    const CONTENT = "http://purl.org/rss/1.0/modules/content/";
+    const doc = new DOMParser().parseFromString(source, "application/xml");
+    const text = (parent: Element, name: string) =>
+      parent.querySelector(`:scope > ${name}`)?.textContent ?? null;
+    const channel = doc.querySelector("rss > channel")!;
+    const self = Array.from(channel.getElementsByTagNameNS(ATOM, "link")).map((link) => ({
+      href: link.getAttribute("href"),
+      rel: link.getAttribute("rel"),
+      type: link.getAttribute("type"),
+    }));
+    const items = Array.from(channel.querySelectorAll(":scope > item"), (item) => {
+      const encoded = Array.from(item.getElementsByTagNameNS(CONTENT, "encoded"));
+      const body = new DOMParser().parseFromString(encoded[0]?.textContent ?? "", "text/html");
+      const addresses = Array.from(body.querySelectorAll("[href], [src], [srcset]")).flatMap(
+        (el) => [
+          ...[el.getAttribute("href"), el.getAttribute("src")].filter((url) => url !== null),
+          ...(el.getAttribute("srcset") ?? "")
+            .split(",")
+            .map((candidate) => candidate.trim().split(/\s+/)[0])
+            .filter(Boolean),
+        ],
+      );
+      return {
+        title: text(item, "title"),
+        link: text(item, "link"),
+        guid: text(item, "guid"),
+        permalink: item.querySelector(":scope > guid")?.getAttribute("isPermaLink") ?? null,
+        description: text(item, "description"),
+        pubDate: text(item, "pubDate"),
+        encoded: encoded.length,
+        words: (body.body.textContent ?? "").trim().split(/\s+/).length,
+        paragraphs: body.querySelectorAll("p").length,
+        risky: body.querySelectorAll("script, style, iframe, object, embed, form, [style]").length,
+        relative: addresses.filter((url) => !/^(https?:|mailto:)/.test(url)),
+        images: Array.from(body.querySelectorAll("img"), (img) => img.getAttribute("src")),
+      };
+    });
+    return {
+      parseError: doc.querySelector("parsererror")?.textContent ?? null,
+      version: doc.documentElement.getAttribute("version"),
+      title: text(channel, "title"),
+      link: text(channel, "link"),
+      description: text(channel, "description"),
+      lastBuildDate: text(channel, "lastBuildDate"),
+      self,
+      items,
+    };
+  }, xml);
+
+  expect(feed.parseError).toBeNull();
+  expect(feed.version).toBe("2.0");
+  expect(feed.title).toBe("Ryan Yogan");
+  expect(feed.link).toBe(`${SITE_URL}/writing`);
+  expect(feed.description).toBeTruthy();
+  expect(feed.self).toEqual([
+    { href: `${SITE_URL}/rss.xml`, rel: "self", type: "application/rss+xml" },
+  ]);
+
+  // RFC 822 with a four-digit year; the day name must be the right one for the date.
+  const rfc822 = (value: string | null, where: string) => {
+    expect(value, where).toMatch(
+      /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), \d{2} [A-Z][a-z]{2} \d{4} \d{2}:\d{2}:\d{2} GMT$/,
+    );
+    const time = Date.parse(value!);
+    expect(new Date(time).toUTCString(), where).toBe(value);
+    // The validator warns about a date in the future.
+    expect(time, where).toBeLessThanOrEqual(Date.now());
+    return time;
+  };
+  rfc822(feed.lastBuildDate, "lastBuildDate");
+
+  expect(feed.items).toHaveLength(postSlugs.length);
+  expect(new Set(feed.items.map((item) => item.guid)).size).toBe(postSlugs.length);
+  const times = feed.items.map((item) => rfc822(item.pubDate, `${item.link} pubDate`));
+  expect(times, "newest first").toEqual([...times].sort((a, b) => b - a));
+  expect(Date.parse(feed.lastBuildDate!)).toBe(times[0]);
+
+  for (const item of feed.items) {
+    const where = String(item.link);
+    expect(item.title, where).toBeTruthy();
+    expect(item.description, where).toBeTruthy();
+    expect(item.guid, where).toBe(item.link);
+    expect(item.permalink, where).toBe("true");
+    expect(item.encoded, where).toBe(1);
+    // The whole post, not the excerpt again.
+    expect(item.paragraphs, where).toBeGreaterThan(3);
+    expect(item.words, where).toBeGreaterThan(200);
+    expect(item.risky, where).toBe(0);
+    expect(item.relative, where).toEqual([]);
+    for (const src of item.images) {
+      const path = src!.startsWith(SITE_URL) ? src!.slice(SITE_URL.length) : null;
+      if (path) expect((await request.get(path)).status(), src!).toBe(200);
+    }
+  }
+  // The feed is tested on a post that has an image and a link to another page of the site.
+  expect(feed.items.flatMap((item) => item.images).length).toBeGreaterThan(0);
+  expect(xml).toMatch(/href="https:\/\/ryanyogan\.com\/writing\/[a-z0-9-]+"/);
+});
+
 test("an unknown path renders the 404 page", async ({ page, consoleErrors }) => {
   const response = await page.goto("/no-such-page");
   expect(response?.status()).toBe(404);
