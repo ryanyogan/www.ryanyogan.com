@@ -1,6 +1,7 @@
 import { createMiddleware, createStart } from "@tanstack/react-start";
 import { adminFunctions } from "~/lib/admin/admin.functions";
 import { adminRequestGuard } from "~/lib/admin/middleware";
+import { iconProbeResponse } from "~/lib/icon-probe";
 import { pageCache } from "~/lib/page-cache-edge";
 import { trailingSlashRedirect } from "~/lib/trailing-slash";
 
@@ -27,10 +28,16 @@ const bareUrls = createMiddleware().server(({ next, request }) => {
   return trailingSlashRedirect(request) ?? next();
 });
 
+/** There are no icon files: /favicon.ico is an empty 404, not the rendered 404 page. */
+const iconProbes = createMiddleware().server(({ next, request }) => {
+  return iconProbeResponse(request) ?? next();
+});
+
 // Global request middleware: runs before the router for every request the Worker handles.
 export const startInstance = createStart(() => ({
   requestMiddleware: [
     bareUrls,
+    iconProbes,
     // Outermost but for the redirect: it stores the final response, after `noStoreOnError` has marked errors.
     pageCache,
     noStoreOnError,

@@ -4,6 +4,7 @@ import { Link, Outlet, HeadContent, Scripts, createRootRoute } from "@tanstack/r
 import { Header } from "~/components/Header";
 import { Footer } from "~/components/Footer";
 import { KeyboardLayer } from "~/components/KeyboardLayer";
+import { NO_ICON_LINK } from "~/lib/icon-probe";
 import { staticOgImage } from "~/lib/og-images";
 import {
   SITE_DESCRIPTION,
@@ -44,6 +45,8 @@ export const Route = createRootRoute({
         href: absoluteUrl("/rss.xml"),
       },
       ...fontPreloads,
+      // There is no icon yet; this stops the browser asking for one (lib/icon-probe.ts).
+      NO_ICON_LINK,
     ],
   }),
   component: RootComponent,
