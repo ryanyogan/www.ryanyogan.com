@@ -18,7 +18,7 @@ import {
 
 /**
  * Social preview images for the pages whose text is known when the site is built: Home,
- * /work, /projects, /writing and every post. Each is drawn once per build (satori lays the
+ * /work, /now, /projects, /writing and every post. Each is drawn once per build (satori lays the
  * card out as SVG, resvg rasterises it) and emitted as a static asset whose name carries a
  * hash of its bytes, so it is cached for good (public/_headers) and a changed title is a
  * new URL. Project pages are drawn by the Worker instead (src/lib/og/render-project.ts).
@@ -37,6 +37,7 @@ const PAGES: (OgCard & { route: string; file: string })[] = [
     title: "I lead engineering teams and build agent systems myself.",
   },
   { route: "/work", file: "work", title: "How to work with me.", kicker: "Work" },
+  { route: "/now", file: "now", title: "What I am doing now.", kicker: "Now" },
   {
     route: "/projects",
     file: "projects",

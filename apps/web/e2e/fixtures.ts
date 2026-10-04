@@ -32,10 +32,11 @@ export const draft = { slug: "e2e-draft", title: "Quixotic Draft", marker: "xq7"
 /** Pages the Worker renders from D1 on each request (not in dist/client). */
 export const dynamicRoutes = ["/", "/projects", ...projectSlugs.map((slug) => `/projects/${slug}`)];
 
-/** The index pages plus one project and one post. /work and /writing are prerendered. */
+/** The index pages plus one project and one post. /work, /now and /writing are prerendered. */
 export const routes = [
   "/",
   "/work",
+  "/now",
   "/projects",
   "/writing",
   "/projects/lincoln-project",
@@ -46,6 +47,7 @@ export const routes = [
 export const publicRoutes = [
   "/",
   "/work",
+  "/now",
   "/projects",
   "/writing",
   ...projectSlugs.map((slug) => `/projects/${slug}`),

@@ -37,10 +37,10 @@ function slugFromPath(path: string): string {
  * A frontmatter date ("April 6, 2026") as YYYY-MM-DD. The string has no zone,
  * so it is read and written in local time and the day cannot shift.
  */
-function isoDay(date: string, slug: string): string {
+function isoDay(date: string, field: string): string {
   const parsed = new Date(date);
   if (Number.isNaN(parsed.getTime())) {
-    throw new Error(`content/writing/${slug}.md: "date" is not a date (got ${String(date)})`);
+    throw new Error(`content/${field} is not a date (got ${String(date)})`);
   }
   const month = String(parsed.getMonth() + 1).padStart(2, "0");
   const day = String(parsed.getDate()).padStart(2, "0");
@@ -55,10 +55,44 @@ export const writingPosts: WritingPost[] = Object.entries(writingMeta)
       slug,
       title: data.title as string,
       date,
-      isoDate: isoDay(date, slug),
+      isoDate: isoDay(date, `writing/${slug}.md: "date"`),
       year: data.year as string,
       author: data.author as string,
       excerpt: data.excerpt as string,
     };
   })
   .sort((a, b) => b.isoDate.localeCompare(a.isoDate));
+
+export interface NowPage {
+  /** As written in the frontmatter, e.g. "October 4, 2026": the day the page was last edited. */
+  updated: string;
+  /** The same day as YYYY-MM-DD, for <time> and the sitemap's lastmod. */
+  isoDate: string;
+  place: string;
+}
+
+// content/now.md goes through the same plugin as a post: its frontmatter is in the bundle,
+// its body is a chunk only /now fetches. Updating the page is a commit to that file.
+const nowMeta = import.meta.glob("../../content/now.md", {
+  eager: true,
+  query: "?meta",
+  import: "default",
+}) as Record<string, Record<string, unknown>>;
+
+const nowHtml = import.meta.glob("../../content/now.md", {
+  query: "?html",
+  import: "default",
+}) as Record<string, () => Promise<string>>;
+
+const nowData = nowMeta["../../content/now.md"];
+
+export const nowPage: NowPage = {
+  updated: nowData.updated as string,
+  isoDate: isoDay(nowData.updated as string, 'now.md: "updated"'),
+  place: nowData.place as string,
+};
+
+/** The rendered body of /now. */
+export async function loadNowHtml(): Promise<string> {
+  return nowHtml["../../content/now.md"]();
+}

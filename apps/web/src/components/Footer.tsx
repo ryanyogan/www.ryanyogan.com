@@ -1,4 +1,4 @@
-import { useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { contactEmail, footerLinks } from "@repo/shared";
 import { openDialog } from "~/lib/keys";
 
@@ -23,6 +23,9 @@ export function Footer() {
           >
             Press&nbsp;<kbd className="kbd">?</kbd>&nbsp;for keys
           </button>
+          <Link to="/now" className="quiet link">
+            Now
+          </Link>
           {footerLinks.map((link) => (
             <a
               key={link.href}

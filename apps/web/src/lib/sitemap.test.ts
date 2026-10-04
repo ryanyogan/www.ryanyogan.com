@@ -10,6 +10,7 @@ const xml = buildSitemap({
     { slug: "alpha", updatedAt: "2026-10-01T12:30:45.123Z" },
     { slug: "beta", updatedAt: "not a date" },
   ],
+  now: { isoDate: "2026-10-04" },
 });
 
 const entry = (path: string) =>
@@ -22,6 +23,7 @@ describe("buildSitemap", () => {
     for (const path of [
       "/",
       "/work",
+      "/now",
       "/projects",
       "/writing",
       "/projects/alpha",
@@ -29,7 +31,7 @@ describe("buildSitemap", () => {
     ]) {
       expect(entry(path), path).not.toBeNull();
     }
-    expect(xml.match(/<loc>/g)).toHaveLength(8);
+    expect(xml.match(/<loc>/g)).toHaveLength(9);
     expect(xml).not.toMatch(/<loc>[^<]+[^m]\/<\/loc>/);
     expect(xml).not.toContain("/admin");
   });
@@ -41,10 +43,13 @@ describe("buildSitemap", () => {
     expect(entry("/projects")?.[1]).toBe("2026-10-01T12:30:45Z");
     expect(entry("/")?.[1]).toBe("2026-10-01T12:30:45Z");
     expect(entry("/work")?.[1]).toBeUndefined();
+    // /now is newer than everything else here and still does not date the home page.
+    expect(entry("/now")?.[1]).toBe("2026-10-04T00:00:00Z");
     expect(entry("/projects/beta")?.[1]).toBeUndefined();
   });
 
-  it("has no lastmod at all when nothing is dated", () => {
-    expect(buildSitemap({ posts: [], projects: [] })).not.toContain("lastmod");
+  it("has no other lastmod when only /now is dated", () => {
+    const bare = buildSitemap({ posts: [], projects: [], now: { isoDate: "2026-10-04" } });
+    expect(bare.match(/<lastmod>/g)).toHaveLength(1);
   });
 });

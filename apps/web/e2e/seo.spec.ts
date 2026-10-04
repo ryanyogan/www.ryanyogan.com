@@ -137,7 +137,7 @@ test("the canonical is the URL the page is finally served at, on every public ro
 });
 
 test("internal links, the feed and llms.txt use the bare form only", async ({ request }) => {
-  for (const route of ["/", "/work", "/projects", "/writing", `/writing/${postSlugs[0]}`]) {
+  for (const route of ["/", "/work", "/now", "/projects", "/writing", `/writing/${postSlugs[0]}`]) {
     const hrefs = attr(await html(request, route), /<a [^>]*href="(\/[^"#?]*)/g);
     expect(hrefs.length, route).toBeGreaterThan(3);
     expect(
@@ -213,6 +213,11 @@ test("sitemap.xml is valid XML listing exactly the public URLs, each a 200", asy
       meta(post, "article:published_time"),
     );
   }
+  // /now carries the day the page itself shows in its <time>.
+  const days = attr(await html(request, "/now"), /<time datetime="([^"]*)"/gi);
+  expect(days).toHaveLength(1);
+  expect(days[0]).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  expect(dated.get(`${SITE_URL}/now`)).toBe(`${days[0]}T00:00:00Z`);
 });
 
 test("there is exactly one sitemap, and the Worker renders it", async ({ request }) => {
@@ -264,7 +269,7 @@ test("llms.txt is short, links every post and states nothing private", async ({ 
   expect(text.startsWith("# Ryan Yogan\n")).toBe(true);
   expect(text.length).toBeLessThan(6000);
   for (const slug of postSlugs) expect(text).toContain(`(${SITE_URL}/writing/${slug})`);
-  for (const path of ["/work", "/projects", "/writing"])
+  for (const path of ["/work", "/now", "/projects", "/writing"])
     expect(text).toContain(`(${SITE_URL}${path})`);
   expect(text).not.toMatch(/gmail\.com|\/admin|<|procore|sonian/i);
   expect(text).not.toContain(draft.slug);
@@ -447,7 +452,7 @@ test('the profile links say rel="me" on every page, and are the JSON-LD sameAs',
   request,
 }) => {
   const profiles = ["https://github.com/ryanyogan", "https://linkedin.com/in/ryanyogan"];
-  for (const route of ["/", "/work", "/projects", "/writing", `/writing/${postSlugs[0]}`]) {
+  for (const route of ["/", "/work", "/now", "/projects", "/writing", `/writing/${postSlugs[0]}`]) {
     const body = await html(request, route);
     const footer = body.slice(body.indexOf("<footer"), body.indexOf("</footer>"));
     const me = (footer.match(/<a [^>]*>/g) ?? [])

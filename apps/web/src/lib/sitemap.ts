@@ -7,6 +7,8 @@ export interface SitemapInput {
   posts: readonly { slug: string; isoDate: string }[];
   /** Published projects only: slug and `updated_at` (ISO 8601). */
   projects: readonly { slug: string; updatedAt: string }[];
+  /** /now: the YYYY-MM-DD day in the frontmatter of content/now.md. */
+  now: { isoDate: string };
 }
 
 function escapeXml(text: string): string {
@@ -33,15 +35,17 @@ function newest(dates: readonly (string | undefined)[]): string | undefined {
 
 /**
  * Every public URL, in the one canonical form, with `lastmod` only where a real content date
- * exists: a post's day, a project's `updated_at`, and for a list the newest of what it
- * lists. /work has no recorded date, so it has no lastmod. Never the build or request time.
+ * exists: a post's day, a project's `updated_at`, the day /now says it was updated, and for
+ * a list the newest of what it lists. /work has no recorded date, so it has no lastmod. Never
+ * the build or request time.
  */
-export function buildSitemap({ posts, projects }: SitemapInput): string {
+export function buildSitemap({ posts, projects, now }: SitemapInput): string {
   const postDates = posts.map((post) => w3cDate(isoDateTime(post.isoDate)));
   const projectDates = projects.map((project) => w3cDate(project.updatedAt));
   const entries: { path: string; lastmod?: string }[] = [
     { path: "/", lastmod: newest([...postDates, ...projectDates]) },
     { path: "/work" },
+    { path: "/now", lastmod: w3cDate(isoDateTime(now.isoDate)) },
     { path: "/projects", lastmod: newest(projectDates) },
     { path: "/writing", lastmod: newest(postDates) },
     ...projects.map((project, index) => ({
