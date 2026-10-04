@@ -317,11 +317,20 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
     await lateFontsLoaded(page);
     await page.evaluate(() => document.fonts.ready);
     await frames(page, 6);
+    // Only the late files are held back here, but the romans are `optional` and the preview
+    // server is shared with every other test: on a busy machine they can miss the first paint
+    // too (seen in CI: 270 ms for a local file, WebKit, page drawn in the fallback faces).
+    // Then the page is in the fallback roman for the visit and the script keeps the italic
+    // and semibold out of it, which is what the tests above hold it to.
+    const web = await drawnInWebFont(page);
+    const added = await lateFaces(page);
     test.info().annotations.push({
       type: "measure",
-      description: `first italic or semibold text is below the window: ${below}`,
+      description: JSON.stringify({ below, web, added }),
     });
-    expect(await lateFaces(page), "faces added").toBe(below ? 4 : 0);
+    if (web.serif)
+      expect(added, "faces added, the page being in the web roman").toBe(below ? 4 : 0);
+    else expect(added, "faces added, the page being in the fallback roman").toBe(0);
     await readThrough(page);
     const end = await seen(page);
     expect(end.changes, "text that changed face or moved after it was on screen").toEqual([]);
