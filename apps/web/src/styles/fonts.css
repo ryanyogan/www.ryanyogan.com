@@ -102,18 +102,35 @@
 }
 
 /*
- * Shown until the web font arrives (font-display: swap). A system face scaled to the web
- * font's metrics, so the swap moves the text as little as possible. The values are worked
- * out from the font files the Capsize way (frequency-weighted average glyph width against
- * the fallback's). Where the local face is missing the rule is ignored and the next family
- * in the stack is used.
+ * Shown until the web font arrives (font-display: swap, kept: the typeface always shows, and
+ * with the two preloads and a year's cache on the files it is there at the first paint of
+ * every view but a slow first one). A system face scaled to the web font's metrics, so that
+ * swap moves the text as little as possible. The values are worked out from the font files
+ * the Capsize way (frequency-weighted average glyph width against the fallback's).
+ *
+ * local() takes a face's real name only, and Linux and Android have neither Arial nor
+ * Georgia, so each source list also names the faces found there. Liberation Sans and Arimo
+ * have Arial's metrics exactly and Roboto's are within a hundredth. No common Linux face has
+ * Georgia's, so the serif has a second rule for the faces with Times New Roman's metrics
+ * (Liberation Serif, Tinos); of two rules for one family the later one wins where its face
+ * exists, so Georgia is used wherever it is installed. Where none is found the rules are
+ * ignored and the next family in the stack is used (e2e/reload.spec.ts measures the match).
  */
 @font-face {
   font-family: "Hanken Grotesk Fallback";
-  src: local("Arial");
+  src: local("Arial"), local("Liberation Sans"), local("Arimo"), local("Roboto");
   size-adjust: 101.46%;
   ascent-override: 98.56%;
   descent-override: 29.86%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Source Serif 4 Fallback";
+  src: local("Times New Roman"), local("Liberation Serif"), local("Tinos");
+  size-adjust: 117.07%;
+  ascent-override: 88.49%;
+  descent-override: 28.62%;
   line-gap-override: 0%;
 }
 

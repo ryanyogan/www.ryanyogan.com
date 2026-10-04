@@ -16,9 +16,16 @@ const lines = [];
 if (existsSync(RESULTS)) {
   const { stats, suites } = JSON.parse(readFileSync(RESULTS, "utf8"));
   const bad = [];
-  const walk = (suite, file) => {
+  // What a test measured (a "measure" annotation, as in e2e/reload.spec.ts): console only.
+  const measured = [];
+  const walk = (suite, file, titles = []) => {
     for (const spec of suite.specs ?? []) {
       for (const t of spec.tests ?? []) {
+        for (const note of t.annotations ?? []) {
+          if (note.type !== "measure") continue;
+          const title = [...titles, spec.title].join(" ");
+          measured.push(`measure [${t.projectName}] ${file}: ${title}: ${note.description}`);
+        }
         if (t.status === "unexpected" || t.status === "flaky") {
           bad.push(
             `- ${t.status === "flaky" ? "FLAKY" : "FAILED"} [${t.projectName}] ${file}: ${spec.title}`,
@@ -26,9 +33,12 @@ if (existsSync(RESULTS)) {
         }
       }
     }
-    for (const child of suite.suites ?? []) walk(child, file);
+    for (const child of suite.suites ?? []) {
+      walk(child, file, child.title === file ? titles : [...titles, child.title]);
+    }
   };
   for (const suite of suites ?? []) walk(suite, suite.file);
+  if (measured.length) console.log(`\n${measured.join("\n")}`);
   lines.push(
     `e2e: ${stats.expected} passed, ${stats.unexpected} failed, ${stats.flaky} flaky, ` +
       `${stats.skipped} skipped in ${(stats.duration / 1000).toFixed(1)}s (exit ${code})`,

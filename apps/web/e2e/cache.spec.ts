@@ -1,9 +1,11 @@
-import { BROKEN_ORIGIN, draft, expect, test } from "./fixtures";
+import { readdirSync } from "node:fs";
+import { BROKEN_ORIGIN, CLIENT_DIR, draft, expect, test } from "./fixtures";
 
 // The edge cache in front of the D1 pages (src/lib/page-cache.ts), on the public preview.
 // What an admin write does to it is in admin.spec.ts (publish, edit, rename, delete).
 
 const PUBLIC_CACHE = "public, max-age=0, s-maxage=60, stale-while-revalidate=300";
+const IMMUTABLE = "public, max-age=31536000, immutable";
 
 for (const path of ["/", "/projects", "/projects/lincoln-project"]) {
   test(`${path} is served from the cache the second time, unchanged`, async ({ request }) => {
@@ -55,6 +57,34 @@ test("drafts, unknown projects and other routes never enter the cache", async ({
   for (const path of ["/work", "/writing", "/rss.xml", "/admin"]) {
     await request.get(path);
     expect((await request.get(path)).headers()["x-cache"], path).toBeUndefined();
+  }
+});
+
+// public/_headers. Every file the build puts under /assets has a hash of its contents in its
+// name, which is what makes a year safe; a file there without one fails this test.
+test("hashed build files are cached for a year, and nothing else is", async ({ request }) => {
+  const files = readdirSync(`${CLIENT_DIR}/assets`);
+  expect(files.length).toBeGreaterThan(10);
+  for (const file of files) expect(file).toMatch(/-[\w-]{8}\.(js|css|woff2)$/);
+
+  const pick = (pattern: RegExp) => files.filter((file) => pattern.test(file));
+  const some = [...pick(/\.woff2$/), ...pick(/\.css$/), ...pick(/^main-.*\.js$/)];
+  expect(some.length).toBeGreaterThanOrEqual(10);
+  for (const file of some) {
+    const response = await request.get(`/assets/${file}`);
+    expect(response.status(), file).toBe(200);
+    expect(response.headers()["cache-control"], file).toBe(IMMUTABLE);
+  }
+  // A name the build did not emit is not an answer to keep for a year.
+  const missing = await request.get("/assets/main-00000000.js");
+  expect(missing.status()).toBe(404);
+  expect(missing.headers()["cache-control"] ?? "").not.toContain("immutable");
+
+  // Their URLs stay the same when their contents change.
+  for (const path of ["/work", "/writing", "/rss.xml", "/robots.txt", "/images/brain.png"]) {
+    const response = await request.get(path);
+    expect(response.status(), path).toBe(200);
+    expect(response.headers()["cache-control"] ?? "", path).not.toContain("immutable");
   }
 });
 
