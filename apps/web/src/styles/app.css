@@ -648,6 +648,31 @@
     text-underline-offset: 0.3em;
   }
 
+  /* Home beside its gutter (D1): the parts of one section sit as close as the rows of a
+     group on /projects, so the space between two sections is the largest on the page. */
+  @media (min-width: 860.02px) {
+    .home .nums {
+      margin-top: 28px;
+    }
+
+    .home .twin > div > * + * {
+      margin-top: 12px;
+    }
+
+    .home .twin .h-m + * {
+      margin-top: 8px;
+    }
+
+    .home .facts li {
+      padding: 6px 0;
+    }
+
+    .home .off,
+    .home .open-way {
+      margin-top: 16px;
+    }
+  }
+
   @media (max-width: 1080px) {
     .hero {
       grid-template-columns: minmax(0, 1fr) 180px;
