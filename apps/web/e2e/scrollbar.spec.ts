@@ -60,6 +60,24 @@ async function open(page: Page, name: keyof typeof dialogs) {
   return dialog;
 }
 
+/**
+ * Down the page by 400, to stay. The router puts a new page at the top once it has rendered
+ * it in the browser, shortly after hydration, and with `scroll-behavior: smooth` that takes
+ * a while: a scroll made before then is undone, and a later reading catches the page on its
+ * way back up. So wait for hydration, and scroll again until the page has kept its place.
+ */
+async function scrollDown(page: Page) {
+  await page.waitForFunction(() => {
+    const heading = document.querySelector("h1");
+    return Boolean(heading && Object.keys(heading).some((key) => key.startsWith("__reactFiber$")));
+  });
+  await expect(async () => {
+    await page.evaluate(() => scrollTo({ top: 400, behavior: "instant" }));
+    await page.waitForTimeout(400);
+    expect(await page.evaluate(() => scrollY)).toBe(400);
+  }).toPass({ timeout: 15_000 });
+}
+
 for (const name of ["search", "help"] as const) {
   for (const theme of ["light", "dark"] as const) {
     test(`the ${name} dialog opens and closes without moving the page, ${theme}`, async ({
@@ -70,7 +88,7 @@ for (const name of ["search", "help"] as const) {
       // Focus on a link at the top, then down the page: closing hands focus back to the
       // link, which must not bring the page back up with it.
       await page.locator("header a").first().focus();
-      await page.evaluate(() => scrollTo({ top: 400, behavior: "instant" }));
+      await scrollDown(page);
 
       const before = await layout(page);
       expect(await scrollbar(page), "a scrollbar that takes space").toBeGreaterThan(8);
