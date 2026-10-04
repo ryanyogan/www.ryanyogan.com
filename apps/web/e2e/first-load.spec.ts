@@ -105,7 +105,16 @@ function watch() {
   }
 }
 
-const seen = (page: Page) => page.evaluate(() => (window as unknown as Watching).__seen);
+/**
+ * What the watcher saw. A change is one the reader saw only if it came after the first paint:
+ * WebKit lays the page out, and runs frames, before it has drawn anything.
+ */
+const seen = async (page: Page) => {
+  const all = await page.evaluate(() => (window as unknown as Watching).__seen);
+  const fcp = all.fcp;
+  const unseen = fcp === undefined ? [] : all.changes.filter((change) => change.t <= fcp);
+  return { ...all, changes: all.changes.filter((change) => !unseen.includes(change)), unseen };
+};
 
 const frames = (page: Page, count = 2) =>
   page.evaluate(
@@ -336,6 +345,9 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
         firstVisit,
         secondVisit,
         atFirstFrame: end.faces[0] === end.faces[1],
+        fcp: end.fcp,
+        changedBeforeFirstPaint: end.unseen.length,
+        changes: end.changes.slice(0, 2),
       }),
     });
     expect(firstVisit, "faces added on the first visit").toBe(0);
