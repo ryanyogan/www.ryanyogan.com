@@ -141,14 +141,16 @@ let versions = "";
 try {
   for (const page of pages) {
     // A first request, not measured, so a Worker page is in the edge cache: the budgets for
-    // those pages are the cache-hit ones. No keep-alive: the Lighthouse runs block this
-    // process, and a connection the server closed meanwhile would fail the next request.
-    const warm = await fetch(origin + page.path, { headers: { connection: "close" } });
-    if (!warm.ok) throw new Error(`${origin}${page.path} answered ${warm.status}`);
+    // those pages are the cache-hit ones. The Lighthouse runs block this process, so the
+    // server may have closed the kept-alive connection of the page before meanwhile: a failed
+    // request gets one more try, on a new connection.
+    const url = origin + page.path;
+    const warm = await fetch(url).catch(() => fetch(url));
+    if (!warm.ok) throw new Error(`${url} answered ${warm.status}`);
     await warm.arrayBuffer();
     const results = [];
     for (let i = 1; i <= runs; i++) {
-      const r = lighthouse(origin + page.path);
+      const r = lighthouse(url);
       results.push(r);
       versions = r.versions;
       console.log(
