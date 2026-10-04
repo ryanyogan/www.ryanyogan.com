@@ -216,9 +216,15 @@ for (const [size, viewport] of [
             ...new Set(
               first
                 .filter((request) => new URL(request.url).pathname.startsWith("/assets/"))
+                // A file still on its way when the page had settled (one the page asks for
+                // late, on a busy machine) has no answer to read a policy from yet.
+                .filter((request) => request.status !== undefined)
                 .map((request) => request.cache ?? "-"),
             ),
           ],
+          unanswered: first
+            .filter((request) => request.status === undefined)
+            .map((request) => short(request.url)),
           fcp: seen.paints["first-contentful-paint"],
           fallbackFrames: fallback.map((frame) => frame.t),
           frames: seen.frames.length,

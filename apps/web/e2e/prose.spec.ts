@@ -4,6 +4,7 @@ import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { renderMarkdown } from "../src/lib/markdown";
 import { expect, postSlugs, publicRoutes, test } from "./fixtures";
+import { inFallbackFaces, inWebFaces } from "./fonts";
 
 // Rendered markdown as the reader gets it: the measure of the reading column, and every
 // element the renderer can emit, checked in both themes at a desktop and a phone width.
@@ -32,46 +33,121 @@ async function ready(page: Page, path: string) {
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
 }
 
+/** The reading column as it is drawn now: its box, its type size and how much text it holds. */
+const column = (page: Page) =>
+  page.evaluate(() => {
+    const prose = document.querySelector<HTMLElement>(".prose")!;
+    const first = prose.querySelector<HTMLElement>(":scope > p")!;
+    // The measure as the spec defines it: the column's width over the width of a "0" in the
+    // column's own font (a hidden 1ch probe).
+    const probe = document.createElement("span");
+    probe.style.cssText = "position:absolute;visibility:hidden;width:1ch;height:1px";
+    prose.appendChild(probe);
+    const ch = probe.getBoundingClientRect().width;
+    probe.remove();
+    // The start of the post's running text on one line, in the column's font: how wide real
+    // text is set.
+    const line = document.createElement("span");
+    line.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap";
+    line.textContent = [...prose.querySelectorAll(":scope > p")]
+      .map((p) => p.textContent)
+      .join(" ")
+      .slice(0, 600);
+    prose.appendChild(line);
+    const text = line.getBoundingClientRect().width;
+    line.remove();
+    const rect = prose.getBoundingClientRect();
+    return {
+      width: rect.width,
+      characters: rect.width / ch,
+      ch,
+      text,
+      left: rect.left,
+      right: document.documentElement.clientWidth - rect.right,
+      size: Number.parseFloat(getComputedStyle(prose).fontSize),
+      paragraph: first.getBoundingClientRect().width / rect.width,
+    };
+  });
+
+// The rule is about the page as designed, in Source Serif 4, and a "character" is that face's
+// "0". The romans are `optional`, so a reader whose fonts miss the first paint reads the post
+// in the fallback face (styles/fonts.css), and on a busy machine so does a test: the page is
+// therefore opened in each face on purpose (e2e/fonts.ts), and each is held to what it owes.
+//
+// In the fallback face the "0" is the wrong ruler. That face is scaled so that running text is
+// as wide as in the web font, which leaves its figures wider: on the CI runner Liberation
+// Serif's "0" is 11px where Source Serif 4's is 10px, and the same 280px column at 320px then
+// counts 25.5 of them, not 28.0. (This test read whichever face the load happened to get, and
+// so failed now and then.) So in the fallback face:
+// - the column must be the same box at the same type size, at every width, which on a phone
+//   is the rule itself (the whole screen between the gutters, at 17px or more);
+// - its measure is the web face's, corrected by how much wider or narrower the fallback sets
+//   the post's own text, and above a phone that is held to 45 to 75 as well. On a phone the
+//   count of 26 is the web face's to hold: the column cannot be made any wider there.
 test("the reading column of a post is 45 to 75 characters wide, and as wide as a phone allows", async ({
   page,
 }) => {
+  test.setTimeout(120_000);
   const report: string[] = [];
-  for (const width of WIDTHS) {
-    await page.setViewportSize({ width, height: 900 });
-    await ready(page, POST);
-    // The measure as the spec defines it: the column's width over the width of a "0" in the
-    // column's own font (a hidden 1ch probe).
-    const column = await page.evaluate(() => {
-      const prose = document.querySelector<HTMLElement>(".prose")!;
-      const probe = document.createElement("span");
-      probe.style.cssText = "position:absolute;visibility:hidden;width:1ch;height:1px";
-      prose.appendChild(probe);
-      const ch = probe.getBoundingClientRect().width;
-      probe.remove();
-      const rect = prose.getBoundingClientRect();
-      return {
-        characters: rect.width / ch,
-        left: rect.left,
-        right: document.documentElement.clientWidth - rect.right,
-        size: Number.parseFloat(getComputedStyle(prose).fontSize),
-        paragraph: prose.querySelector(":scope > p")!.getBoundingClientRect().width / rect.width,
-      };
-    });
-    const measure = column.characters.toFixed(1);
-    if (column.characters > 75) report.push(`${width}: ${measure} characters, over 75`);
+  const measured: string[] = [];
+  const rule = (
+    face: string,
+    width: number,
+    characters: number,
+    drawn: Awaited<ReturnType<typeof column>>,
+  ) => {
+    const at = `${width} ${face}`;
+    const measure = characters.toFixed(1);
+    if (characters > 75) report.push(`${at}: ${measure} characters, over 75`);
     if (width > 640) {
-      if (column.characters < 45) report.push(`${width}: ${measure} characters, under 45`);
+      if (characters < 45) report.push(`${at}: ${measure} characters, under 45`);
     } else {
-      // A phone cannot hold 45 characters at a readable size (320px is about 31 at 18px).
+      // A phone cannot hold 45 characters at a readable size (320px is 28 at 18px).
       // There the column takes the whole screen between the page gutters, at 17px or more.
-      if (column.characters < 26) report.push(`${width}: ${measure} characters, under 26`);
-      if (column.left > 33 || column.right > 33) {
-        report.push(`${width}: column inset ${column.left} and ${column.right}px`);
+      if (face === "web" && characters < 26) {
+        report.push(`${at}: ${measure} characters, under 26`);
+      }
+      if (drawn.left > 33 || drawn.right > 33) {
+        report.push(`${at}: column inset ${drawn.left} and ${drawn.right}px`);
       }
     }
-    if (column.size < 17) report.push(`${width}: ${column.size}px text`);
-    if (column.paragraph < 0.99) report.push(`${width}: paragraphs narrower than the column`);
+    if (drawn.size < 17) report.push(`${at}: ${drawn.size}px text`);
+    if (drawn.paragraph < 0.99) report.push(`${at}: paragraphs narrower than the column`);
+  };
+
+  const web = new Map<number, Awaited<ReturnType<typeof column>>>();
+  let loads = 0;
+  for (const width of WIDTHS) {
+    await page.setViewportSize({ width, height: 900 });
+    loads += await inWebFaces(page, POST);
+    const drawn = await column(page);
+    web.set(width, drawn);
+    rule("web", width, drawn.characters, drawn);
   }
+
+  for (const width of WIDTHS) {
+    await page.setViewportSize({ width, height: 900 });
+    await inFallbackFaces(page, POST);
+    const drawn = await column(page);
+    const designed = web.get(width)!;
+    // The same column: its width and type size are not set by the face.
+    if (Math.abs(drawn.width - designed.width) > 0.5 || drawn.size !== designed.size) {
+      report.push(
+        `${width} fallback: column ${drawn.width}px at ${drawn.size}px, in the web face ${designed.width}px at ${designed.size}px`,
+      );
+    }
+    // The same words take `text` px on one line in each face; the column holds that much
+    // more or less of them.
+    const set = drawn.text / designed.text;
+    rule("fallback", width, designed.characters / set, drawn);
+    measured.push(
+      `${width}: ${drawn.width}px at ${drawn.size}px; web ${designed.characters.toFixed(1)} ("0" ${designed.ch.toFixed(2)}px), fallback ${(designed.characters / set).toFixed(1)} (text ${set.toFixed(4)} as wide; by its own "0", ${drawn.ch.toFixed(2)}px, ${drawn.characters.toFixed(1)})`,
+    );
+  }
+  test.info().annotations.push({
+    type: "measure",
+    description: `characters in the column, ${loads} loads for ${WIDTHS.length} widths in the web face. ${measured.join("; ")}`,
+  });
   expect(report).toEqual([]);
 });
 

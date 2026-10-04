@@ -1,5 +1,5 @@
 import { readdirSync } from "node:fs";
-import { BROKEN_ORIGIN, CLIENT_DIR, draft, expect, test } from "./fixtures";
+import { BROKEN_ORIGIN, CLIENT_DIR, draft, expect, fromCache, test } from "./fixtures";
 
 // The edge cache in front of the D1 pages (src/lib/page-cache.ts), on the public preview.
 // What an admin write does to it is in admin.spec.ts (publish, edit, rename, delete).
@@ -9,11 +9,12 @@ const IMMUTABLE = "public, max-age=31536000, immutable";
 
 for (const path of ["/", "/projects", "/projects/lincoln-project"]) {
   test(`${path} is served from the cache the second time, unchanged`, async ({ request }) => {
+    // The copy in the cache may be a minute old by now (another spec asked for this page
+    // first), and then it is served STALE once while a new one is rendered.
     const first = await request.get(path);
-    expect(["MISS", "HIT"]).toContain(first.headers()["x-cache"]);
-    const second = await request.get(path);
+    expect(["MISS", "HIT", "STALE"]).toContain(first.headers()["x-cache"]);
+    const second = await fromCache(request, path);
     expect(second.status()).toBe(200);
-    expect(second.headers()["x-cache"]).toBe("HIT");
     expect(second.headers()["cache-control"]).toBe(PUBLIC_CACHE);
     expect(second.headers()["content-type"]).toContain("text/html");
     expect(second.headers()["x-page-cached-at"]).toBeUndefined();
@@ -21,8 +22,8 @@ for (const path of ["/", "/projects", "/projects/lincoln-project"]) {
 
     // A trailing slash and tracking parameters are the same entry.
     const sep = path === "/" ? "" : "/";
-    const tracked = await request.get(`${path}${sep}?utm_source=e2e&fbclid=1`);
-    expect(tracked.headers()["x-cache"]).toBe("HIT");
+    const tracked = await fromCache(request, `${path}${sep}?utm_source=e2e&fbclid=1`);
+    expect(await tracked.text()).toBe(await second.text());
   });
 }
 

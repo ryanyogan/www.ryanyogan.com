@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { test as base, expect } from "@playwright/test";
+import { type APIRequestContext, type APIResponse, test as base, expect } from "@playwright/test";
 
 export const SITE_URL = "https://ryanyogan.com";
 export const CLIENT_DIR = fileURLToPath(new URL("../dist/client", import.meta.url));
@@ -88,6 +88,22 @@ export function adminFunctionIds(): string[] {
     }
   }
   return [...ids];
+}
+
+/**
+ * `path` as the page cache (src/lib/page-cache.ts) serves it from a copy it holds: the first
+ * answer marked HIT. A copy is fresh for 60 seconds and is stored after the answer that
+ * rendered it has gone out, so what one request gets depends on when the suite last asked:
+ * MISS (not stored yet), STALE (stored over a minute ago; a new copy is on its way) or HIT.
+ * Asking until the answer is HIT takes that out of a test.
+ */
+export async function fromCache(request: APIRequestContext, path: string): Promise<APIResponse> {
+  let response = await request.get(path);
+  await expect(async () => {
+    if (response.headers()["x-cache"] !== "HIT") response = await request.get(path);
+    expect(response.headers()["x-cache"], path).toBe("HIT");
+  }).toPass({ timeout: 15_000 });
+  return response;
 }
 
 /** Every test fails if the page logs a console error or throws. */

@@ -369,35 +369,55 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
     await frames(page, 6);
     const firstVisit = await lateFaces(page);
 
+    // A cached file is asked for at once and is usually there before the first frame, and
+    // then the faces are in that frame. On a busy machine it is not always (seen in CI,
+    // Chromium: the same page got them on some loads and not on others), nor is the roman
+    // (see the first test here); then this text has been drawn without them and they stay
+    // out. Every load is held to that: all four in the first frame, or none at all. That a
+    // cached load does put them in the first frame is held too: the page is loaded again, a
+    // few times at most, until one has.
     await watching(page, browserName);
-    await page.reload();
-    await hydrated(page);
-    await page.evaluate(() => document.fonts.ready);
-    await frames(page, 6);
-    await readThrough(page);
-    const end = await seen(page);
-    const secondVisit = await lateFaces(page);
-    const web = await drawnInWebFont(page);
-    test.info().annotations.push({
-      type: "measure",
-      description: JSON.stringify({
-        firstVisit,
-        secondVisit,
-        atFirstFrame: end.faces[0] === end.faces[1],
+    const visits: object[] = [];
+    let inFirstFrame = false;
+    for (let visit = 2; visit <= 6 && !inFirstFrame; visit += 1) {
+      await page.reload();
+      await hydrated(page);
+      await page.evaluate(() => document.fonts.ready);
+      await frames(page, 6);
+      await readThrough(page);
+      const end = await seen(page);
+      const added = await lateFaces(page);
+      const web = await drawnInWebFont(page);
+      const atFirstFrame = end.faces[0] === end.faces[1];
+      visits.push({
+        visit,
+        added,
+        atFirstFrame,
         fcp: end.fcp,
         undrawnUntil: end.undrawn,
         web,
         changedBeforeFirstPaint: end.unseen.length,
         changes: end.changes.slice(0, 2),
-      }),
+      });
+      expect(
+        end.changes,
+        `visit ${visit}: text that changed face or moved after it was on screen`,
+      ).toEqual([]);
+      expect([0, 4], `visit ${visit}: faces added`).toContain(added);
+      if (browserName === "chromium") {
+        expect(end.faces[0], `visit ${visit}: faces at the first frame`).toBe(end.faces[1]);
+      }
+      inFirstFrame = added === 4 && atFirstFrame;
+    }
+    test.info().annotations.push({
+      type: "measure",
+      description: JSON.stringify({ firstVisit, visits }),
     });
     expect(firstVisit, "faces added on the first visit").toBe(0);
-    expect(end.changes, "text that changed face or moved after it was on screen").toEqual([]);
     // Chromium holds the first frame for an `optional` face loaded from a script, so the
     // faces are in it. Another engine may draw first, and then leaves them out again.
     if (browserName === "chromium") {
-      expect(secondVisit, "faces added on the second visit").toBe(4);
-      expect(end.faces[0], "faces at the first frame").toBe(end.faces[1]);
+      expect(inFirstFrame, "a cached load with the faces in its first frame").toBe(true);
     }
   });
 });
