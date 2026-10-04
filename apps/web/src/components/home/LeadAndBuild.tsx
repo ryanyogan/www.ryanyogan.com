@@ -14,10 +14,6 @@ export function LeadAndBuild() {
       <div className="col twin">
         <div>
           <h3 className="h-m">I lead</h3>
-          <p>
-            I grew a UI engineering org through hypergrowth and an IPO, and I have sat on the hiring
-            side of the table several hundred times.
-          </p>
           <ul className="facts">
             <li>
               <b>Co-founder and CTO</b> of an AI startup in construction procurement. Built and led
@@ -46,9 +42,6 @@ export function LeadAndBuild() {
           <blockquote className="said">
             <p>&ldquo;I would rather publish a negative result than another feature.&rdquo;</p>
           </blockquote>
-          <p className="more">
-            <Link to="/projects">See every project and its status &rarr;</Link>
-          </p>
         </div>
       </div>
     </section>

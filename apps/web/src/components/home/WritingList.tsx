@@ -1,16 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { writingPosts } from "~/lib/content";
 
-/** The posts shown on Home, newest first. Everything else is on /writing. */
-const homeSlugs = new Set([
-  "lincoln-six-months-later",
-  "building-agent-memory-from-research-to-reality",
-  "project-yogan-hockey",
-  "project-puck-pro",
-  "building-teams",
-  "startup-lessons",
-]);
-
 function monthYear(date: string): string {
   return new Date(date).toLocaleDateString("en-US", {
     month: "short",
@@ -19,57 +9,19 @@ function monthYear(date: string): string {
   });
 }
 
-/** The two newest posts sit under the hero; the list further down leaves them out. */
-const latest = writingPosts.slice(0, 2);
-
-function fullDate(date: string): string {
-  return new Date(date).toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-}
-
-export function LatestWriting() {
+/** The newest posts, under the hero. Everything else is on /writing. */
+export function LatestWriting({ limit }: { limit: number }) {
   return (
-    <section aria-labelledby="new-h" className="row latest">
+    <section aria-labelledby="new-h" className="row">
       <div className="gut">
         <h2 id="new-h" className="lab">
           Latest writing
         </h2>
-      </div>
-      <ol className="col fresh">
-        {latest.map((post) => (
-          <li key={post.slug}>
-            <time dateTime={post.isoDate}>{fullDate(post.isoDate)}</time>
-            <Link to="/writing/$slug" params={{ slug: post.slug }} data-kb-item>
-              {post.title}
-            </Link>
-            <p>{post.excerpt}</p>
-          </li>
-        ))}
-      </ol>
-    </section>
-  );
-}
-
-export function WritingList() {
-  const posts = writingPosts.filter((post) => homeSlugs.has(post.slug) && !latest.includes(post));
-
-  return (
-    <section aria-labelledby="wr-h" className="row">
-      <div className="gut">
-        <h2 id="wr-h" className="lab">
-          Earlier writing
-        </h2>
-        <p className="gnote">
-          Build logs and what I learned running teams. <Link to="/writing">All writing</Link>
-        </p>
+        <p className="gnote">Build logs and what I learned running teams.</p>
       </div>
       <div className="col">
         <ol className="wlist">
-          {posts.map((post) => (
+          {writingPosts.slice(0, limit).map((post) => (
             <li key={post.slug}>
               <time dateTime={post.isoDate}>{monthYear(post.isoDate)}</time>
               <Link to="/writing/$slug" params={{ slug: post.slug }} data-kb-item>
@@ -78,6 +30,9 @@ export function WritingList() {
             </li>
           ))}
         </ol>
+        <p className="more">
+          <Link to="/writing">All writing</Link>
+        </p>
       </div>
     </section>
   );

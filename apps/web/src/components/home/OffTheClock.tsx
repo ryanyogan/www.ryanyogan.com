@@ -16,15 +16,7 @@ export function OffTheClock() {
               <b>Hockey dad and coach.</b> Two of the projects on this site exist because of it.
             </li>
             <li>
-              <b>I build for my family.</b> A household coordination app and a household budget,
-              each built in days.
-            </li>
-            <li>
               <b>Linux, specifically Omarchy.</b> I put vim keys in everything.
-            </li>
-            <li>
-              <b>Elixir loyalist</b> for real-time work. TanStack Start on Cloudflare for everything
-              else.
             </li>
             <li>
               <b>I have rebuilt this site at least eight times</b> in two years. This is not the

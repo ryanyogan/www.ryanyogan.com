@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { contactEmail } from "@repo/shared";
 
 export function OpenTo() {
@@ -30,11 +29,6 @@ export function OpenTo() {
           <a className="mail" href={`mailto:${contactEmail}`}>
             {contactEmail}
           </a>
-        </p>
-        <p className="more">
-          <Link to="/work" hash="work-open">
-            How I work, and what I have scaled &rarr;
-          </Link>
         </p>
       </div>
     </section>

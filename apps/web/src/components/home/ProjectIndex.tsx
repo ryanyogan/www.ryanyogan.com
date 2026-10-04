@@ -27,11 +27,15 @@ const words = [
   "Eighteen",
 ]);
 
-export function ProjectIndex({ projects: all }: { projects: Project[] }) {
+/**
+ * The first project of each group, in group order, up to `limit`: the owner picks them with
+ * each project's `order` in /admin. The whole list is on /projects.
+ */
+export function ProjectIndex({ projects: all, limit }: { projects: Project[]; limit: number }) {
   const groups = projectGroups
-    .map((group) => ({ group, projects: all.filter((p) => p.group === group.id) }))
-    .filter((g) => g.projects.length > 0);
-  const count = groups.reduce((n, g) => n + g.projects.length, 0);
+    .map((group) => all.filter((p) => p.group === group.id))
+    .filter((projects) => projects.length > 0);
+  const shown = groups.map((projects) => projects[0]!).slice(0, limit);
 
   return (
     <section aria-labelledby="idx-h" className="row">
@@ -40,36 +44,28 @@ export function ProjectIndex({ projects: all }: { projects: Project[] }) {
           What I&rsquo;ve built
         </h2>
         <p className="gnote">
-          {words[count] ?? count} entries in {(words[groups.length] ?? "").toLowerCase()} groups,
-          each with its real status.
+          {words[all.length] ?? all.length} entries in {(words[groups.length] ?? "").toLowerCase()}{" "}
+          groups, each with its real status.
         </p>
       </div>
       <div className="col idx">
-        {groups.map(({ group, projects }) => (
-          <div key={group.id}>
-            <div className="grp">
-              <h3 className="h-m">{group.title}</h3>
-              <p className="small">{group.blurb}</p>
-            </div>
-            <ul className="plist">
-              {projects.map((project) => (
-                <li key={project.slug}>
-                  <Link to="/projects/$slug" params={{ slug: project.slug }} data-kb-item>
-                    {project.title}
-                  </Link>
-                  <StatusPill status={project.status} label={project.statusLabel} />
-                  <span className="sum">{project.summary}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-        <div className="end">
-          <ProjectGraph projects={all} />
+        <div>
+          <ul className="plist">
+            {shown.map((project) => (
+              <li key={project.slug}>
+                <Link to="/projects/$slug" params={{ slug: project.slug }} data-kb-item>
+                  {project.title}
+                </Link>
+                <StatusPill status={project.status} label={project.statusLabel} />
+                <span className="sum">{project.summary}</span>
+              </li>
+            ))}
+          </ul>
           <p className="more">
-            <Link to="/projects">Full project notes &rarr;</Link>
+            <Link to="/projects">All projects</Link>
           </p>
         </div>
+        <ProjectGraph projects={all} />
       </div>
     </section>
   );

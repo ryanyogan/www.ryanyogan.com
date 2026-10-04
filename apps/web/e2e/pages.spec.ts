@@ -47,13 +47,12 @@ test("Home links the newest posts above the project index, and no post twice", a
   await page.goto("/");
   const latest = page.getByRole("region", { name: "Latest writing" });
   const links = latest.getByRole("link");
-  await expect(links).toHaveCount(2);
+  // The newest three and the link to the rest.
+  await expect(links).toHaveCount(4);
+  await expect(links.last()).toHaveAttribute("href", "/writing");
   await expect(links.first()).toHaveAttribute("href", `/writing/${newest[0]!.slug}`);
-  // Each has its date and a line of description.
-  await expect(latest.locator("li time")).toHaveCount(2);
-  for (const line of await latest.locator("li p").allTextContents()) {
-    expect(line.trim()).not.toBe("");
-  }
+  // Each has its date.
+  await expect(latest.locator("li time")).toHaveCount(3);
 
   const top = await links.first().boundingBox();
   const hero = await page.locator("h1").boundingBox();
@@ -61,11 +60,11 @@ test("Home links the newest posts above the project index, and no post twice", a
   expect(top!.y).toBeGreaterThan(hero!.y);
   expect(top!.y + top!.height).toBeLessThan(index!.y);
 
-  // The list further down carries on from there: no post is linked twice.
+  // It is the only writing list on the page: no post is linked twice.
   const hrefs = await page
     .locator('main a[href^="/writing/"]')
     .evaluateAll((anchors) => anchors.map((anchor) => anchor.getAttribute("href")));
-  expect(hrefs.length).toBeGreaterThan(2);
+  expect(hrefs.length).toBe(3);
   expect(new Set(hrefs).size).toBe(hrefs.length);
 });
 
@@ -297,7 +296,7 @@ test("/projects: a retired project says so, is in the status key, and shows only
   page,
 }) => {
   await page.goto("/projects");
-  const retired = page.locator("main article.proj", {
+  const retired = page.locator("main .plist li", {
     has: page.locator('span.st[data-status="retired"]'),
   });
   await expect(retired).toHaveCount(1);

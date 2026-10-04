@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { contactEmail, projectGroups } from "@repo/shared";
-import type { Project, ProjectStatus } from "@repo/shared";
+import type { ProjectStatus } from "@repo/shared";
 import { StatusMarks } from "~/components/PageArt";
-import { ProjectLinks } from "~/components/ProjectLinks";
 import { StatusPill } from "~/components/StatusPill";
 import { PROJECT_PAGE_CACHE, fetchProjects } from "~/lib/projects.functions";
 import { collectionNode, pageTitle, seo } from "~/lib/seo";
@@ -110,11 +109,17 @@ function ProjectsPage() {
             </h2>
             <p className="gnote">{info.blurb}</p>
           </div>
-          <div className="col">
+          <ul className="col plist">
             {projects.map((project) => (
-              <ProjectRow key={project.slug} project={project} />
+              <li key={project.slug}>
+                <Link to="/projects/$slug" params={{ slug: project.slug }} data-kb-item>
+                  {project.title}
+                </Link>
+                <StatusPill status={project.status} label={project.statusLabel} />
+                <span className="sum">{project.summary}</span>
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
       ))}
 
@@ -140,25 +145,5 @@ function ProjectsPage() {
         </div>
       </section>
     </main>
-  );
-}
-
-function ProjectRow({ project }: { project: Project }) {
-  return (
-    <article className="proj">
-      <header>
-        <h3>
-          <Link to="/projects/$slug" params={{ slug: project.slug }} data-kb-item>
-            {project.title}
-          </Link>
-        </h3>
-        <StatusPill status={project.status} label={project.statusLabel} />
-      </header>
-      <p>{project.tagline}</p>
-      <div className="meta">
-        <span className="tech">{project.tech.join(" · ")}</span>
-        <ProjectLinks project={project} />
-      </div>
-    </article>
   );
 }
