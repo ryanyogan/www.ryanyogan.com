@@ -63,17 +63,36 @@ test("leaving a page while its route chunk is still loading does not reload it",
 // longer exist. The page reloads once, gets the new build's HTML, and works.
 test("a route chunk that is gone reloads the page once, and the page then works", async ({
   page,
+  consoleErrors,
 }) => {
   const requested = documents(page);
-  await page.route(chunk, (route) =>
-    requested.length < 2 ? route.fulfill({ status: 404, body: "Not found" }) : route.continue(),
-  );
+  const answers: string[] = [];
+  await page.route(chunk, (route) => {
+    const gone = requested.length < 2;
+    answers.push(gone ? "404" : "200");
+    return gone
+      ? route.fulfill({ status: 404, headers: { "cache-control": "no-store" }, body: "Not found" })
+      : route.continue();
+  });
 
   await page.goto("/projects", { waitUntil: "commit" });
+  await expect.poll(() => requested).toEqual(["/projects", "/projects"]);
   // Hydrated: React has attached to the heading the route chunk draws.
-  await page.waitForFunction(() => {
-    const h1 = document.querySelector("h1");
-    return Boolean(h1 && Object.keys(h1).some((key) => key.startsWith("__reactFiber$")));
-  });
+  await page
+    .waitForFunction(
+      () => {
+        const h1 = document.querySelector("h1");
+        return Boolean(h1 && Object.keys(h1).some((key) => key.startsWith("__reactFiber$")));
+      },
+      undefined,
+      { timeout: 10_000 },
+    )
+    .catch(() => {
+      throw new Error(`not hydrated; documents: ${requested}; chunk: ${answers}; ${consoleErrors}`);
+    });
   expect(requested).toEqual(["/projects", "/projects"]);
+
+  // The browser reports the 404 itself. Nothing else may be logged.
+  expect(consoleErrors.filter((error) => !error.includes("status of 404"))).toEqual([]);
+  consoleErrors.length = 0;
 });
