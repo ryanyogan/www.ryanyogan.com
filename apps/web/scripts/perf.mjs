@@ -247,7 +247,7 @@ try {
     const url = origin + page.path;
     const warm = await fetch(url).catch(() => fetch(url));
     if (!warm.ok) throw new Error(`${url} answered ${warm.status}`);
-    await warm.arrayBuffer();
+    const html = await warm.text();
     const results = [];
     for (let i = 1; i <= runs; i++) {
       const r = lighthouse(url);
@@ -267,7 +267,6 @@ try {
     table.push(...rows(page, medians, Boolean(baseUrl)));
     if (detail) {
       const run = results.toSorted((x, y) => x.lcp - y.lcp)[Math.floor((runs - 1) / 2)];
-      const html = await (await fetch(url)).text();
       details.push(describe(page, run, html));
       mkdirSync(DETAIL_DIR, { recursive: true });
       const name = page.path.replace(/\W+/g, "-").replace(/^-|-$/g, "") || "home";
