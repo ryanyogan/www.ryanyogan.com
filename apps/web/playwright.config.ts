@@ -68,16 +68,17 @@ export default defineConfig({
     },
     // Safari's engine at iPhone size, for what Chromium emulation cannot show (font metrics,
     // hyphenation, dvh, focus). Public pages only: the device matrix, the mobile menu, the
-    // page smoke tests, the view count and the route chunk tests (chunks.spec.ts is about what
-    // this engine does), plus one test picked by its title: the hydration check in
-    // public.spec.ts. The admin tests, axe (it reads the DOM and computed colours, which do
-    // not differ by engine) and the rest, which mostly only make requests, stay in Chromium.
+    // page smoke tests, the view count, the route chunk tests (chunks.spec.ts is about what
+    // this engine does) and where a post's body comes from (post-body.spec.ts), plus one test
+    // picked by its title: the hydration check in public.spec.ts. The admin tests, axe (it
+    // reads the DOM and computed colours, which do not differ by engine) and the rest, which
+    // mostly only make requests, stay in Chromium.
     // `grep` is matched against "<file name> <title>".
     {
       name: "webkit",
       use: { ...devices["iPhone 14"] },
-      testMatch: /(viewports|mobile|pages|views|chunks|public)\.spec\.ts$/,
-      grep: /(viewports|mobile|pages|views|chunks)\.spec\.ts|hydrates without a mismatch/,
+      testMatch: /(viewports|mobile|pages|views|chunks|post-body|public)\.spec\.ts$/,
+      grep: /(viewports|mobile|pages|views|chunks|post-body)\.spec\.ts|hydrates without a mismatch/,
     },
   ],
   webServer: [

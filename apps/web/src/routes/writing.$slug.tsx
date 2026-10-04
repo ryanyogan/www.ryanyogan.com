@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { loadPostHtml, writingPosts } from "~/lib/content";
+import { loadPostHtml, postHtml, writingPosts } from "~/lib/content";
 import { Prose } from "~/components/Prose";
 import { PostViews } from "~/components/ViewCount";
 import {
@@ -16,11 +16,10 @@ import { staticOgImage } from "~/lib/og-images";
 
 export const Route = createFileRoute("/writing/$slug")({
   component: WritingDetail,
-  // Only the slug-specific part: the post's metadata is already in the bundle.
+  // Waits for the body and returns nothing: what a loader returns is written into the
+  // document a second time, for hydration. The component reads the body with postHtml().
   loader: async ({ params }) => {
-    const html = await loadPostHtml(params.slug);
-    if (html === undefined) throw notFound();
-    return { html };
+    if ((await loadPostHtml(params.slug)) === undefined) throw notFound();
   },
   head: ({ params }) => {
     // The loader throws notFound() for an unknown slug, and head still runs.
@@ -65,17 +64,7 @@ export const Route = createFileRoute("/writing/$slug")({
   },
 });
 
-/** Whole minutes to read the rendered body at 230 words a minute. */
-function readingMinutes(html: string): number {
-  const words = html
-    .replace(/<[^>]+>/g, " ")
-    .split(/\s+/)
-    .filter(Boolean).length;
-  return Math.max(1, Math.round(words / 230));
-}
-
 function WritingDetail() {
-  const { html } = Route.useLoaderData();
   const { slug } = Route.useParams();
   // writingPosts is newest first. The loader has already answered 404 for an unknown slug.
   const at = writingPosts.findIndex((p) => p.slug === slug);
@@ -95,8 +84,8 @@ function WritingDetail() {
             <p className="lede">{post.excerpt}</p>
             <p className="small post-meta">
               <span>
-                <time dateTime={post.isoDate}>{post.date}</time> &middot; {readingMinutes(html)} min
-                read &middot; {post.author}
+                <time dateTime={post.isoDate}>{post.date}</time> &middot; {post.minutes} min read
+                &middot; {post.author}
               </span>
               <PostViews slug={slug} />
             </p>
@@ -104,7 +93,7 @@ function WritingDetail() {
         </header>
 
         <div className="row post-body">
-          <Prose className="col push post" html={html} />
+          <Prose className="col push post" html={postHtml(slug)} />
         </div>
       </article>
 

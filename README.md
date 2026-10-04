@@ -193,7 +193,9 @@ loads each public page type from a `vite preview` it starts itself, sums what th
 and fails when the JavaScript or CSS is over the budgets in `apps/web/scripts/perf-budget.mjs`, when a
 page makes more requests than its ceiling there (6 to 10 today; the shared modules are one chunk and
 the stylesheet is inlined in the document), when a public page fetches the markdown parser or the
-highlighter, or when a script carries another post's body.
+highlighter, when a script carries another post's body, or when the longest post's document is over its
+HTML ceiling or carries the body twice (a post's body is in its HTML only, not again in the data the
+page hydrates from).
 `pnpm perf:budget --report` prints the table without failing.
 
 `pnpm perf` is the report: Lighthouse (mobile emulation, simulated Slow 4G, 4x CPU slowdown; median of
