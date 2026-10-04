@@ -55,10 +55,11 @@ export const LATE_FONTS_KEY = "fonts";
  *
  * They join only a page drawn in the web roman, on every path. The roman is `optional`: if it
  * missed the first paint the page is in the fallback face for the visit, and these stay out of
- * it. `roman()` asks the layout which face it uses, and its answer is final only once no face
- * is still loading; when these are ready before the roman's fate is known (a cached load whose
- * roman is slow: e2e/first-load.spec.ts holds it), the script waits for the page's fonts and
- * asks again.
+ * it. `roman()` asks the layout which face it uses, which is not settled while the roman is on
+ * its way, so the script waits for the roman as it does for its own two files and asks then.
+ * (Not for `document.fonts.ready`: that comes after the first frame even when every file was
+ * there before it. And a cached load whose roman is slow had all four beside the fallback roman
+ * when the script did not ask: e2e/first-load.spec.ts holds both.)
  */
 export const lateFontsScript = `(function(F){
 if(!window.FontFace||!document.fonts)return;
@@ -72,7 +73,7 @@ s.style.cssText="position:absolute;visibility:hidden;white-space:nowrap;font:100
 s.textContent="The quick brown fox";
 document.body.appendChild(s);
 var a=s.offsetWidth;s.style.fontFamily='"'+family+'",monospace';var b=s.offsetWidth;
-s.remove();return a!==b&&document.fonts.status!=="loading"}
+s.remove();return a!==b}
 function seen(){
 var all=document.body.getElementsByTagName("*");
 for(var i=0;i<all.length;i++){var el=all[i],text=false;
@@ -84,9 +85,8 @@ var r=el.getBoundingClientRect();
 if(r.width&&r.top<innerHeight)return true}
 return false}
 function go(){
-Promise.all([faces[0].load(),faces[1].load()]).then(function(){
+Promise.all([faces[0].load(),faces[1].load(),document.fonts.load('1em "'+family+'"').then(0,function(){})]).then(function(){
 try{localStorage.setItem("${LATE_FONTS_KEY}",key)}catch(e){}
-return roman()?0:document.fonts.ready}).then(function(){
 if(!roman()||(framed&&seen()))return;
 faces.forEach(function(f){document.fonts.add(f)})},function(){try{localStorage.removeItem("${LATE_FONTS_KEY}")}catch(e){}})}
 if(warm)go();else if(document.readyState==="complete")setTimeout(go);else addEventListener("load",function(){setTimeout(go)})
