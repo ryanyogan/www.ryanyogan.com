@@ -8,11 +8,13 @@ export interface WritingPost {
   year: string;
   author: string;
   excerpt: string;
+  /** Whole minutes to read the body, counted from the rendered HTML when the site is built. */
+  minutes: number;
 }
 
 // vite-plugin-posts.ts answers both queries at build time. The frontmatter of every post is
 // in the bundle of any page that lists posts; a post's body is a chunk of its own, fetched
-// only by that post's page.
+// only when a reader arrives at that post by a link.
 const writingMeta = import.meta.glob("../../content/writing/*.md", {
   eager: true,
   query: "?meta",
@@ -24,9 +26,33 @@ const writingHtml = import.meta.glob("../../content/writing/*.md", {
   import: "default",
 }) as Record<string, () => Promise<string>>;
 
+// The bodies loaded so far, by slug. The post page draws from here and its loader returns
+// nothing: what a loader returns is serialised into the document for hydration, which sent
+// every body twice (40 KB of the longest post's 87 KB).
+const postBodies = new Map<string, string>();
+
+// A post opened by its URL arrives with its body in the HTML, and no loader runs in the
+// browser. So the browser reads the body back from the element the server sent, as it does
+// the stylesheet (styles/inline.ts). The script that imports this module is the last thing
+// in <body>, so the element is complete by now.
+if (!import.meta.env.SSR) {
+  const slug = location.pathname.match(/^\/writing\/([^/]+)\/?$/)?.[1];
+  const sent = slug ? document.querySelector(".post-body > .prose") : null;
+  if (slug && sent) postBodies.set(slug, sent.innerHTML);
+}
+
 /** The rendered body of a post, or undefined for an unknown slug. */
 export async function loadPostHtml(slug: string): Promise<string | undefined> {
-  return writingHtml[`../../content/writing/${slug}.md`]?.();
+  const loaded = postBodies.get(slug);
+  if (loaded !== undefined) return loaded;
+  const html = await writingHtml[`../../content/writing/${slug}.md`]?.();
+  if (html !== undefined) postBodies.set(slug, html);
+  return html;
+}
+
+/** The body `loadPostHtml` has loaded for this slug: the post page's loader waits for it. */
+export function postHtml(slug: string): string {
+  return postBodies.get(slug) ?? "";
 }
 
 function slugFromPath(path: string): string {
@@ -59,6 +85,7 @@ export const writingPosts: WritingPost[] = Object.entries(writingMeta)
       year: data.year as string,
       author: data.author as string,
       excerpt: data.excerpt as string,
+      minutes: data.minutes as number,
     };
   })
   .sort((a, b) => b.isoDate.localeCompare(a.isoDate));

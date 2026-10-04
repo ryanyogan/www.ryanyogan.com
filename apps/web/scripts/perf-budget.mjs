@@ -8,8 +8,8 @@
 //
 // Fails (exit 1) when a route is over a budget below (bytes, or how many requests it makes),
 // when a public route downloads the
-// markdown parser or the syntax highlighter, or when a script carries the body of a post
-// other than the one being read. Fonts have three budgets: the files the page preloads
+// markdown parser or the syntax highlighter, when a script carries the body of a post
+// other than the one being read, or when a post's document carries its body twice. Fonts have three budgets: the files the page preloads
 // (`<link rel="preload" as="font">`, from src/styles/fonts.ts), how many of those there
 // are, and every font file the page ends up fetching. `--report` prints the table and
 // never fails.
@@ -52,7 +52,11 @@ const FONT_BUDGET = 150 * KB;
  * API call), two above what October 2026 measured: 7 or 6, 8 for a project page, 10 for a
  * post. Before the shared modules were one chunk a page made 25 to 28. Production adds three
  * this run does not see (the favicon and Cloudflare's analytics script and its beacon).
+ *
+ * `html` is a ceiling on the longest post's document, set just above what it measured once
+ * the body was no longer in it a second time as loader data (src/lib/content.ts).
  */
+const POST_HTML_BUDGET = 30 * KB;
 const routes = [
   { path: "/", js: JS_BUDGET, requests: 9 },
   { path: "/work", js: JS_BUDGET, requests: 9 },
@@ -60,7 +64,13 @@ const routes = [
   { path: "/projects", js: JS_BUDGET, requests: 8 },
   { path: "/projects/lincoln-project", js: JS_BUDGET, requests: 10 },
   { path: "/writing", js: JS_BUDGET, requests: 10 },
-  { path: `/writing/${longest.slug}`, js: JS_BUDGET, requests: 12, post: longest.slug },
+  {
+    path: `/writing/${longest.slug}`,
+    js: JS_BUDGET,
+    requests: 12,
+    html: POST_HTML_BUDGET,
+    post: longest.slug,
+  },
 ];
 
 /** Strings that survive minification in unified, micromark and highlight.js. */
@@ -101,7 +111,8 @@ async function measure(browser, origin, route) {
           external: url.origin !== origin,
           // Fonts are already compressed.
           bytes: kind === "font" ? body.length : gzipSync(body, { level: 9 }).length,
-          text: kind === "js" ? body.toString("utf8") : "",
+          raw: body.length,
+          text: kind === "js" || kind === "html" ? body.toString("utf8") : "",
         };
       })(),
     );
@@ -144,6 +155,14 @@ async function measure(browser, origin, route) {
       );
     }
   }
+  // The post's body is in its document once, as HTML: not again as loader data.
+  const probe = posts.find((post) => post.slug === route.post)?.probe;
+  if (probe) {
+    const copies = responses
+      .filter((r) => r.kind === "html")
+      .reduce((total, r) => total + r.text.split(probe).length - 1, 0);
+    if (copies !== 1) problems.push(`the document carries the post's body ${copies} times`);
+  }
   const preloads = [...new Set(preloadHrefs)].map((href) => {
     const response = responses.find((r) => r.url === href && r.status < 400);
     // Without this a preload that fetched nothing would count as zero bytes.
@@ -166,6 +185,7 @@ async function measure(browser, origin, route) {
     preloads: preloads.length,
     fontPreload: preloads.reduce((total, p) => total + p.bytes, 0),
     html: sum("html"),
+    htmlRaw: responses.filter((r) => r.kind === "html").reduce((total, r) => total + r.raw, 0),
     problems,
   };
   if (result.js > route.js) {
@@ -173,6 +193,9 @@ async function measure(browser, origin, route) {
   }
   if (result.requests > route.requests) {
     problems.push(`${result.requests} requests; the ceiling is ${route.requests}`);
+  }
+  if (route.html && result.html > route.html) {
+    problems.push(`HTML ${kb(result.html)} KB gzip is over the ${kb(route.html)} KB budget`);
   }
   if (result.css > CSS_BUDGET) {
     problems.push(`CSS ${kb(result.css)} KB gzip is over the ${kb(CSS_BUDGET)} KB budget`);
@@ -202,11 +225,11 @@ try {
   await browser.close();
 
   console.log(
-    "route | requests (third-party) | JS gz KB | CSS gz KB | fonts KB | preloaded fonts KB (files) | HTML gz KB",
+    "route | requests (third-party) | JS gz KB | CSS gz KB | fonts KB | preloaded fonts KB (files) | HTML gz KB (raw)",
   );
   for (const r of results) {
     console.log(
-      `${r.path} | ${r.requests} (${r.external}) | ${kb(r.js)} | ${kb(r.css)} | ${kb(r.font)} | ${kb(r.fontPreload)} (${r.preloads}) | ${kb(r.html)}`,
+      `${r.path} | ${r.requests} (${r.external}) | ${kb(r.js)} | ${kb(r.css)} | ${kb(r.font)} | ${kb(r.fontPreload)} (${r.preloads}) | ${kb(r.html)} (${kb(r.htmlRaw)})`,
     );
   }
   for (const r of results) {
