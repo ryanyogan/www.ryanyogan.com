@@ -135,23 +135,6 @@ export const workSections: WorkSection[] = [
         ],
         tags: ["R&D Leadership", "AWS Partnership", "Clojure", "Cost Optimization"],
       },
-      // Not on LinkedIn, and inside the Sonian dates above. Kept until the owner says otherwise.
-      {
-        company: "Montway Auto Transport",
-        title: "Director of Engineering",
-        type: "Full-time",
-        dates: "Nov 2015 — May 2016",
-        location: "Chicago, IL",
-        description:
-          "Managed 11 engineers and the department budget; led vendor selection and partnered with Operations and Sales on technology initiatives.",
-        summary: "Managed 11 engineers and the department budget.",
-        highlights: [
-          "Built mobile applications replacing manual paper Bills of Lading",
-          "Implemented computer vision pipelines for 360-degree vehicle inspection imaging",
-          "Architected smart pricing engine accurate within dollars on cross-country quotes",
-        ],
-        tags: ["Digital Transformation", "Mobile", "Computer Vision"],
-      },
       {
         company: "Sonian (acquired by Barracuda)",
         title: "Operations Engineer",

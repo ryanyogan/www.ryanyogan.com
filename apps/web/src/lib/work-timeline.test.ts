@@ -39,10 +39,7 @@ describe("work timeline", () => {
   });
 
   it("has every role on LinkedIn, in LinkedIn's order", () => {
-    // Montway is on the site and not on LinkedIn; everything else is LinkedIn's list.
-    const listed = roles
-      .filter((role) => role.company !== "Montway Auto Transport")
-      .map((role) => `${role.company} | ${role.title} | ${role.dates}`);
+    const listed = roles.map((role) => `${role.company} | ${role.title} | ${role.dates}`);
     expect(listed).toEqual([
       "Chromatic | Senior Staff Engineer | Jun 2026 — Present",
       "Yogan Dot Dev | Founder & Lead Engineer | Mar 2022 — Jun 2026",
