@@ -423,7 +423,11 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
     }
   });
 
-  test("once cached, a roman that misses the first paint keeps them out", async ({
+  // In WebKit the script adds cached files that are there before the first frame without
+  // asking about the roman (the accepted exception in styles/fonts.ts), so there this load ends
+  // with none of the four or with all of them from its first frame, by whether the files were
+  // there in time (both seen in CI). Nothing changes or moves after the first paint either way.
+  test("once cached, a roman that misses the first paint keeps them out (WebKit: out, or in from the first frame)", async ({
     page,
     browserName,
   }) => {
@@ -437,8 +441,9 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
     // That next load, with only the romans late: the page is in the fallback roman for the
     // visit, and the web italic and semibold must not be set beside it. (Seen in CI before the
     // script asked, run 37240200047, Chromium: all four in the first frame, roman fallback.
-    // WebKit does not get that far here: with a route installed its late files are not there
-    // at once, it gives up on them and the note is dropped; `noted` in the measure says so.)
+    // WebKit does not always get that far here: with a route installed its late files are not
+    // always there at once, and then it gives up on them and the note is dropped; `noted` in
+    // the measure says so.)
     const held = await slowFonts(page, ROMAN);
     await watching(page, browserName);
     await page.reload({ waitUntil: "commit" });
@@ -463,7 +468,9 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
         web,
         added,
         facesAtFirstFrame: end.faces[0],
+        faces: end.faces[1],
         noted,
+        vendor: await page.evaluate(() => navigator.vendor),
         shift: end.shift,
         changes: end.changes.slice(0, 2),
       }),
@@ -473,7 +480,10 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
       sans: false,
       serif: false,
     });
-    expect(added, "late faces beside the fallback roman").toBe(0);
+    if (browserName === "webkit") {
+      expect([0, 4], "late faces: none, or all four").toContain(added);
+      expect(end.faces[0], "faces at the first frame, and at the end").toBe(end.faces[1]);
+    } else expect(added, "late faces beside the fallback roman").toBe(0);
     expect(end.changes, "text that changed face or moved after it was on screen").toEqual([]);
     expect(end.shift, "layout shift").toBe(0);
   });

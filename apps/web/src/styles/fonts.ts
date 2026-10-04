@@ -69,10 +69,18 @@ export const LATE_FONTS_KEY = "fonts";
  *   roman's face settled): the semibold was seen to change on screen.
  * (The two files are `optional` only when cached: WebKit gives up on such a face unless it is
  * there at once, and if it does the note is dropped and the next load starts over.)
+ *
+ * A known, accepted exception, for WebKit alone (`wk`): cached files that are there before the
+ * first frame are added to it without waiting for the roman or asking about it, because waiting
+ * would cost every cached Safari visit the real italic and semibold on a first screen. The price
+ * is that a cached roman which misses its own block period leaves them beside the fallback
+ * roman for that visit: rare, nothing changes on screen, and not seen in WebKit. After the first
+ * frame WebKit follows the rule above like every other engine. `navigator.vendor` is "Apple
+ * Computer, Inc." in every WebKit port, "Google Inc." in Chromium and empty in Firefox.
  */
 export const lateFontsScript = `(function(F){
 if(!window.FontFace||!document.fonts)return;
-var family="Source Serif 4",key=F[0][0]+F[1][0],warm=false,framed=false,rf;
+var family="Source Serif 4",key=F[0][0]+F[1][0],warm=false,framed=false,rf,wk=/Apple/.test(navigator.vendor);
 try{warm=localStorage.getItem("${LATE_FONTS_KEY}")===key}catch(e){}
 var faces=F.map(function(f,i){return new FontFace(family,'url("'+f[0]+'") format("woff2")',{style:f[1],weight:f[2],unicodeRange:f[3],display:warm||i>1?"optional":"swap"})});
 requestAnimationFrame(function(){framed=true});
@@ -98,9 +106,10 @@ var R=document.fonts.ready;
 if(warm){
 document.fonts.forEach(function(f){if(f.family.replace(/["']/g,"")===family&&/^U\\+0+-/i.test(f.unicodeRange))rf=f});
 if(rf)R=rf.load().then(0,function(){})}
-Promise.all([faces[0].load(),faces[1].load(),R]).then(function(){
+function add(){faces.forEach(function(f){document.fonts.add(f)})}
+Promise.all([faces[0].load(),faces[1].load()]).then(function(){
 try{localStorage.setItem("${LATE_FONTS_KEY}",key)}catch(e){}
-if(!roman()||(framed&&seen()))return;
-faces.forEach(function(f){document.fonts.add(f)})},function(){try{localStorage.removeItem("${LATE_FONTS_KEY}")}catch(e){}})}
+if(wk&&warm&&!framed)add();
+else R.then(function(){if(roman()&&!(framed&&seen()))add()})},function(){try{localStorage.removeItem("${LATE_FONTS_KEY}")}catch(e){}})}
 if(warm)go();else if(document.readyState==="complete")setTimeout(go);else addEventListener("load",function(){setTimeout(go)})
 }(${JSON.stringify(lateFaces)}))`;
