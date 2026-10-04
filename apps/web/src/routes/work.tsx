@@ -193,8 +193,8 @@ function WorkPage() {
           Recurring themes: {themes.slice(0, -1).join(", ")}, and {themes.at(-1)}.
         </p>
         <p className="small mt-2 max-w-[36rem]">
-          GitHub contributions doubled year over year: 812, then 1,656. By day I lead AI
-          engineering. That work stays off this site.{" "}
+          GitHub contributions doubled year over year: 812, then 1,656. By day I lead AI engineering
+          at Chromatic, and I build too: AI, MCP and core services.{" "}
           <Link to="/projects" className="tlink">
             The rest is on the Projects page &rarr;
           </Link>
