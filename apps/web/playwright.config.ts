@@ -49,9 +49,16 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   projects: [
+    // Scrollbars that take no space, as on a phone or a Mac and as headless Chromium has
+    // always drawn the pages here; said outright because `scrollbar-gutter` (styles/app.css)
+    // would otherwise keep 15px for a scrollbar that headless mode hides. scrollbar.spec.ts
+    // runs with real ones.
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        launchOptions: { args: ["--enable-features=OverlayScrollbar"] },
+      },
       testIgnore: /mobile\.spec\.ts$/,
     },
     // The public smoke tests again at phone size, plus the mobile menu and the view count

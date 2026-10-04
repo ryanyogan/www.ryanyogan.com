@@ -13,9 +13,9 @@ import { expect, test } from "./fixtures";
 test.use({ launchOptions: { ignoreDefaultArgs: ["--hide-scrollbars"] } });
 
 type Box = [x: number, y: number, width: number, height: number];
-type Layout = { scrollbar: number; scrollY: number; boxes: Record<string, Box> };
+type Layout = { scrollY: number; boxes: Record<string, Box> };
 
-/** The scrollbar's width and where the page's fixed points are, in page coordinates. */
+/** Where the page's fixed points are, in page coordinates. */
 const layout = (page: Page): Promise<Layout> =>
   page.evaluate(() => {
     const boxes: Record<string, Box> = {};
@@ -30,12 +30,17 @@ const layout = (page: Page): Promise<Layout> =>
       const rect = document.querySelector(selector)!.getBoundingClientRect();
       boxes[selector] = [rect.x + scrollX, rect.y + scrollY, rect.width, rect.height];
     }
-    return {
-      scrollbar: innerWidth - document.documentElement.clientWidth,
-      scrollY,
-      boxes,
-    };
+    return { scrollY, boxes };
   });
+
+/**
+ * The space the scrollbar takes: the window's width less the header's, which spans the page.
+ * (Not clientWidth, which counts the kept space once the scrollbar itself is gone.)
+ */
+const scrollbar = (page: Page) =>
+  page.evaluate(
+    () => innerWidth - document.querySelector("body > header")!.getBoundingClientRect().width,
+  );
 
 const dialogs = {
   search: { key: "/", find: (page: Page) => page.getByRole("dialog", { name: "Search the site" }) },
@@ -68,7 +73,7 @@ for (const name of ["search", "help"] as const) {
       await page.evaluate(() => scrollTo({ top: 400, behavior: "instant" }));
 
       const before = await layout(page);
-      expect(before.scrollbar, "a scrollbar that takes space").toBeGreaterThan(8);
+      expect(await scrollbar(page), "a scrollbar that takes space").toBeGreaterThan(8);
       expect(before.scrollY).toBe(400);
 
       const dialog = await open(page, name);
@@ -90,22 +95,19 @@ test("a page too short to scroll keeps the same space, and stays centred", async
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto("/now");
   const long = await layout(page);
+  const space = await scrollbar(page);
+  expect(space).toBeGreaterThan(8);
   await page.setViewportSize({ width: 1280, height: 6000 });
   expect(
     await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight),
     "the page does not scroll",
   ).toBe(true);
   const short = await layout(page);
-  expect(short.scrollbar).toBe(long.scrollbar);
-  expect(short.scrollbar).toBeGreaterThan(8);
+  expect(await scrollbar(page)).toBe(space);
   for (const selector of ["body > header", "header a", ".header-tools", "main h1"]) {
     const [x, , width] = short.boxes[selector];
     expect([x, width], selector).toEqual([long.boxes[selector][0], long.boxes[selector][2]]);
   }
-  // The header's row is centred in what is left beside the scrollbar's space.
-  const [x, , width] = short.boxes["body > header"];
-  expect(x).toBe(0);
-  expect(width).toBe(1280 - short.scrollbar);
 
   const dialog = await open(page, "search");
   expect(await layout(page), "while open").toEqual(short);
@@ -117,12 +119,11 @@ test("without the kept space the page does jump: this test can fail", async ({ p
   await page.goto("/work");
   await page.addStyleTag({ content: "html { scrollbar-gutter: auto !important; }" });
   const before = await layout(page);
-  expect(before.scrollbar).toBeGreaterThan(8);
+  const space = await scrollbar(page);
+  expect(space).toBeGreaterThan(8);
   await open(page, "search");
   const during = await layout(page);
-  expect(during.scrollbar).toBe(0);
-  expect(during.boxes["body > header"][2]).toBe(
-    before.boxes["body > header"][2] + before.scrollbar,
-  );
+  expect(await scrollbar(page)).toBe(0);
+  expect(during.boxes["body > header"][2]).toBe(before.boxes["body > header"][2] + space);
   expect(during.boxes[".header-tools"][0]).not.toBe(before.boxes[".header-tools"][0]);
 });
