@@ -15,6 +15,8 @@ const DELAY = 1500;
 const FONT = /\.woff2$/;
 /** The files styles/fonts.ts loads from its script. */
 const LATE = /-(400-italic|600-normal)-[^/]*\.woff2$/;
+/** The files the stylesheet names and the document preloads: the two romans. */
+const ROMAN = /-(wght-normal|400-normal)-[^/]*\.woff2$/;
 
 type Change = { t: number; what: string; from: string; to: string };
 type Seen = {
@@ -419,5 +421,57 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
     if (browserName === "chromium") {
       expect(inFirstFrame, "a cached load with the faces in its first frame").toBe(true);
     }
+  });
+
+  test("once cached, a roman that misses the first paint keeps them out", async ({
+    page,
+    browserName,
+  }) => {
+    // The first visit leaves the note that the two files are cached, so on the next load the
+    // script asks for them at once and has them before the first frame.
+    await page.goto(post);
+    await hydrated(page);
+    await lateFontsLoaded(page);
+    await page.evaluate(() => document.fonts.ready);
+
+    // That next load, with only the romans late: the page is in the fallback roman for the
+    // visit, and the web italic and semibold must not be set beside it.
+    const held = await slowFonts(page, ROMAN);
+    await watching(page, browserName);
+    await page.reload({ waitUntil: "commit" });
+    await hydrated(page);
+    // What the script's own question ("is the web roman the face in use") reads while the
+    // romans are on their way, and what the page has by then.
+    const during = { web: await drawnInWebFont(page), added: await lateFaces(page) };
+    await expect.poll(() => held.arrived, { timeout: 15_000 }).toBeGreaterThanOrEqual(2);
+    await page.evaluate(() => document.fonts.ready);
+    await frames(page, 6);
+    const web = await drawnInWebFont(page);
+    const added = await lateFaces(page);
+    const noted = await page.evaluate(() => localStorage.getItem("fonts") !== null);
+    await readThrough(page);
+    const end = await seen(page);
+    test.info().annotations.push({
+      type: "measure",
+      description: JSON.stringify({
+        fcp: end.fcp,
+        fonts: held,
+        during,
+        web,
+        added,
+        facesAtFirstFrame: end.faces[0],
+        noted,
+        shift: end.shift,
+        changes: end.changes.slice(0, 2),
+      }),
+    });
+
+    expect(web, "web fonts in use, the romans having missed the first paint").toEqual({
+      sans: false,
+      serif: false,
+    });
+    expect(added, "late faces beside the fallback roman").toBe(0);
+    expect(end.changes, "text that changed face or moved after it was on screen").toEqual([]);
+    expect(end.shift, "layout shift").toBe(0);
   });
 });
