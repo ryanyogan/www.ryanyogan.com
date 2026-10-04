@@ -45,15 +45,16 @@ const column = (page: Page) =>
     prose.appendChild(probe);
     const ch = probe.getBoundingClientRect().width;
     probe.remove();
-    // The post's first paragraph on one line, in the column's font: how wide real text is set.
+    // The start of the post's running text on one line, in the column's font: how wide real
+    // text is set.
     const line = document.createElement("span");
     line.style.cssText = "position:absolute;visibility:hidden;white-space:nowrap";
-    line.textContent = first.textContent;
+    line.textContent = [...prose.querySelectorAll(":scope > p")]
+      .map((p) => p.textContent)
+      .join(" ")
+      .slice(0, 600);
     prose.appendChild(line);
     const text = line.getBoundingClientRect().width;
-    // The same line in the fallback face by name, whatever the column is drawn in.
-    line.style.fontFamily = '"Source Serif 4 Fallback", monospace';
-    const named = line.getBoundingClientRect().width;
     line.remove();
     const rect = prose.getBoundingClientRect();
     return {
@@ -61,7 +62,6 @@ const column = (page: Page) =>
       characters: rect.width / ch,
       ch,
       text,
-      named,
       left: rect.left,
       right: document.documentElement.clientWidth - rect.right,
       size: Number.parseFloat(getComputedStyle(prose).fontSize),
@@ -72,14 +72,18 @@ const column = (page: Page) =>
 // The rule is about the page as designed, in Source Serif 4, and a "character" is that face's
 // "0". The romans are `optional`, so a reader whose fonts miss the first paint reads the post
 // in the fallback face (styles/fonts.css), and on a busy machine so does a test: the page is
-// therefore opened in each face on purpose (e2e/fonts.ts) and held to the rule in both.
+// therefore opened in each face on purpose (e2e/fonts.ts), and each is held to what it owes.
 //
-// In the fallback face the "0" itself is the wrong ruler: that face is scaled so that running
-// text is as wide as in the web font, which leaves its figures wider (Liberation Serif's "0"
-// is 0.5em, times 117%), and the same column of the same words then counts fewer of them
-// (25.5 at 320px, which is how this test used to fail now and then). So there the column must
-// be the same box at the same type size, and its measure is the web face's, corrected by how
-// much wider or narrower the fallback sets the post's own first paragraph.
+// In the fallback face the "0" is the wrong ruler. That face is scaled so that running text is
+// as wide as in the web font, which leaves its figures wider: on the CI runner Liberation
+// Serif's "0" is 11px where Source Serif 4's is 10px, and the same 280px column at 320px then
+// counts 25.5 of them, not 28.0. (This test read whichever face the load happened to get, and
+// so failed now and then.) So in the fallback face:
+// - the column must be the same box at the same type size, at every width, which on a phone
+//   is the rule itself (the whole screen between the gutters, at 17px or more);
+// - its measure is the web face's, corrected by how much wider or narrower the fallback sets
+//   the post's own text, and above a phone that is held to 45 to 75 as well. On a phone the
+//   count of 26 is the web face's to hold: the column cannot be made any wider there.
 test("the reading column of a post is 45 to 75 characters wide, and as wide as a phone allows", async ({
   page,
 }) => {
@@ -98,9 +102,11 @@ test("the reading column of a post is 45 to 75 characters wide, and as wide as a
     if (width > 640) {
       if (characters < 45) report.push(`${at}: ${measure} characters, under 45`);
     } else {
-      // A phone cannot hold 45 characters at a readable size (320px is about 31 at 18px).
+      // A phone cannot hold 45 characters at a readable size (320px is 28 at 18px).
       // There the column takes the whole screen between the page gutters, at 17px or more.
-      if (characters < 26) report.push(`${at}: ${measure} characters, under 26`);
+      if (face === "web" && characters < 26) {
+        report.push(`${at}: ${measure} characters, under 26`);
+      }
       if (drawn.left > 33 || drawn.right > 33) {
         report.push(`${at}: column inset ${drawn.left} and ${drawn.right}px`);
       }
@@ -134,23 +140,8 @@ test("the reading column of a post is 45 to 75 characters wide, and as wide as a
     // more or less of them.
     const set = drawn.text / designed.text;
     rule("fallback", width, designed.characters / set, drawn);
-    if (width === 320 || width === 1280) {
-      const client = await page.context().newCDPSession(page);
-      await client.send("DOM.enable");
-      await client.send("CSS.enable");
-      const { root } = await client.send("DOM.getDocument");
-      const { nodeId } = await client.send("DOM.querySelector", {
-        nodeId: root.nodeId,
-        selector: ".prose > p",
-      });
-      const { fonts } = await client.send("CSS.getPlatformFontsForNode", { nodeId });
-      await client.detach();
-      measured.push(
-        `${width} drawn in ${fonts.map((font) => font.familyName).join("+")}: column ${drawn.width}px at ${drawn.size}px, "0" ${drawn.ch.toFixed(2)}px (web ${designed.ch.toFixed(2)}), line ${drawn.text.toFixed(0)}px (web ${designed.text.toFixed(0)}, in the named fallback ${drawn.named.toFixed(0)}, web page's named fallback ${designed.named.toFixed(0)})`,
-      );
-    }
     measured.push(
-      `${width}: web ${designed.characters.toFixed(1)}, fallback ${(designed.characters / set).toFixed(1)} (text ${set.toFixed(4)} as wide; by its own "0" ${drawn.characters.toFixed(1)})`,
+      `${width}: ${drawn.width}px at ${drawn.size}px; web ${designed.characters.toFixed(1)} ("0" ${designed.ch.toFixed(2)}px), fallback ${(designed.characters / set).toFixed(1)} (text ${set.toFixed(4)} as wide; by its own "0", ${drawn.ch.toFixed(2)}px, ${drawn.characters.toFixed(1)})`,
     );
   }
   test.info().annotations.push({
