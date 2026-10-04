@@ -43,7 +43,7 @@ function NowPage() {
           <p className="gut lab">Now</p>
           <div className="col">
             <h1>What I am doing now.</h1>
-            <p className="small post-meta">
+            <p className="small mt-[18px]">
               Updated <time dateTime={nowPage.isoDate}>{nowPage.updated}</time> &middot;{" "}
               {nowPage.place}
             </p>
