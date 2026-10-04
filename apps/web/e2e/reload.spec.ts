@@ -281,7 +281,7 @@ test("the fallback faces are found on Linux and set text as wide as the web font
       const span = document.createElement("span");
       span.style.cssText = `position:absolute;white-space:nowrap;font:400 100px ${family}`;
       span.textContent = text;
-      document.body.append(span);
+      document.body.appendChild(span);
       const measured = span.getBoundingClientRect().width;
       span.remove();
       return measured;
