@@ -241,3 +241,48 @@ for (const [size, viewport] of [
     }
   });
 }
+
+// The fallback faces in styles/fonts.css are what a reader sees until a web font arrives.
+// They are local() faces, which a machine without the named font ignores without a word: this
+// runner has Liberation Sans and Liberation Serif, as most Linux desktops do, and neither
+// Arial nor Georgia.
+test("the fallback faces are found on Linux and set text as wide as the web fonts", async ({
+  page,
+}) => {
+  await page.goto("/work");
+  const widths = await page.evaluate(async () => {
+    const text =
+      "The quick brown fox jumps over the lazy dog, and then reads the rest of the page.";
+    const families = ["Hanken Grotesk", "Source Serif 4"];
+    await Promise.all(
+      families.flatMap((family) => [
+        document.fonts.load(`100px "${family}"`, text),
+        document.fonts.load(`100px "${family} Fallback"`, text),
+      ]),
+    );
+    const width = (family: string) => {
+      const span = document.createElement("span");
+      span.style.cssText = `position:absolute;white-space:nowrap;font:400 100px ${family}`;
+      span.textContent = text;
+      document.body.append(span);
+      const measured = span.getBoundingClientRect().width;
+      span.remove();
+      return measured;
+    };
+    return families.map((family) => ({
+      family,
+      web: width(`"${family}", monospace`),
+      fallback: width(`"${family} Fallback", monospace`),
+      none: width("monospace"),
+    }));
+  });
+  for (const { family, web, fallback, none } of widths) {
+    test.info().annotations.push({
+      type: "measure",
+      description: `${family}: fallback is ${(fallback / web).toFixed(4)} of the web font's width`,
+    });
+    expect(web, `${family} loaded`).not.toBe(none);
+    expect(fallback, `${family} Fallback was found`).not.toBe(none);
+    expect(Math.abs(fallback / web - 1), `${family} Fallback width`).toBeLessThan(0.03);
+  }
+});
