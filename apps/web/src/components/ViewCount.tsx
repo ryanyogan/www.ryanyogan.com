@@ -35,7 +35,10 @@ export function PostViews({ slug }: { slug: string }) {
 async function fetchJson(url: string, method: "GET" | "POST"): Promise<unknown> {
   try {
     const response = await fetch(url, { method });
-    return response.ok ? await response.json() : undefined;
+    if (response.ok) return await response.json();
+    // An unread body keeps the request open; nothing here wants an error's text.
+    await response.body?.cancel();
+    return undefined;
   } catch {
     // Offline, blocked or not JSON: the count is decoration, the page goes without it.
     return undefined;
