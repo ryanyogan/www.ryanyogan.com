@@ -1269,6 +1269,9 @@
     text-decoration: underline;
     text-decoration-color: var(--rule);
     text-underline-offset: 0.3em;
+    /* A long address (github.com/owner/repo) has no space to break at: at 200% text on a
+       320px screen it must wrap inside the column, not widen the page. */
+    overflow-wrap: anywhere;
   }
 
   .ext a:hover {
