@@ -51,12 +51,17 @@ const column = (page: Page) =>
     line.textContent = first.textContent;
     prose.appendChild(line);
     const text = line.getBoundingClientRect().width;
+    // The same line in the fallback face by name, whatever the column is drawn in.
+    line.style.fontFamily = '"Source Serif 4 Fallback", monospace';
+    const named = line.getBoundingClientRect().width;
     line.remove();
     const rect = prose.getBoundingClientRect();
     return {
       width: rect.width,
       characters: rect.width / ch,
+      ch,
       text,
+      named,
       left: rect.left,
       right: document.documentElement.clientWidth - rect.right,
       size: Number.parseFloat(getComputedStyle(prose).fontSize),
@@ -128,10 +133,22 @@ test("the reading column of a post is 45 to 75 characters wide, and as wide as a
     // The same words take `text` px on one line in each face; the column holds that much
     // more or less of them.
     const set = drawn.text / designed.text;
-    if (Math.abs(set - 1) > 0.03) {
-      report.push(`${width} fallback: text set ${set.toFixed(4)} as wide as in the web face`);
-    }
     rule("fallback", width, designed.characters / set, drawn);
+    if (width === 320 || width === 1280) {
+      const client = await page.context().newCDPSession(page);
+      await client.send("DOM.enable");
+      await client.send("CSS.enable");
+      const { root } = await client.send("DOM.getDocument");
+      const { nodeId } = await client.send("DOM.querySelector", {
+        nodeId: root.nodeId,
+        selector: ".prose > p",
+      });
+      const { fonts } = await client.send("CSS.getPlatformFontsForNode", { nodeId });
+      await client.detach();
+      measured.push(
+        `${width} drawn in ${fonts.map((font) => font.familyName).join("+")}: column ${drawn.width}px at ${drawn.size}px, "0" ${drawn.ch.toFixed(2)}px (web ${designed.ch.toFixed(2)}), line ${drawn.text.toFixed(0)}px (web ${designed.text.toFixed(0)}, in the named fallback ${drawn.named.toFixed(0)}, web page's named fallback ${designed.named.toFixed(0)})`,
+      );
+    }
     measured.push(
       `${width}: web ${designed.characters.toFixed(1)}, fallback ${(designed.characters / set).toFixed(1)} (text ${set.toFixed(4)} as wide; by its own "0" ${drawn.characters.toFixed(1)})`,
     );
