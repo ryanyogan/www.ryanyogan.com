@@ -271,7 +271,8 @@ test("the fallback faces are found on Linux and set text as wide as the web font
     const text =
       "The quick brown fox jumps over the lazy dog, and then reads the rest of the page.";
     const families = ["Hanken Grotesk", "Source Serif 4"];
-    await Promise.all(
+    // Settled, not all: the rule for a face this machine lacks (Georgia) rejects.
+    await Promise.allSettled(
       families.flatMap((family) => [
         document.fonts.load(`100px "${family}"`, text),
         document.fonts.load(`100px "${family} Fallback"`, text),
