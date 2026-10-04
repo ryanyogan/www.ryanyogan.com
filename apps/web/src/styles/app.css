@@ -293,10 +293,6 @@
     text-decoration-color: var(--accent);
   }
 
-  .link:hover {
-    color: var(--accent);
-  }
-
   /* Header, footer and other quiet controls: plain text, 44px to press. */
   .quiet {
     display: inline-flex;
@@ -307,12 +303,8 @@
     cursor: pointer;
   }
 
-  .quiet:hover,
   .quiet[aria-current="page"] {
     color: var(--ink);
-  }
-
-  .quiet[aria-current="page"] {
     text-decoration: underline;
     text-decoration-color: var(--accent);
     text-underline-offset: 0.5em;
@@ -400,11 +392,6 @@
     text-underline-offset: 0.35em;
   }
 
-  .more a:hover,
-  .mail:hover {
-    color: var(--accent);
-  }
-
   .home b {
     font-weight: 500;
     color: var(--ink);
@@ -453,10 +440,6 @@
     min-width: 44px;
     color: var(--ink-soft);
     text-decoration: underline;
-  }
-
-  .else a:hover {
-    color: var(--ink);
   }
 
   .hero {
@@ -536,12 +519,6 @@
     display: flex;
     align-items: center;
     min-height: 44px;
-  }
-
-  .plist a:hover,
-  .wlist a:hover {
-    text-decoration: underline;
-    text-decoration-color: var(--accent);
   }
 
   .plist .sum {
@@ -917,10 +894,6 @@
     font-family: var(--font-sans);
   }
 
-  .adm-input:hover {
-    border-color: var(--muted);
-  }
-
   .adm-input:focus-visible {
     border-color: var(--ink);
     outline-offset: 1px;
@@ -967,10 +940,6 @@
     cursor: pointer;
   }
 
-  .adm-btn:hover:not(:disabled) {
-    color: var(--accent);
-  }
-
   .adm-btn:disabled {
     color: var(--muted);
     text-decoration: none;
@@ -985,11 +954,6 @@
     text-decoration: none;
   }
 
-  .adm-btn-primary:hover:not(:disabled) {
-    background: var(--ink-soft);
-    color: var(--paper);
-  }
-
   .adm-btn-primary:disabled {
     background: var(--muted);
     color: var(--paper);
@@ -998,11 +962,6 @@
   .adm-btn-danger {
     color: var(--error);
     text-decoration-color: var(--error);
-  }
-
-  .adm-btn-danger:hover:not(:disabled) {
-    color: var(--error);
-    text-decoration-thickness: 2px;
   }
 
   /* The preview reads as the public page does. */
@@ -1212,12 +1171,8 @@
     text-underline-offset: 0.5em;
   }
 
-  .pick button:hover,
   .pick button[aria-pressed="true"] {
     color: var(--ink);
-  }
-
-  .pick button[aria-pressed="true"] {
     font-weight: 500;
     text-decoration: underline;
     text-decoration-color: var(--accent);
@@ -1228,12 +1183,6 @@
     align-items: baseline;
     justify-content: space-between;
     gap: 16px;
-  }
-
-  .pd-nav a:hover,
-  .crumbs a:hover {
-    text-decoration: underline;
-    text-decoration-color: var(--accent);
   }
 
   .tech {
@@ -1265,10 +1214,6 @@
     /* A long address (github.com/owner/repo) has no space to break at: at 200% text on a
        320px screen it must wrap inside the column, not widen the page. */
     overflow-wrap: anywhere;
-  }
-
-  .ext a:hover {
-    color: var(--accent);
   }
 
   /* Project page */
@@ -1547,11 +1492,6 @@
     text-wrap: balance;
   }
 
-  .post-nav a:hover {
-    text-decoration: underline;
-    text-decoration-color: var(--accent);
-  }
-
   .post-nav .older {
     text-align: right;
   }
@@ -1599,6 +1539,47 @@
 
     .wr-year .views {
       grid-area: 1 / 2;
+    }
+  }
+
+  /* Hover only where a pointer can hover: after a tap on a touch screen the colour would stay. */
+  @media (hover: hover) {
+    .link:hover,
+    .more a:hover,
+    .mail:hover,
+    .ext a:hover,
+    .adm-btn:hover:not(:disabled) {
+      color: var(--accent);
+    }
+
+    .quiet:hover,
+    .else a:hover,
+    .pick button:hover {
+      color: var(--ink);
+    }
+
+    .plist a:hover,
+    .wlist a:hover,
+    .pd-nav a:hover,
+    .crumbs a:hover,
+    .post-nav a:hover {
+      text-decoration: underline;
+      text-decoration-color: var(--accent);
+    }
+
+    /* :where keeps this below the focus and invalid borders. */
+    .adm-input:where(:hover) {
+      border-color: var(--muted);
+    }
+
+    .adm-btn-primary:hover:not(:disabled) {
+      background: var(--ink-soft);
+      color: var(--paper);
+    }
+
+    .adm-btn-danger:hover:not(:disabled) {
+      color: var(--error);
+      text-decoration-thickness: 2px;
     }
   }
 }
@@ -1688,8 +1669,10 @@
   color: var(--ink-soft);
 }
 
-.prose a:hover {
-  color: var(--accent);
+@media (hover: hover) {
+  .prose a:hover {
+    color: var(--accent);
+  }
 }
 
 .prose strong {
@@ -1760,6 +1743,19 @@
   margin: 2.5em 0;
   border: 0;
   border-top: 1px solid var(--rule);
+}
+
+/* Footnotes (lib/markdown.ts): the notes close the body, small, under a hairline. */
+.prose section {
+  margin-top: 2.5em;
+  padding-top: 0.5em;
+  border-top: 1px solid var(--rule);
+  font-size: 0.875em;
+}
+
+.prose section li,
+.prose sup a {
+  scroll-margin-top: 24px;
 }
 
 /* Inline code: the monospace face and a faint tone, no border or pill. */

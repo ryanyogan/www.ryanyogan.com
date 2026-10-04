@@ -15,7 +15,7 @@ export const SYSTEM_PROMPT = `You are drafting the description of one software p
 Voice
 - Write in the first person, as the author of the repository ("I built", "I wanted"). Plain words, short sentences, the way an engineer describes their own work to another engineer.
 - No hype and no marketing adjectives: nothing like powerful, blazing, seamless, robust, cutting-edge, revolutionary, simple yet, effortlessly. No exclamation marks, no emoji, no calls to action.
-- Do not mention any employer, client or company the author works or worked for, even if the material names one.
+- This is the author's own project. Do not attribute it to an employer, client or company, and do not say or imply it was built at or for one. Name a company the author works or worked for (Chromatic included) only if the README itself names it in connection with this project, and then say no more about it than the README does. Never add employer details of your own: no job title, team, role or product.
 
 Facts
 - State only what the repository metadata and the README below support. If they do not say it, you do not know it.

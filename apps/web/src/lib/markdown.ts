@@ -8,7 +8,8 @@
 // whatever it contains. Raw HTML in the source is never parsed as HTML (it is shown as the
 // text that was typed), rehype-sanitize then keeps only GitHub's allowlist of elements,
 // attributes and URL schemes, and the last step replaces the attributes of every element it
-// knows with a fixed set (no classes, apart from the highlighter's own on code; a heading's id is made here). See markdown.test.ts.
+// knows with a fixed set (no classes, apart from the highlighter's own on code; a heading's id
+// and a footnote's two ids are made here). See markdown.test.ts.
 import type { Element, ElementContent, Properties, Root, RootContent } from "hast";
 import elixir from "highlight.js/lib/languages/elixir";
 import { common } from "lowlight";
@@ -128,6 +129,18 @@ function headingId(node: Element, ids: Set<string>): string {
   return id;
 }
 
+/**
+ * A footnote's name, from the id or href remark-rehype gave it and the sanitiser may have
+ * prefixed: "#user-content-fn-1" is "1", and a second reference to the same note is "1-2".
+ * The ids made from it, `fn_1` on the note and `fnref_1` on the reference, have an
+ * underscore, which no heading id (letters, digits and hyphens) and no id in RESERVED_IDS
+ * has, so neither can be taken by one.
+ */
+function footnote(value: unknown, kind: "fn" | "fnref"): string | undefined {
+  const name = text(value)?.match(/^#?(?:user-content-)*(fn|fnref)-([\w%.-]+)$/);
+  return name?.[1] === kind ? name[2] : undefined;
+}
+
 /** A leading `WIDTHxHEIGHT` in an image's title is its size; the rest is its caption. */
 const TITLE = /^(\d{1,5})x(\d{1,5})(?:\s+(.+))?$/;
 
@@ -198,6 +211,15 @@ function image(node: Element, images: ProseImages, lead: boolean): Element {
 function style(node: Element, context: Context, lead = false): Element {
   const { images } = context;
   const tag = node.tagName;
+  if (tag === "section" && node.properties.dataFootnotes !== undefined) {
+    // The notes at the end of the body: the list alone, named for a screen reader. The
+    // heading remark-rehype writes above it is left out, so it takes no heading id.
+    return el(
+      tag,
+      { ariaLabel: "Footnotes" },
+      elements(node, "ol").map((list) => style(list, context)),
+    );
+  }
   // Before the children, so that ids are given out in the order the headings are read.
   const id = /^h[1-6]$/.test(tag) ? headingId(node, context.ids) : undefined;
   const children = node.children.map((child) =>
@@ -220,11 +242,29 @@ function style(node: Element, context: Context, lead = false): Element {
     }
   }
   if (id) return el(tag, { id }, children);
+  if (tag === "li") {
+    const note = footnote(node.properties.id, "fn");
+    if (note) return el(tag, { id: `fn_${note}` }, children);
+  }
   if (bare.has(tag)) return el(tag, {}, children);
 
   switch (tag) {
     case "a": {
       const href = text(node.properties.href);
+      // A footnote's number links to its note, and the note's "Back" to the number.
+      if (node.properties.dataFootnoteRef !== undefined) {
+        const note = footnote(href, "fn");
+        const mark = footnote(node.properties.id, "fnref");
+        if (note && mark) {
+          const label = `Footnote ${plain(node)}`;
+          return el(tag, { href: `#fn_${note}`, id: `fnref_${mark}`, ariaLabel: label }, children);
+        }
+      }
+      if (node.properties.dataFootnoteBackref !== undefined) {
+        const mark = footnote(href, "fnref");
+        const label = text(node.properties.ariaLabel);
+        if (mark) return el(tag, { href: `#fnref_${mark}`, ariaLabel: label }, children);
+      }
       const properties: Properties = { href };
       if (href?.startsWith("http")) {
         properties.target = "_blank";
@@ -296,7 +336,8 @@ function build() {
       .use(remarkGfm)
       // "Dangerous" only passes raw HTML through as `raw` nodes; the next step turns each
       // into text, and nothing here ever parses one.
-      .use(remarkRehype, { allowDangerousHtml: true })
+      // A footnote's way back is the word, not remark's arrow (generated-look.test.ts).
+      .use(remarkRehype, { allowDangerousHtml: true, footnoteBackContent: "Back" })
       .use(rehypeRawAsText)
       .use(rehypeSanitize)
       // After the sanitiser: these two only add attributes this file controls.
