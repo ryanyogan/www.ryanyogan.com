@@ -450,6 +450,7 @@
     display: flex;
     align-items: center;
     min-height: 44px;
+    min-width: 44px;
     color: var(--ink-soft);
     text-decoration: underline;
   }
@@ -515,6 +516,11 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 48px 64px;
+  }
+
+  /* On /projects the column is wide: keep a status within reach of its title. */
+  .plist {
+    max-width: 40rem;
   }
 
   .plist li {
