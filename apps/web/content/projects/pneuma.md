@@ -3,8 +3,10 @@ title: "Pneuma"
 summary: "Terminal coding agent with plan and build modes"
 tagline: "A terminal coding agent built from scratch: a streaming agent loop, seven tools, and plan and build modes where plan mode withholds the write tools."
 tech:
-  - Terminal
-  - Agent loop
+  - TypeScript
+  - Bun
+  - Hono
+  - PostgreSQL
 year: "2026"
 github: "https://github.com/ryanyogan/pneuma"
 group: tools-for-agents

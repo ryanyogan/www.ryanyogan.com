@@ -74,7 +74,7 @@ function ProjectsPage() {
             <h1 id="proj-h">Everything I&rsquo;ve built, with its real status.</h1>
             <p className="lede">
               Live means you can open it. Prototype means prototype. Private means I will describe
-              it and not link it. Nothing here is rounded up.
+              it and not link it. Retired means I stopped working on it. Nothing here is rounded up.
             </p>
             <div role="group" aria-label="Filter projects by status" className="pick">
               <span>Show</span>

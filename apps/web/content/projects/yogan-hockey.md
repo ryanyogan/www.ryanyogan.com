@@ -17,36 +17,25 @@ status: live
 order: 1
 ---
 
-Real-time NHL stats dashboard with live play-by-play and a dedicated tracker for Andrew's DEL2 career. Updates instantly without page refreshes on a $5/month server. Built because every existing hockey app is either slow, ad-infested, or both.
+A live NHL scores and stats dashboard, with a dedicated tracker for my brother Andrew's season in Germany's DEL2. Pages update without a refresh. It runs on a single small Fly.io machine. Built because every existing hockey app is either slow, ad-infested, or both.
 
 ## Features
 
-- **Live NHL Scores** — Real-time game updates with 30-second polling via GenServer army
-- **Playoff Bracket Tracker** — Full bracket visualization with elimination scenarios
-- **Per-Game Live View** — Ice rink visualization, period-by-period scoring, shot counts, penalty tracking, and live play-by-play stream
-- **Team & Player Stats** — Deep stats pages with sortable tables and season trends
-- **Andrew's DEL2 Tracker** — Dedicated section for my brother's pro career in Germany's DEL2
-- **Distributed Caching** — ETS-powered multi-region cache replication via PubSub
+- **Live NHL scores**, polled every 30 seconds
+- **Standings and team pages**, refreshed every five minutes
+- **Player stats**
+- **Andrew's DEL2 tracker**, a section for my brother's pro season in Germany, read from Elite Prospects every five minutes
 
-## The GenServer Army
+## Three GenServers
 
-The architecture is built around specialized GenServer processes: LiveScoresServer polls every 30 seconds, TeamsServer pre-populates all 32 teams on startup. Dynamic GamePlayServer processes are spawned on-demand when users visit individual game pages, tracking connected viewers and auto-shutting down when the last viewer disconnects.
+The supervision tree has three polling processes. LiveScoresServer polls live scores every 30 seconds. TeamsServer polls teams and standings every five minutes. YoganStatsServer polls Andrew's stats every five minutes and backs off on failure. Each one owns a single concern, crashes on its own, and is restarted by its supervisor.
 
-## ETS: The Secret Weapon
+The NHL data comes from ESPN's public endpoints.
 
-ETS (Erlang Term Storage) replaces Redis entirely. Sub-microsecond lookups with concurrent reads, no locks, and no network hops. For a real-time sports app, that's the difference between "instant" and "noticeable" — roughly 1000x faster than Redis for read-heavy workloads.
+## ETS Instead of Redis
 
-## Distributed Cache Replication
+Each GenServer writes what it fetched into ETS (Erlang Term Storage), and Phoenix PubSub pushes the change to every connected LiveView. Reads happen in-process, with no network hop and no external cache. For one node that is enough.
 
-Running on Fly.io across multiple regions, ETS caches are kept in sync via Phoenix PubSub. When any node updates its cache, all other nodes receive the update and sync their local ETS tables. Users in Europe and the US get identical sub-millisecond response times.
+## Status
 
-## Performance
-
-| Metric                | This App    | Typical Sports App |
-| --------------------- | ----------- | ------------------ |
-| Page load             | ~200ms      | ~800ms+            |
-| Per-connection memory | ~2KB        | ~50KB              |
-| Monthly cost          | $5          | $25-100            |
-| Data freshness        | 30s polling | Minutes stale      |
-
-All of this on a single $5/month Fly.io instance serving dozens of concurrent users during game nights.
+Live at [yogan-hockey.fly.dev](https://yogan-hockey.fly.dev), on one shared-CPU Fly.io machine with 512 MB of memory.

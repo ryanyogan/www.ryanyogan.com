@@ -55,7 +55,7 @@ jobs:
         run: pnpm test
 
       # This checkout is a fresh clone: no local database yet. `pnpm dev` must migrate and
-      # seed it by itself and serve / and /projects with the 13 projects (a few seconds).
+      # seed it by itself and serve / and /projects with the 17 projects (a few seconds).
       - name: Fresh clone dev check
         run: sh scripts/fresh-clone-check.sh --in-place
 
