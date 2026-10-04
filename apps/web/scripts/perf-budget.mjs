@@ -52,17 +52,21 @@ const FONT_BUDGET = 150 * KB;
  * API call), two above what October 2026 measured: 7 or 6, 8 for a project page, 10 for a
  * post. Before the shared modules were one chunk a page made 25 to 28. Production adds three
  * this run does not see (the favicon and Cloudflare's analytics script and its beacon).
+ * Every page now fetches the serif italic and semibold after its load event, whether or not
+ * it sets text in them (src/styles/fonts.ts: so that they are cached for the pages that do):
+ * two requests and 40.7 KB more on /now, /projects and /writing, which measure 9, 9 and 10.
  *
  * `html` is a ceiling on the longest post's document, gzip, just above the 25.9 KB (91.6 KB
  * raw) it measured once the body was no longer in it a second time as loader data
- * (src/lib/content.ts); with both copies it was 37.4 KB.
+ * (src/lib/content.ts); with both copies it was 37.4 KB. The script that loads those two
+ * faces is in every document: it measures 27.1 KB (93.8 KB raw) with it.
  */
-const POST_HTML_BUDGET = 27 * KB;
+const POST_HTML_BUDGET = 28 * KB;
 const routes = [
   { path: "/", js: JS_BUDGET, requests: 9 },
   { path: "/work", js: JS_BUDGET, requests: 9 },
-  { path: "/now", js: JS_BUDGET, requests: 8 },
-  { path: "/projects", js: JS_BUDGET, requests: 8 },
+  { path: "/now", js: JS_BUDGET, requests: 9 },
+  { path: "/projects", js: JS_BUDGET, requests: 9 },
   { path: "/projects/lincoln-project", js: JS_BUDGET, requests: 10 },
   { path: "/writing", js: JS_BUDGET, requests: 10 },
   {
