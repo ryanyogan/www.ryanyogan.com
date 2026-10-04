@@ -119,7 +119,20 @@ export const nowPage: NowPage = {
   place: nowData.place as string,
 };
 
-/** The rendered body of /now. */
-export async function loadNowHtml(): Promise<string> {
-  return nowHtml["../../content/now.md"]();
+// The body of /now, kept out of the loader's data and read back from the server's element when
+// the page is opened by its URL, as a post's is (above).
+let nowBody: string | undefined;
+
+if (!import.meta.env.SSR && /^\/now\/?$/.test(location.pathname)) {
+  nowBody = document.querySelector(".post-body > .prose")?.innerHTML;
+}
+
+/** Loads the rendered body of /now: the page's loader waits for it. */
+export async function loadNowHtml(): Promise<void> {
+  nowBody ??= await nowHtml["../../content/now.md"]();
+}
+
+/** The body `loadNowHtml` has loaded. */
+export function nowBodyHtml(): string {
+  return nowBody ?? "";
 }

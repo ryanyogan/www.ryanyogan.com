@@ -14,7 +14,16 @@ export default defineConfig({
   reporter: [["line"]],
   // Its own directory, so a run does not wipe the suite's traces in test-results/.
   outputDir: "screenshots/.playwright",
-  projects: [{ name: "shots", use: { ...devices["Desktop Chrome"] } }],
+  // Overlay scrollbars, as in playwright.config.ts: a phone-size shot has no scrollbar space.
+  projects: [
+    {
+      name: "shots",
+      use: {
+        ...devices["Desktop Chrome"],
+        launchOptions: { args: ["--enable-features=OverlayScrollbar"] },
+      },
+    },
+  ],
   // Only the public preview: no admin, no stubs.
   webServer: servers.filter((server) => server.url === `${base.use?.baseURL}/work`),
 });

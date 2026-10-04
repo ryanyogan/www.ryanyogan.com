@@ -782,7 +782,14 @@
     }
   }
 
-  /* Keyboard layer: command palette and key help. */
+  /* Keyboard layer: command palette and key help. An open dialog stops the page scrolling,
+     which takes a classic scrollbar away. The scrollbar's space is kept at all times, on a
+     page too short to scroll as well, so the page under a dialog does not widen and jump
+     sideways (e2e/scrollbar.spec.ts). Overlay scrollbars (phones, macOS) take no space. */
+  html {
+    scrollbar-gutter: stable;
+  }
+
   html:has(dialog[open]) {
     overflow: hidden;
   }
@@ -1494,6 +1501,20 @@
 
   .views svg {
     flex: none;
+  }
+
+  /* The number is the one thing on a public page that is not in the server's HTML. It fades
+     into its box over 180ms, opacity only, so that it arrives rather than pops. */
+  @media (prefers-reduced-motion: no-preference) {
+    .views > * {
+      animation: views-in 180ms ease-out;
+    }
+  }
+
+  @keyframes views-in {
+    from {
+      opacity: 0;
+    }
   }
 
   /* The writing index: each row ends in its post's count, in the date's type and on the

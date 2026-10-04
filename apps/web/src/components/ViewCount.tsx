@@ -5,7 +5,7 @@ import { VIEWS_API, formatViews, readViewCounts, readViews } from "~/lib/post-vi
 /**
  * A view count: the rising-trend icon and the number, read out as "1,204 views". With no
  * number (not loaded yet, or the request failed) it is an empty box of the same size
- * (`.views` in app.css), so nothing on the page moves when the number arrives.
+ * (`.views` in app.css), so nothing on the page moves when the number arrives, and it fades in.
  *
  * In a list of posts, pair it with `useViewCounts`, which counts nothing:
  *   const counts = useViewCounts();

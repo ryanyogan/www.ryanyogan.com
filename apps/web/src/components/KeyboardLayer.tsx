@@ -178,7 +178,10 @@ function Modal({
     dialog.querySelector<HTMLElement>("[data-autofocus]")?.focus();
     return () => {
       dialog.close();
-      if (before && before.isConnected && before !== document.body) before.focus();
+      // Without scrolling: the reader may have moved the page since they last used it.
+      if (before && before.isConnected && before !== document.body) {
+        before.focus({ preventScroll: true });
+      }
     };
   }, [open]);
 

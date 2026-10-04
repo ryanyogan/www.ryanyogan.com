@@ -47,6 +47,11 @@ jobs:
       - name: Build
         run: pnpm build
 
+      # What the build wrote as files (served without the Worker); every other page is
+      # rendered by the Worker on request.
+      - name: Prerendered pages
+        run: cd apps/web/dist/client && find . -type f \( -name '*.html' -o -name '*.xml' -o -name '*.txt' \) | sort
+
       - name: Typecheck
         run: pnpm typecheck
 

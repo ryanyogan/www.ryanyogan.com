@@ -49,9 +49,16 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   projects: [
+    // Scrollbars that take no space, as on a phone or a Mac and as headless Chromium has
+    // always drawn the pages here; said outright because `scrollbar-gutter` (styles/app.css)
+    // would otherwise keep 15px for a scrollbar that headless mode hides. scrollbar.spec.ts
+    // runs with real ones.
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        launchOptions: { args: ["--enable-features=OverlayScrollbar"] },
+      },
       testIgnore: /mobile\.spec\.ts$/,
     },
     // The public smoke tests again at phone size, plus the mobile menu and the view count
@@ -69,7 +76,8 @@ export default defineConfig({
     // Safari's engine at iPhone size, for what Chromium emulation cannot show (font metrics,
     // hyphenation, dvh, focus). Public pages only: the device matrix, the mobile menu, the
     // page smoke tests, the view count, the route chunk tests (chunks.spec.ts is about what
-    // this engine does) and where a post's body comes from (post-body.spec.ts), plus one test
+    // this engine does), where a post's body comes from (post-body.spec.ts) and a first load
+    // with slow fonts (first-load.spec.ts: what each engine does with a late font), plus one test
     // picked by its title: the hydration check in public.spec.ts. The admin tests, axe (it
     // reads the DOM and computed colours, which do not differ by engine) and the rest, which
     // mostly only make requests, stay in Chromium.
@@ -77,8 +85,8 @@ export default defineConfig({
     {
       name: "webkit",
       use: { ...devices["iPhone 14"] },
-      testMatch: /(viewports|mobile|pages|views|chunks|post-body|public)\.spec\.ts$/,
-      grep: /(viewports|mobile|pages|views|chunks|post-body)\.spec\.ts|hydrates without a mismatch/,
+      testMatch: /(viewports|mobile|pages|views|chunks|post-body|first-load|public)\.spec\.ts$/,
+      grep: /(viewports|mobile|pages|views|chunks|post-body|first-load)\.spec\.ts|hydrates without a mismatch/,
     },
   ],
   webServer: [
