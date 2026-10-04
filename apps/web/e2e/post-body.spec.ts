@@ -93,6 +93,15 @@ test("a post's document carries its body once, as HTML", async ({ request }) => 
   }
 });
 
+test("/now carries its body once too", async ({ request }) => {
+  const html = await (await request.get("/now")).text();
+  const body = html.slice(html.indexOf('<div class="prose col push post">'));
+  // A run of plain words from the body: the same bytes in HTML and in a script's string.
+  const probe = body.match(/[A-Za-z ,]{40,}/)?.[0];
+  expect(probe, "a sentence in the body").toBeTruthy();
+  expect(html.split(probe!).length - 1, "copies of the body").toBe(1);
+});
+
 test("a post opened by its URL hydrates around the body the server sent", async ({ page }) => {
   const fetched = bodyChunks(page);
   // No script runs until the server's element has been marked and is being watched.

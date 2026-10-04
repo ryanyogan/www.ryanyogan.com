@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Prose } from "~/components/Prose";
-import { loadNowHtml, nowPage } from "~/lib/content";
+import { loadNowHtml, nowBodyHtml, nowPage } from "~/lib/content";
 import { staticOgImage } from "~/lib/og-images";
 import { WEBSITE_ID, absoluteUrl, isoDateTime, pageTitle, personRef, seo } from "~/lib/seo";
 
@@ -10,7 +10,8 @@ const description =
 // The page is content/now.md (frontmatter: `updated`, `place`). It is prerendered, so an
 // update is a commit; the same `updated` day is the <time> here and the sitemap's lastmod.
 export const Route = createFileRoute("/now")({
-  loader: async () => ({ html: await loadNowHtml() }),
+  // Returns nothing: what a loader returns is written into the document a second time.
+  loader: () => loadNowHtml(),
   head: () =>
     seo({
       title: pageTitle("Now"),
@@ -35,7 +36,6 @@ export const Route = createFileRoute("/now")({
 });
 
 function NowPage() {
-  const { html } = Route.useLoaderData();
   return (
     <main id="main" className="wrap">
       <article>
@@ -51,7 +51,7 @@ function NowPage() {
         </header>
 
         <div className="row post-body">
-          <Prose className="col push post" html={html} />
+          <Prose className="col push post" html={nowBodyHtml()} />
         </div>
       </article>
     </main>
