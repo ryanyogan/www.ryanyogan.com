@@ -379,57 +379,6 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
     // cached load does put them in the first frame is held too: the page is loaded again, a
     // few times at most, until one has.
     await watching(page, browserName);
-    // DIAGNOSTIC (temporary): when the Latin roman's face settles, as its promise, as a frame
-    // and as a timer see it.
-    await page.addInitScript(() => {
-      const rec: Record<string, unknown> = {};
-      (window as unknown as { __rec: object }).__rec = rec;
-      const now = () => Math.round(performance.now() * 10) / 10;
-      let rf: FontFace | undefined;
-      const find = () => {
-        if (rf) return rf;
-        for (const face of document.fonts) {
-          if (face.family.replace(/["']/g, "") !== "Source Serif 4") continue;
-          if (!rec.found)
-            rec[`face ${face.unicodeRange.slice(0, 9)}`] ??= `${now()} ${face.status}`;
-          if (!rf && /^U\+0+-/i.test(face.unicodeRange)) {
-            rf = face;
-            rec.found = now();
-            rec.statusWhenFound = face.status;
-            rec.range = face.unicodeRange.slice(0, 12);
-            void face.loaded.then(
-              () => (rec.loadedPromise = now()),
-              () => (rec.loadedRejected = now()),
-            );
-          }
-        }
-        return rf;
-      };
-      const look = (by: string) => {
-        const face = find();
-        if (face && face.status !== "loading" && face.status !== "unloaded")
-          rec[`settled_${by}`] ??= `${now()} ${face.status}`;
-        if (face && face.status === "loading") rec[`loading_${by}`] ??= now();
-        if (document.fonts.size > 7) rec[`added_${by}`] ??= now();
-      };
-      const frame = () => {
-        rec.firstFrame ??= now();
-        look("frame");
-        if (performance.now() < 1500) requestAnimationFrame(frame);
-      };
-      requestAnimationFrame(frame);
-      const timer = () => {
-        look("timer");
-        if (performance.now() < 1500) setTimeout(timer, 0);
-      };
-      timer();
-      const channel = new MessageChannel();
-      channel.port1.onmessage = () => {
-        look("task");
-        if (performance.now() < 1500) channel.port2.postMessage(0);
-      };
-      channel.port2.postMessage(0);
-    });
     const visits: object[] = [];
     let inFirstFrame = false;
     for (let visit = 2; visit <= 6 && !inFirstFrame; visit += 1) {
@@ -451,7 +400,6 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
         web,
         changedBeforeFirstPaint: end.unseen.length,
         changes: end.changes.slice(0, 2),
-        rec: await page.evaluate(() => (window as unknown as { __rec: object }).__rec),
       });
       expect(
         end.changes,
