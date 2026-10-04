@@ -10,7 +10,9 @@ const servers = Array.isArray(base.webServer) ? base.webServer : [];
 
 export default defineConfig({
   ...base,
-  testMatch: /screenshots\.shots\.ts$/,
+  // baselines.spec.ts as well: CI runs this config with --update-snapshots=changed, which
+  // redraws the committed pictures that no longer match (see the top of that spec).
+  testMatch: /(screenshots\.shots|baselines\.spec)\.ts$/,
   reporter: [["line"]],
   // Its own directory, so a run does not wipe the suite's traces in test-results/.
   outputDir: "screenshots/.playwright",
