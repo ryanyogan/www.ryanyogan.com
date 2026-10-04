@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { expect, postSlugs, routes, test } from "./fixtures";
+import { expect, routes, test } from "./fixtures";
 
 // What a reader sees on a first visit when the fonts are slow: the page is drawn in the
 // fallback faces and stays in them, here and on the pages reached from it without a new
@@ -60,7 +60,8 @@ function watch() {
       box: [rect.x + scrollX, rect.y + scrollY, rect.width, rect.height].map(round),
       lines: [...range.getClientRects()].map((line) => round(line.width)),
     });
-    const text = element.textContent ?? "";
+    // A new page puts what it shares with the last one (the footer) somewhere else.
+    const text = location.pathname + (element.textContent ?? "");
     if (!known || known.text !== text) first.set(element, { text, state });
     else if (known.state !== state && seen.changes.length < 20) {
       seen.changes.push({ t: Math.round(performance.now()), what, from: known.state, to: state });
@@ -251,7 +252,8 @@ for (const route of routes) {
 }
 
 test.describe("the serif italic and semibold arrive after the first paint", () => {
-  const post = `/writing/${postSlugs[0]}`;
+  // A post with both: emphasis and strong text in its body.
+  const post = "/writing/building-agent-memory-from-research-to-reality";
 
   test("below the window they are added, and are there when the reader scrolls to them", async ({
     page,
@@ -262,15 +264,20 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
     await hydrated(page);
     const text = await lateText(page);
     expect(await text.evaluate((element) => element !== null), "the post has such text").toBe(true);
-    expect(
-      await text.evaluate((element) => element!.getBoundingClientRect().top >= innerHeight),
-      "it starts below the window",
-    ).toBe(true);
+    // Whether the first of it is on the first screen depends on the window.
+    const below = await text.evaluate(
+      (element) => element!.getBoundingClientRect().top >= innerHeight,
+    );
     expect(await lateFaces(page), "before the files arrive").toBe(0);
 
     await lateFontsLoaded(page);
-    await expect.poll(() => lateFaces(page), "faces added").toBe(4);
-    await frames(page, 4);
+    await page.evaluate(() => document.fonts.ready);
+    await frames(page, 6);
+    test.info().annotations.push({
+      type: "measure",
+      description: `first italic or semibold text is below the window: ${below}`,
+    });
+    expect(await lateFaces(page), "faces added").toBe(below ? 4 : 0);
     await readThrough(page);
     const end = await seen(page);
     expect(end.changes, "text that changed face or moved after it was on screen").toEqual([]);

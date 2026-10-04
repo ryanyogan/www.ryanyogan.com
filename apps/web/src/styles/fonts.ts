@@ -49,14 +49,16 @@ export const LATE_FONTS_KEY = "fonts";
  * On a first visit the files are fetched after the load event, clear of the first paint. Once
  * they are cached (noted in localStorage, by file name, so a new build starts over) they are
  * asked for at once: they come from the cache before the first frame, and Chromium holds that
- * frame for an `optional` face loaded this way as it does for a preloaded one. If the roman
+ * frame for an `optional` face loaded this way as it does for a preloaded one. (Only then
+ * are they `optional`: WebKit gives up on such a face unless it is there at once, and if it
+ * does the note is dropped and the next load starts over.) If the roman
  * itself missed the first paint the page is in the fallback face and these stay out of it.
  */
 export const lateFontsScript = `(function(F){
 if(!window.FontFace||!document.fonts)return;
 var family="Source Serif 4",key=F[0][0]+F[1][0],warm=false,framed=false;
 try{warm=localStorage.getItem("${LATE_FONTS_KEY}")===key}catch(e){}
-var faces=F.map(function(f){return new FontFace(family,'url("'+f[0]+'") format("woff2")',{style:f[1],weight:f[2],unicodeRange:f[3],display:"optional"})});
+var faces=F.map(function(f,i){return new FontFace(family,'url("'+f[0]+'") format("woff2")',{style:f[1],weight:f[2],unicodeRange:f[3],display:warm||i>1?"optional":"swap"})});
 requestAnimationFrame(function(){framed=true});
 function roman(){
 var s=document.createElement("span");
@@ -80,6 +82,6 @@ Promise.all([faces[0].load(),faces[1].load()]).then(function(){
 try{localStorage.setItem("${LATE_FONTS_KEY}",key)}catch(e){}
 return framed?document.fonts.ready:0}).then(function(){
 if(framed&&(!roman()||seen()))return;
-faces.forEach(function(f){document.fonts.add(f)})},function(){})}
+faces.forEach(function(f){document.fonts.add(f)})},function(){try{localStorage.removeItem("${LATE_FONTS_KEY}")}catch(e){}})}
 if(warm)go();else if(document.readyState==="complete")setTimeout(go);else addEventListener("load",function(){setTimeout(go)})
 }(${JSON.stringify(lateFaces)}))`;
