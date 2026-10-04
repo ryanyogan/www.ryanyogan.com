@@ -1,0 +1,24 @@
+# Copy to .dev.vars (git-ignored) for local development. `wrangler deploy` never uploads
+# this file; production values are set with `wrangler secret put` (see README, "Admin").
+
+# Opens /admin locally without Cloudflare Access. Honoured only when it is exactly 1 AND the
+# request is for localhost / 127.0.0.1. Never set this as a deployed var or secret.
+ADMIN_DEV_BYPASS=1
+
+# To exercise the real check locally instead, remove the line above and set all three:
+# ACCESS_TEAM_DOMAIN=your-team.cloudflareaccess.com
+# ACCESS_AUD=the-application-audience-tag
+# ADMIN_EMAIL=you@example.com
+
+# GitHub import (/admin/import). All optional. Only PUBLIC repositories are ever listed.
+# GITHUB_USER=ryanyogan
+# A token only raises the API rate limit (60 an hour without one). Never commit one: put it
+# in .dev.vars locally and use `wrangler secret put GITHUB_TOKEN` for production. A
+# fine-grained token with no repository access at all ("Public repositories (read-only)") is enough.
+# GITHUB_TOKEN=
+# Tests point this at a local stub; leave it unset to use https://api.github.com.
+# GITHUB_API_BASE=
+
+# "Draft with AI" uses the Workers AI binding (wrangler.jsonc); `pnpm dev` needs `wrangler login`.
+# Tests only: a loopback URL that stands in for the model, honoured only with ADMIN_DEV_BYPASS=1.
+# AI_STUB_URL=

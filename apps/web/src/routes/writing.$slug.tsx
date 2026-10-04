@@ -1,83 +1,130 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { writingPosts } from "~/lib/content";
+import { loadPostHtml, writingPosts } from "~/lib/content";
 import { Prose } from "~/components/Prose";
+import {
+  WEBSITE_ID,
+  absoluteUrl,
+  breadcrumbNode,
+  isoDateTime,
+  pageTitle,
+  personRef,
+  seo,
+  imageUrl,
+} from "~/lib/seo";
+import { staticOgImage } from "~/lib/og-images";
 
 export const Route = createFileRoute("/writing/$slug")({
   component: WritingDetail,
-  loader: ({ params }) => {
-    const post = writingPosts.find((p) => p.slug === params.slug);
-    if (!post) throw notFound();
-    return post;
+  // Only the slug-specific part: the post's metadata is already in the bundle.
+  loader: async ({ params }) => {
+    const html = await loadPostHtml(params.slug);
+    if (html === undefined) throw notFound();
+    return { html };
   },
-  head: ({ loaderData }) => ({
-    meta: [
-      { title: `${loaderData.title} — Ryan Yogan` },
-      { name: "description", content: loaderData.excerpt },
-      { property: "og:title", content: loaderData.title },
-      { property: "og:description", content: loaderData.excerpt },
-      { property: "og:url", content: `https://ryanyogan.com/writing/${loaderData.slug}` },
-      { property: "og:type", content: "article" },
-      { property: "article:author", content: "Ryan Yogan" },
-      { property: "article:published_time", content: loaderData.date },
-    ],
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Article",
-          headline: loaderData.title,
-          description: loaderData.excerpt,
-          author: { "@type": "Person", name: "Ryan Yogan", url: "https://ryanyogan.com" },
-          publisher: { "@type": "Person", name: "Ryan Yogan" },
-          datePublished: loaderData.date,
-        }),
-      },
-    ],
-  }),
+  head: ({ params }) => {
+    // The loader throws notFound() for an unknown slug, and head still runs.
+    const post = writingPosts.find((p) => p.slug === params.slug);
+    if (!post) return {};
+    const path = `/writing/${post.slug}`;
+    const published = isoDateTime(post.isoDate);
+    const image = staticOgImage(path);
+    return seo({
+      title: pageTitle(post.title),
+      ogTitle: post.title,
+      description: post.excerpt,
+      path,
+      image,
+      type: "article",
+      meta: [
+        // ogp.me: article:author is a profile URL, not a name.
+        { property: "article:author", content: absoluteUrl("/work") },
+        { property: "article:published_time", content: published },
+      ],
+      graph: [
+        {
+          "@type": "BlogPosting",
+          "@id": `${absoluteUrl(path)}#post`,
+          headline: post.title,
+          description: post.excerpt,
+          url: absoluteUrl(path),
+          // Posts record one date; there is no modification date to state.
+          datePublished: published,
+          image: imageUrl(image.path),
+          author: personRef(),
+          mainEntityOfPage: { "@type": "WebPage", "@id": absoluteUrl(path) },
+          isPartOf: { "@id": WEBSITE_ID },
+          inLanguage: "en",
+        },
+        breadcrumbNode([
+          { name: "Writing", path: "/writing" },
+          { name: post.title, path },
+        ]),
+      ],
+    });
+  },
 });
 
+/** Whole minutes to read the rendered body at 230 words a minute. */
+function readingMinutes(html: string): number {
+  const words = html
+    .replace(/<[^>]+>/g, " ")
+    .split(/\s+/)
+    .filter(Boolean).length;
+  return Math.max(1, Math.round(words / 230));
+}
+
 function WritingDetail() {
-  const post = Route.useLoaderData();
+  const { html } = Route.useLoaderData();
+  const { slug } = Route.useParams();
+  // writingPosts is newest first. The loader has already answered 404 for an unknown slug.
+  const at = writingPosts.findIndex((p) => p.slug === slug);
+  const post = writingPosts[at];
+  const newer = at > 0 ? writingPosts[at - 1] : undefined;
+  const older = at >= 0 && at < writingPosts.length - 1 ? writingPosts[at + 1] : undefined;
 
   return (
-    <main className="pt-28 md:pt-40 pb-16 md:pb-24 px-5 sm:px-6 md:px-8 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-0">
-      <aside className="hidden md:block md:col-span-3">
-        <div className="sticky top-40 space-y-8">
-          <Link
-            to="/writing"
-            className="font-sans text-[10px] tracking-widest uppercase text-neutral-400 hover:text-primary transition-colors"
-          >
-            &larr; Back to Writing
-          </Link>
-          <div className="space-y-1">
-            <span className="block font-sans text-[10px] tracking-[0.2em] uppercase text-on-surface-variant opacity-60">
-              {post.date}
-            </span>
-            <span className="block font-sans text-[10px] tracking-widest uppercase text-neutral-400">
-              {post.author}
-            </span>
+    <main id="main" className="wrap">
+      <article>
+        <header className="row post-head">
+          <div className="col push">
+            <p className="crumbs">
+              <Link to="/writing">Writing</Link>
+            </p>
+            <h1>{post.title}</h1>
+            <p className="lede">{post.excerpt}</p>
+            <p className="small post-meta">
+              <time dateTime={post.isoDate}>{post.date}</time> &middot; {readingMinutes(html)} min
+              read &middot; {post.author}
+            </p>
           </div>
-        </div>
-      </aside>
-      <article className="md:col-span-9">
-        <header className="mb-10 md:mb-16">
-          <Link
-            to="/writing"
-            className="md:hidden font-sans text-[10px] tracking-widest uppercase text-neutral-400 hover:text-primary mb-8 block"
-          >
-            &larr; Back to Writing
-          </Link>
-          <h1 className="font-sans text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter text-primary leading-[0.95] mb-4">
-            {post.title}
-          </h1>
-          <span className="font-sans text-sm text-on-surface-variant">
-            {post.date} &middot; {post.author}
-          </span>
-          <div className="h-px w-full bg-outline-variant opacity-20 mt-8" />
         </header>
-        <Prose content={post.content} />
+
+        <div className="row post-body">
+          <Prose className="col push post" html={html} />
+        </div>
       </article>
+
+      <nav aria-label="More writing" className="row post-end">
+        <div className="col push">
+          <div className="post-nav">
+            {newer && (
+              <Link to="/writing/$slug" params={{ slug: newer.slug }}>
+                <span>Newer</span>
+                {newer.title}
+              </Link>
+            )}
+            {older && (
+              <Link to="/writing/$slug" params={{ slug: older.slug }} className="older">
+                <span>Older</span>
+                {older.title}
+              </Link>
+            )}
+          </div>
+          <p className="post-all">
+            <Link to="/writing">All writing</Link>
+          </p>
+        </div>
+      </nav>
     </main>
   );
 }

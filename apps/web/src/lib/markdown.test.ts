@@ -1,0 +1,284 @@
+import { readdirSync, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import type { Element, Root } from "hast";
+import rehypeParse from "rehype-parse";
+import { unified } from "unified";
+import { describe, expect, it } from "vitest";
+import { type ProseImages, renderMarkdown } from "./markdown";
+
+// What the build hands over for a file in public/images (vite-plugin-images.ts).
+const images: ProseImages = {
+  "/images/nexus.png": {
+    width: 1098,
+    height: 921,
+    avif: "/images/opt/nexus.720.aaaa.avif 720w, /images/opt/nexus.1098.bbbb.avif 1098w",
+    webp: "/images/opt/nexus.720.cccc.webp 720w, /images/opt/nexus.1098.dddd.webp 1098w",
+  },
+};
+
+describe("renderMarkdown: structure the prose styles rely on", () => {
+  it("renders an image alone in a paragraph as a figure, not inside a <p>", () => {
+    const html = renderMarkdown("Before.\n\n![Nexus brain](/images/nexus.png)\n\nAfter.");
+    expect(html).toContain(
+      '<figure><img src="/images/nexus.png" alt="Nexus brain" loading="lazy" decoding="async"></figure>',
+    );
+    expect(html).not.toMatch(/<p[^>]*>\s*<figure/);
+  });
+
+  it("captions a figure with the image's title, never with its alt", () => {
+    const html = renderMarkdown('Text.\n\n![A graph of nodes](/a.png "The graph after a week.")');
+    expect(html).toContain(
+      '<figure><img src="/a.png" alt="A graph of nodes" loading="lazy" decoding="async"><figcaption>The graph after a week.</figcaption></figure>',
+    );
+    expect(html).not.toContain("title=");
+    // No title, no caption: the alt alone would be read twice by a screen reader.
+    expect(renderMarkdown("Text.\n\n![A graph of nodes](/a.png)")).not.toContain("<figcaption");
+  });
+
+  it("reads a title that starts with a size as the size, and the rest as the caption", () => {
+    const sized = renderMarkdown('Text.\n\n![Chart](https://example.com/c.png "1200x800")');
+    expect(sized).toContain('width="1200" height="800"');
+    expect(sized).not.toContain("<figcaption");
+    const both = renderMarkdown(
+      'Text.\n\n![Chart](https://example.com/c.png "1200x800 Requests a day.")',
+    );
+    expect(both).toContain(
+      '<figure><img src="https://example.com/c.png" alt="Chart" width="1200" height="800" loading="lazy" decoding="async"><figcaption>Requests a day.</figcaption></figure>',
+    );
+    // A file the build measured keeps the build's size; its title is still the caption.
+    const known = renderMarkdown('Text.\n\n![Nexus](/images/nexus.png "The brain.")', images);
+    expect(known).toContain('width="1098" height="921"');
+    expect(known).toContain("</picture><figcaption>The brain.</figcaption></figure>");
+    expect(known).not.toMatch(/<p[^>]*>\s*<(figure|picture)/);
+  });
+
+  it("keeps an image among other content inline", () => {
+    const html = renderMarkdown("See ![icon](/i.png) here.");
+    expect(html).toContain('<img src="/i.png" alt="icon" loading="lazy" decoding="async">');
+    expect(html).not.toContain("<figure");
+  });
+
+  it("gives an image the build knows its size and its AVIF and WebP copies", () => {
+    const html = renderMarkdown("Before.\n\n![Nexus brain](/images/nexus.png)\n\nAfter.", images);
+    const sizes = 'sizes="(min-width: 680px) 608px, 100vw"';
+    expect(html).toContain(
+      "<figure><picture>" +
+        `<source type="image/avif" srcset="${images["/images/nexus.png"].avif}" ${sizes}>` +
+        `<source type="image/webp" srcset="${images["/images/nexus.png"].webp}" ${sizes}>` +
+        '<img src="/images/nexus.png" alt="Nexus brain" width="1098" height="921" loading="lazy" decoding="async">' +
+        "</picture></figure>",
+    );
+    expect(html).not.toMatch(/<p[^>]*>\s*<(figure|picture)/);
+  });
+
+  it("takes the size of any other image from a WIDTHxHEIGHT title", () => {
+    const html = renderMarkdown('Text.\n\n![Chart](https://example.com/c.png "1200x800")', images);
+    expect(html).toContain(
+      '<img src="https://example.com/c.png" alt="Chart" width="1200" height="800" loading="lazy" decoding="async">',
+    );
+    expect(html).not.toContain("<picture");
+    // Any other title is dropped, and a name that is not a file of the build is not looked up.
+    const plain = renderMarkdown('Text.\n\n![a](/a.png "A chart") ![b](constructor)', images);
+    expect(plain).toContain('<img src="/a.png" alt="a" loading="lazy" decoding="async">');
+    expect(plain).toContain('<img src="constructor" alt="b" loading="lazy" decoding="async">');
+    expect(plain).not.toMatch(/title=|width=/);
+  });
+
+  it("loads the image that opens the body at once, and every later one lazily", () => {
+    const html = renderMarkdown(
+      "![Lead](/images/nexus.png)\n\nText.\n\n![Later](/images/nexus.png)",
+      images,
+    );
+    const tags = html.match(/<img[^>]*>/g) ?? [];
+    expect(tags).toHaveLength(2);
+    expect(tags[0]).toContain('fetchpriority="high"');
+    expect(tags[0]).not.toContain("loading=");
+    expect(tags[1]).toContain('loading="lazy"');
+    expect(tags[1]).not.toContain("fetchpriority");
+  });
+
+  it("opens external links in a new tab and leaves internal ones alone", () => {
+    const html = renderMarkdown("[out](https://example.com) and [in](/work)");
+    expect(html).toContain(
+      '<a href="https://example.com" target="_blank" rel="noopener noreferrer">out</a>',
+    );
+    expect(html).toContain('<a href="/work">in</a>');
+  });
+
+  it("highlights fenced code at render time and makes the block focusable", () => {
+    const html = renderMarkdown("```ts\nconst a: number = 1;\n```");
+    expect(html).toMatch(/<pre tabindex="0"><code class="hljs language-ts">/);
+    expect(html).toContain('<span class="hljs-keyword">const</span>');
+  });
+  it("highlights Elixir, which the highlighter's default set leaves out", () => {
+    const html = renderMarkdown("```elixir\ndefmodule Memory do\n  def get(id), do: id\nend\n```");
+    expect(html).toContain('<code class="hljs language-elixir">');
+    expect(html).toContain('<span class="hljs-keyword">defmodule</span>');
+  });
+
+  it("gives each heading an id made from its text", () => {
+    const html = renderMarkdown(
+      "## Why OTP, and Why Thoughts as Processes\n\n### What I've `scaled`\n\n#### Été 2024",
+    );
+    expect(html).toContain('<h2 id="why-otp-and-why-thoughts-as-processes">');
+    expect(html).toContain('<h3 id="what-ive-scaled">');
+    expect(html).toContain('<h4 id="été-2024">');
+    // The same source gives the same ids on the next render.
+    expect(renderMarkdown("## Setup\n\n## Setup")).toBe(renderMarkdown("## Setup\n\n## Setup"));
+  });
+
+  it("keeps heading ids unique within a body, wherever the heading sits", () => {
+    const html = renderMarkdown(
+      "## Setup\n\n## Setup\n\n> ## Setup\n\n## Setup 1\n\n## !!!\n\n## ???",
+    );
+    const ids = [...html.matchAll(/ id="([^"]*)"/g)].map((match) => match[1]);
+    expect(ids).toEqual(["setup", "setup-1", "setup-2", "setup-1-1", "section", "section-1"]);
+  });
+
+  it("never gives a heading an id the page itself uses", () => {
+    // Every id written as a literal in a route or a component, the skip link's target first.
+    const src = fileURLToPath(new URL("..", import.meta.url));
+    const used = new Set(["main"]);
+    for (const name of readdirSync(src, { recursive: true, encoding: "utf8" })) {
+      if (!name.endsWith(".tsx")) continue;
+      const source = readFileSync(`${src}/${name}`, "utf8");
+      for (const match of source.matchAll(/\b(?:id|[A-Z_]+_ID)\s*=\s*"([^"]+)"/g))
+        used.add(match[1]!);
+    }
+    expect(used.size).toBeGreaterThan(10);
+    for (const id of used) {
+      // A heading's id is lower-case letters, digits and hyphens; nothing else can clash.
+      if (!/^[a-z0-9-]+$/.test(id)) continue;
+      const html = renderMarkdown(`## ${id.replaceAll("-", " ")}`);
+      expect(html, `add "${id}" to RESERVED_IDS in markdown.ts`).toContain(`<h2 id="${id}-1">`);
+    }
+  });
+
+  it("sets a column of figures to the right and keeps an alignment the source gives", () => {
+    const html = renderMarkdown(
+      [
+        "| Route | Requests | Size | Note | Mixed |",
+        "|---|---|---|:-:|---|",
+        "| / | 12 | 117.4 KB | 1 | 3 |",
+        "| /work | 1,204 | -3.1% | 2 | none |",
+      ].join("\n"),
+    );
+    expect(html).toContain("<th>Route</th>");
+    expect(html).toContain('<th data-align="right">Requests</th>');
+    expect(html).toContain('<td data-align="right">1,204</td>');
+    expect(html).toContain('<td data-align="right">117.4 KB</td>');
+    expect(html).toContain('<td data-align="right">-3.1%</td>');
+    expect(html).toContain('<th data-align="center">Note</th>');
+    expect(html).toContain('<td data-align="center">2</td>');
+    expect(html).toContain("<th>Mixed</th>");
+    expect(html).toContain("<td>3</td>");
+    expect(html).not.toMatch(/style=| align=/);
+    // Asked for on the left: figures stay on the left.
+    expect(renderMarkdown("| n |\n|:--|\n| 1 |")).toContain('<td data-align="left">1</td>');
+  });
+
+  it("renders the kitchen-sink fixture the browser tests read (e2e/prose.spec.ts)", () => {
+    const fixture = fileURLToPath(new URL("../../e2e/kitchen-sink.md", import.meta.url));
+    const html = renderMarkdown(readFileSync(fixture, "utf8"));
+    for (const tag of ["h2", "h3", "ul", "ol", "blockquote", "pre", "table", "figure", "hr"]) {
+      expect(html, tag).toContain(`<${tag}`);
+    }
+    const ids = [...html.matchAll(/ id="([^"]*)"/g)].map((match) => match[1]);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids).toContain("setup-1");
+    expect(ids).toContain("main-1");
+    expect(ids).not.toContain("main");
+    expect(html).toContain("<figcaption>The memory graph after six attempts.</figcaption>");
+    expect(html).not.toMatch(/<p[^>]*>\s*<(figure|picture)/);
+  });
+
+  it("leaves inline code bare and wraps tables in a focusable scroller", () => {
+    const html = renderMarkdown("Use `pnpm`.\n\n| a | b |\n|---|:-:|\n| 1 | 2 |");
+    expect(html).toMatch(/<code>pnpm<\/code>/);
+    expect(html).toMatch(/<div tabindex="0"><table>/);
+    expect(html).not.toContain("style=");
+  });
+
+  it("supports GFM: strikethrough, task lists, autolinks", () => {
+    const html = renderMarkdown("~~old~~\n\n- [x] done\n\nhttps://example.com");
+    expect(html).toContain("<del>old</del>");
+    expect(html).toContain('<input type="checkbox" checked disabled>');
+    expect(html).toContain('href="https://example.com"');
+  });
+});
+
+describe("renderMarkdown: a project body is untrusted text", () => {
+  // The output is parsed the way a browser would parse it, then every element is checked:
+  // a pattern over the string cannot tell an attribute from text inside a quoted attribute.
+  const inert = (html: string) => {
+    const tree = unified().use(rehypeParse, { fragment: true }).parse(html);
+    const banned = /^(script|style|iframe|object|embed|form|svg|math|link|meta|base|template)$/;
+    const walk = (node: Root | Element) => {
+      for (const child of node.children) {
+        if (child.type !== "element") continue;
+        expect(child.tagName).not.toMatch(banned);
+        for (const [name, value] of Object.entries(child.properties)) {
+          expect(name).not.toMatch(/^on/i);
+          expect(name).not.toMatch(/^(style|srcDoc|formAction)$/);
+          if (name === "href" || name === "src") {
+            expect(String(value).trim()).toMatch(/^(https?:|mailto:|\/|#|[\w.-]*$)/i);
+          }
+        }
+        walk(child);
+      }
+    };
+    walk(tree);
+  };
+
+  it("shows raw HTML as the text that was typed", () => {
+    const html = renderMarkdown('Hello <script>alert("x")</script> <b onclick="steal()">bold</b>');
+    inert(html);
+    expect(html).toContain("&#x3C;script>");
+    expect(html).toContain("alert");
+  });
+
+  it("neutralises HTML blocks, event handlers and embedded documents", () => {
+    const html = renderMarkdown(
+      [
+        "<script>window.pwned = 1</script>",
+        "",
+        '<img src="x" onerror="window.pwned = 1">',
+        "",
+        '<iframe src="https://evil.example"></iframe>',
+        "",
+        '<svg onload="window.pwned = 1"></svg>',
+        "",
+        "<style>body { display: none }</style>",
+      ].join("\n"),
+    );
+    inert(html);
+  });
+
+  it("drops script URLs from links and images", () => {
+    const html = renderMarkdown(
+      [
+        "[a](javascript:alert(1))",
+        "[b](JaVaScRiPt:alert(1))",
+        "[c](data:text/html,<script>alert(1)</script>)",
+        "[d](vbscript:x)",
+        "![e](javascript:alert(1))",
+        "<javascript:alert(1)>",
+      ].join("\n\n"),
+    );
+    inert(html);
+    expect(html).not.toMatch(/(href|src)="[^"]*script:/i);
+  });
+
+  it("cannot break out of an attribute or a code block", () => {
+    const html = renderMarkdown(
+      [
+        '![x" onerror="alert(1)](/a.png)',
+        '[y](/b "t\\" onmouseover=\\"alert(1)")',
+        '```"><script>alert(1)</script>',
+        "</code></pre><script>alert(1)</script>",
+        "```",
+      ].join("\n\n"),
+    );
+    inert(html);
+  });
+});

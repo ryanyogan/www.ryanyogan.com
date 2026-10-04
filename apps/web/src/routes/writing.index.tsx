@@ -1,109 +1,84 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { writingPosts } from "~/lib/content";
 import type { WritingPost } from "~/lib/content";
+import { collectionNode, pageTitle, seo } from "~/lib/seo";
+import { staticOgImage } from "~/lib/og-images";
+
+const description = "Build logs, one retraction, and what I learned running teams.";
 
 export const Route = createFileRoute("/writing/")({
-  head: () => ({
-    meta: [
-      { title: "Writing — Ryan Yogan" },
-      {
-        name: "description",
-        content:
-          "Thoughts on AI systems, developer experience, team building, Elixir, and the craft of shipping software.",
-      },
-      { property: "og:title", content: "Writing — Ryan Yogan" },
-      {
-        property: "og:description",
-        content:
-          "Thoughts on AI systems, developer experience, team building, Elixir, and the craft of shipping software.",
-      },
-      { property: "og:url", content: "https://ryanyogan.com/writing" },
-    ],
-  }),
+  head: () =>
+    seo({
+      title: pageTitle("Writing"),
+      description,
+      path: "/writing",
+      image: staticOgImage("/writing"),
+      graph: [
+        collectionNode({
+          name: pageTitle("Writing"),
+          description,
+          path: "/writing",
+          items: writingPosts.map((post) => ({ name: post.title, path: `/writing/${post.slug}` })),
+        }),
+      ],
+    }),
   component: WritingPage,
 });
 
-function WritingPage() {
-  const grouped = writingPosts.reduce<Record<string, WritingPost[]>>((acc, post) => {
-    if (!acc[post.year]) acc[post.year] = [];
-    acc[post.year].push(post);
-    return acc;
-  }, {});
+/** Posts bucketed by year, newest year first; posts keep their newest-first order. */
+const years = [...new Set(writingPosts.map((post) => post.year))]
+  .sort((a, b) => Number(b) - Number(a))
+  .map((year) => ({ year, posts: writingPosts.filter((post) => post.year === year) }));
 
-  const years = Object.keys(grouped).sort((a, b) => Number(b) - Number(a));
-  const totalArticles = writingPosts.length;
-
-  return (
-    <main className="pt-28 md:pt-40 pb-16 md:pb-24 px-5 sm:px-6 md:px-8 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-0">
-      <aside className="hidden md:block md:col-span-3">
-        <div className="sticky top-40 space-y-8">
-          <div className="space-y-1">
-            <span className="block font-sans text-[10px] tracking-[0.2em] uppercase text-on-surface-variant opacity-60">
-              Archive
-            </span>
-            <span className="block font-sans text-sm font-bold uppercase tracking-tight">
-              Writing
-            </span>
-          </div>
-          <p className="font-sans text-xs leading-relaxed text-on-surface-variant pr-12">
-            A chronological record of thoughts on engineering, leadership, and digital craft.
-          </p>
-        </div>
-      </aside>
-
-      <section className="md:col-span-9">
-        <header className="mb-12 md:mb-24">
-          <h1 className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-extrabold tracking-tighter text-primary leading-[0.9] mb-8">
-            The Archive.
-          </h1>
-          <div className="h-px w-full bg-outline-variant opacity-20" />
-        </header>
-
-        {years.map((year) => (
-          <YearCollection key={year} year={year} posts={grouped[year]} />
-        ))}
-
-        <div className="pt-12 flex justify-between items-center border-t border-outline-variant/10">
-          <span className="font-sans text-[10px] tracking-widest uppercase text-neutral-400">
-            {totalArticles} articles
-          </span>
-        </div>
-      </section>
-    </main>
-  );
+function monthDay(post: WritingPost): string {
+  return new Date(`${post.isoDate}T00:00:00Z`).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
 }
 
-function YearCollection({ year, posts }: { year: string; posts: WritingPost[] }) {
+function WritingPage() {
   return (
-    <div className="mb-16 md:mb-32">
-      <div className="flex items-baseline gap-4 mb-8 md:mb-12">
-        <h2 className="font-sans text-xs font-bold tracking-[0.3em] uppercase text-on-surface-variant">
-          {year}
-        </h2>
-        <div className="h-px flex-grow bg-outline-variant opacity-10" />
-      </div>
+    <main id="main" className="wrap">
+      <header className="row wr-head">
+        <p className="gut lab">Writing</p>
+        <div className="col">
+          <h1 id="wr-h">Build logs, one retraction, and what I learned running teams.</h1>
+          <p className="lede">
+            Newest first, grouped by year. The 2026 posts are build logs for projects on this site.
+            The 2024 posts cover teams, startups and embedded work.
+          </p>
+          <p className="small wr-count">
+            {writingPosts.length} posts &middot; <a href="/rss.xml">RSS</a>
+          </p>
+        </div>
+      </header>
 
-      <div className="space-y-10 md:space-y-16">
-        {posts.map((post) => (
-          <article key={post.slug} className="grid grid-cols-1 md:grid-cols-4 gap-4 group">
-            <div className="font-sans text-xs tracking-widest uppercase text-neutral-400 pt-1.5">
-              {post.date}
-            </div>
-            <div className="md:col-span-3">
-              <Link
-                to="/writing/$slug"
-                params={{ slug: post.slug }}
-                className="block font-sans text-xl sm:text-2xl md:text-3xl font-bold tracking-tight hover:text-neutral-500 transition-colors duration-300"
-              >
-                {post.title}
-              </Link>
-              <p className="mt-4 text-lg text-on-surface-variant leading-relaxed max-w-2xl opacity-80">
-                {post.excerpt}
-              </p>
-            </div>
-          </article>
-        ))}
-      </div>
-    </div>
+      {years.map(({ year, posts }) => (
+        <section key={year} aria-labelledby={`y-${year}`} className="row wr-year">
+          <div className="gut">
+            <h2 id={`y-${year}`} className="lab">
+              {year}
+            </h2>
+          </div>
+          <ol className="col wr-list">
+            {posts.map((post) => (
+              <li key={post.slug}>
+                <time dateTime={post.isoDate}>{monthDay(post)}</time>
+                <div>
+                  <h3>
+                    <Link to="/writing/$slug" params={{ slug: post.slug }} data-kb-item>
+                      {post.title}
+                    </Link>
+                  </h3>
+                  <p>{post.excerpt}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ))}
+    </main>
   );
 }

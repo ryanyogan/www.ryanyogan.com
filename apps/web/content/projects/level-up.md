@@ -1,15 +1,18 @@
 ---
 title: "Level Up"
-tagline: "AI job application assistant with scam detection, resume tailoring, and interview prep. Built by someone who has conducted 700+ interviews and knows what makes hiring managers immediately reject an application."
+summary: "Job and resume analysis on durable workflows"
+tagline: "Job and resume analysis on six durable workflows, with structured output, multi-model routing and a scheduled cost alert. Built by someone who has conducted 700+ interviews."
 tech:
   - TanStack Start
   - Cloudflare Workers
   - D1
   - Claude API
-github: "https://github.com/ryanyogan/levelup"
 live: "https://levelup.yogan.dev"
 year: "2026"
 featured: true
+group: shipped
+status: live
+order: 1
 ---
 
 AI job application assistant with scam detection, resume tailoring, cover letter generation, and interview prep. Built by someone who has conducted 700+ interviews and knows exactly what hiring managers are looking for — and what makes them immediately reject an application.
@@ -29,6 +32,15 @@ AI job application assistant with scam detection, resume tailoring, cover letter
 - **One-Click Tailoring** — AI rewrites your resume for each specific job, emphasizing relevant experience and using keywords from the posting. Not keyword stuffing — thoughtful rephrasing that makes your experience speak directly to what the role needs.
 - **Cover Letter Generation** — Generates cover letters that don't sound AI-generated. Each letter references specific aspects of the company and role, connecting them to your actual experience.
 - **Interview Prep** — AI-generated interview questions based on the role, company, and your resume. Includes behavioral questions, technical questions, and suggested talking points for each.
+
+## How It Is Built
+
+- Six durable workflows with per-step retries
+- Structured output validated against schemas
+- Multi-model routing through a gateway
+- A scheduled cost alert
+
+The source is private. The product is live at [levelup.yogan.dev](https://levelup.yogan.dev).
 
 ## Built by Someone Who Actually Hires
 

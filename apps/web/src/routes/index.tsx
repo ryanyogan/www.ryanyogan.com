@@ -1,41 +1,38 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Hero } from "~/components/Hero";
-import { WritingSection } from "~/components/WritingSection";
-import { ProjectsSection } from "~/components/ProjectsSection";
+import { Hero } from "~/components/home/Hero";
+import { LeadAndBuild } from "~/components/home/LeadAndBuild";
+import { OffTheClock } from "~/components/home/OffTheClock";
+import { OpenTo } from "~/components/home/OpenTo";
+import { ProjectIndex } from "~/components/home/ProjectIndex";
+import { WritingList } from "~/components/home/WritingList";
+import { PROJECT_PAGE_CACHE, fetchProjects } from "~/lib/projects.functions";
+import { SITE_DESCRIPTION, SITE_TITLE, personNode, seo, websiteNode } from "~/lib/seo";
+import { staticOgImage } from "~/lib/og-images";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Ryan Yogan — AI Systems, Dev Ex, Teams" },
-      {
-        name: "description",
-        content:
-          "Building AI systems that run autonomously, developer tools that get out of the way, and engineering teams that ship.",
-      },
-      { property: "og:title", content: "Ryan Yogan — AI Systems, Dev Ex, Teams" },
-      {
-        property: "og:description",
-        content:
-          "Building AI systems that run autonomously, developer tools that get out of the way, and engineering teams that ship.",
-      },
-      { property: "og:url", content: "https://ryanyogan.com" },
-    ],
-  }),
+  head: () =>
+    seo({
+      title: SITE_TITLE,
+      description: SITE_DESCRIPTION,
+      path: "/",
+      image: staticOgImage("/"),
+      graph: [websiteNode(), personNode()],
+    }),
+  loader: () => fetchProjects(),
+  headers: () => ({ "Cache-Control": PROJECT_PAGE_CACHE }),
   component: HomePage,
 });
 
 function HomePage() {
+  const projects = Route.useLoaderData();
   return (
-    <main className="pt-24 md:pt-32 pb-16 md:pb-24 max-w-7xl mx-auto px-5 sm:px-6 md:px-8">
+    <main id="main" className="wrap home">
       <Hero />
-
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-0">
-        <div className="hidden md:block md:col-span-3" />
-        <div className="md:col-span-9">
-          <WritingSection />
-          <ProjectsSection />
-        </div>
-      </div>
+      <ProjectIndex projects={projects} />
+      <LeadAndBuild />
+      <WritingList />
+      <OffTheClock />
+      <OpenTo />
     </main>
   );
 }

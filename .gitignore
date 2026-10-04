@@ -1,4 +1,11 @@
 node_modules
+# pnpm puts its store here when the checkout is on another filesystem than $HOME (containers)
+.pnpm-store
+# This repo uses pnpm (pnpm-lock.yaml); other package managers' lockfiles are never committed
+bun.lock
+bun.lockb
+package-lock.json
+yarn.lock
 dist
 .output
 *.local
@@ -7,6 +14,12 @@ dist
 
 # Generated
 **/routeTree.gen.ts
+# `wrangler types` (run by `pnpm typecheck` and `pnpm cf-typegen`)
+worker-configuration.d.ts
+# `pnpm db:seed:generate`, from apps/web/content/projects/*.md
+apps/web/db/seed.sql
+# Local D1 and other miniflare state
+.wrangler
 
 # Editor
 .idea
@@ -17,3 +30,15 @@ dist
 .env
 .env.*
 !.env.example
+# Local Worker vars (the admin dev bypass lives here); never deployed, never committed
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+
+# Playwright
+playwright-report/
+test-results/
+e2e-results.json
+
+# Internal agent handoff notes
+.handoff/

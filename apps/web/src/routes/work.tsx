@@ -1,131 +1,267 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { workBio, workSections } from "@repo/shared";
-import type { WorkRole, WorkSection } from "@repo/shared";
+import { Link, createFileRoute } from "@tanstack/react-router";
+import { contactEmail, workSections } from "@repo/shared";
+import type { ReactNode } from "react";
+import { AgentLoop } from "~/components/PageArt";
+import { PERSON_BIO, WEBSITE_ID, absoluteUrl, pageTitle, personNode, seo } from "~/lib/seo";
+import { staticOgImage } from "~/lib/og-images";
 
 export const Route = createFileRoute("/work")({
-  head: () => ({
-    meta: [
-      { title: "Work — Ryan Yogan" },
-      {
-        name: "description",
-        content:
-          "20 years building teams, shipping products, and scaling organizations from startup to IPO.",
-      },
-      { property: "og:title", content: "Work — Ryan Yogan" },
-      {
-        property: "og:description",
-        content:
-          "20 years building teams, shipping products, and scaling organizations from startup to IPO.",
-      },
-      { property: "og:url", content: "https://ryanyogan.com/work" },
-    ],
-  }),
+  head: () =>
+    seo({
+      title: pageTitle("Work"),
+      description:
+        "How to work with Ryan Yogan: how he leads, what he has scaled, what he is building now, what he is open to, and a compact timeline.",
+      path: "/work",
+      image: staticOgImage("/work"),
+      type: "profile",
+      meta: [
+        { property: "profile:first_name", content: "Ryan" },
+        { property: "profile:last_name", content: "Yogan" },
+      ],
+      graph: [
+        {
+          "@type": "ProfilePage",
+          "@id": absoluteUrl("/work"),
+          url: absoluteUrl("/work"),
+          name: pageTitle("Work"),
+          isPartOf: { "@id": WEBSITE_ID },
+          mainEntity: personNode(),
+        },
+      ],
+    }),
   component: WorkPage,
 });
 
+const chapters = [
+  { id: "work-lead", title: "How I lead" },
+  { id: "work-scale", title: "What I've scaled" },
+  { id: "work-now", title: "What I'm building now" },
+  { id: "work-open", title: "What I'm open to" },
+  { id: "work-timeline", title: "Timeline" },
+] as const;
+
+/** Each quote is the owner's own, from the brief. Headings are plain labels for them. */
+const principles: { heading: string; quote: string }[] = [
+  {
+    heading: "I say so when I'm wrong",
+    quote: "The most important thing I ever did as a manager was publicly admit when I was wrong.",
+  },
+  {
+    heading: "The team owns its process",
+    quote: "Teams that own their process outperform teams that inherit it.",
+  },
+  {
+    heading: "The team comes before the product",
+    quote: "The team you build is more important than the product you build.",
+  },
+  {
+    heading: "I hire for how people think with others",
+    quote:
+      "The best engineers I've ever worked with weren't the ones who could solve the hardest algorithm problems. They were the ones who could explain their thinking, listen to feedback, and make everyone around them better.",
+  },
+];
+
+const scale: { from?: string; value: string; label: string }[] = [
+  { from: "8", value: "65+", label: "UI engineers at Procore, across 11 squads" },
+  { from: "150", value: "2,300", label: "employees at Procore over that stretch, through an IPO" },
+  { value: "700+", label: "interviews conducted" },
+  { value: "50+", label: "hires made" },
+  { value: "900+", label: "instances moved to serverless at Sonian, cutting costs 40%+" },
+  { value: "8", label: "people on the team I built and led as co-founder and CTO" },
+];
+
+const arc: { when: string; title: string; body: string; quote?: string }[] = [
+  {
+    when: "2025",
+    title: "Study.",
+    body: "Sandboxed coding agents, Cloudflare Workflows, structured output, and an LLM-from-scratch course.",
+  },
+  {
+    when: "Feb to Apr 2026",
+    title: "Original work begins.",
+    body: "An autonomous memory agent on Durable Objects, then a shared memory layer over MCP, then a deployed workflow product, then a published MCP server, then Lincoln: 140 commits in April alone.",
+  },
+  {
+    when: "May to Jul 2026",
+    title: "A coding agent, twice.",
+    body: "I built my own terminal coding agent from first principles, twice.",
+  },
+  {
+    when: "Sep 2026",
+    title: "The audit.",
+    body: "I went back to Lincoln and published an audit of my own claims.",
+    quote: "I would rather publish a negative result than another feature.",
+  },
+];
+
+const themes = [
+  "agent memory and persistence",
+  "MCP",
+  "durable background execution",
+  "cost-aware model routing",
+];
+
+const offers: { label: string; title: string; detail?: string; basis: string }[] = [
+  {
+    label: "Advising",
+    title: "Teams building agent systems",
+    basis: "Lincoln, Nexus, Pneuma",
+  },
+  {
+    label: "Fractional",
+    title: "Engineering leadership",
+    basis: "8 to 65+ engineers, 700+ interviews, 50+ hires, a team of 8 as CTO",
+  },
+  {
+    label: "Builds",
+    title: "A small number of builds",
+    detail: "MCP servers, agent memory, Cloudflare-native AI products.",
+    basis: "Fizzy Do MCP, Nexus, Level Up",
+  },
+];
+
 function WorkPage() {
   return (
-    <main className="pt-28 md:pt-40 pb-16 md:pb-24 px-5 sm:px-6 md:px-8 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-0">
-      <aside className="hidden md:block md:col-span-3">
-        <div className="sticky top-40 space-y-8">
-          <div className="space-y-1">
-            <span className="block font-sans text-[10px] tracking-[0.2em] uppercase text-on-surface-variant opacity-60">
-              Archive
-            </span>
-            <span className="block font-sans text-sm font-bold uppercase tracking-tight">Work</span>
-          </div>
-          <p className="font-sans text-xs leading-relaxed text-on-surface-variant pr-12">
-            20 years building teams, shipping products, and scaling organizations from startup to
-            IPO.
+    <main id="main" className="wrap">
+      <section className="row first" aria-labelledby="work-h">
+        <div className="gut">
+          <p className="who">
+            <b>Work</b>A manual, not a resume.
           </p>
         </div>
-      </aside>
-
-      <section className="md:col-span-9">
-        <header className="mb-12 md:mb-24">
-          <h1 className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-extrabold tracking-tighter text-primary leading-[0.9] mb-8">
-            The Career.
-          </h1>
-          <div className="h-px w-full bg-outline-variant opacity-20" />
-        </header>
-
-        <div className="mb-16 md:mb-32">
-          <p className="text-lg text-on-surface-variant leading-relaxed max-w-2xl opacity-80">
-            {workBio}
+        <div className="col">
+          <h1 id="work-h">How to work with me.</h1>
+          <p className="lede">
+            How I lead, what I have scaled, what I am building now, and what I am open to. The
+            timeline comes last.
           </p>
         </div>
-
-        {workSections.map((section) => (
-          <SectionGroup key={section.label} {...section} />
-        ))}
       </section>
+
+      <Chapter index={0} note="I call the approach Empathy Driven Development, a term I coined.">
+        <ol className="prin">
+          {principles.map((p) => (
+            <li key={p.heading}>
+              <h3 className="h-m">{p.heading}</h3>
+              <blockquote>
+                <p>&ldquo;{p.quote}&rdquo;</p>
+              </blockquote>
+            </li>
+          ))}
+        </ol>
+      </Chapter>
+
+      <Chapter index={1}>
+        <dl className="figs">
+          {scale.map((s) => (
+            <div key={s.label}>
+              <dt>
+                {s.from && (
+                  <>
+                    {s.from}
+                    <i aria-hidden="true">&rarr;</i>
+                    <span className="sr-only"> to </span>
+                  </>
+                )}
+                {s.value}
+              </dt>
+              <dd>{s.label}</dd>
+            </div>
+          ))}
+        </dl>
+      </Chapter>
+
+      <Chapter
+        index={2}
+        note="Twenty years of scaling orgs; the last two spent deep in agent memory, MCP, and durable AI workflows."
+      >
+        <div className="now">
+          <ol className="arc">
+            {arc.map((a) => (
+              <li key={a.when}>
+                <span className="when">{a.when}</span>
+                <p>
+                  <b>{a.title}</b> {a.body}
+                  {a.quote && <> &ldquo;{a.quote}&rdquo;</>}
+                </p>
+              </li>
+            ))}
+          </ol>
+          <AgentLoop />
+        </div>
+        <p className="after">
+          Recurring themes: {themes.slice(0, -1).join(", ")}, and {themes.at(-1)}.
+        </p>
+        <p className="small mt-2 max-w-[36rem]">
+          GitHub contributions doubled year over year: 812, then 1,656. By day I lead AI
+          engineering. That work stays off this site.{" "}
+          <Link to="/projects" className="tlink">
+            The rest is on the Projects page &rarr;
+          </Link>
+        </p>
+      </Chapter>
+
+      <Chapter index={3} note="Three kinds of work, each based on something I have done.">
+        <ul className="offers">
+          {offers.map((o) => (
+            <li key={o.label}>
+              <span className="k">{o.label}</span>
+              <span className="t">
+                {o.title}
+                {o.detail && <>: {o.detail}</>}
+              </span>
+              <span className="b">Based on: {o.basis}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="after">One way in. Tell me what you are building and where it is stuck.</p>
+        <p>
+          <a className="mail" href={`mailto:${contactEmail}`}>
+            {contactEmail}
+          </a>
+        </p>
+      </Chapter>
+
+      <Chapter index={4} note="Company, title, years, one line each.">
+        {workSections.map((section) => (
+          <div key={section.label} className="tl">
+            <h3>{section.label}</h3>
+            <ol>
+              {section.roles.map((role) => (
+                <li key={`${role.company}-${role.dates}`}>
+                  <span className="d">{role.dates}</span>
+                  <span className="c">
+                    {role.company}
+                    <span>{role.title}</span>
+                  </span>
+                  <span className="s">{role.summary}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ))}
+        {/* In the third person on purpose: a sentence a search engine can quote as it stands. */}
+        <p className="after" data-testid="bio">
+          {PERSON_BIO}
+        </p>
+      </Chapter>
     </main>
   );
 }
 
-function SectionGroup({ label, roles }: WorkSection) {
+function Chapter({ index, note, children }: { index: number; note?: string; children: ReactNode }) {
+  const c = chapters[index];
+  if (!c) return null;
+  const headingId = `${c.id}-h`;
   return (
-    <div className="mb-16 md:mb-32">
-      <div className="flex items-baseline gap-4 mb-8 md:mb-12">
-        <h2 className="font-sans text-xs font-bold tracking-[0.3em] uppercase text-on-surface-variant">
-          {label}
+    <section id={c.id} aria-labelledby={headingId} className="row scroll-mt-[84px]">
+      <div className="gut">
+        <h2 id={headingId} className="lab">
+          {c.title}
         </h2>
-        <div className="h-px flex-grow bg-outline-variant opacity-10" />
+        {note && <p className="gnote">{note}</p>}
       </div>
-
-      <div className="space-y-10 md:space-y-16">
-        {roles.map((role) => (
-          <RoleEntry key={`${role.company}-${role.title}`} {...role} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function RoleEntry({ company, title, dates, location, description, highlights, tags }: WorkRole) {
-  return (
-    <article className="grid grid-cols-1 md:grid-cols-4 gap-4 group">
-      <div className="pt-1.5 space-y-1">
-        <span className="block font-sans text-xs tracking-widest uppercase text-neutral-400">
-          {dates}
-        </span>
-        <span className="block font-sans text-[10px] tracking-widest uppercase text-neutral-400/60">
-          {location}
-        </span>
-      </div>
-      <div className="md:col-span-3">
-        <span className="block font-sans text-[10px] tracking-widest uppercase text-neutral-400 mb-2">
-          {company}
-        </span>
-        <h3 className="font-sans text-xl sm:text-2xl md:text-3xl font-bold tracking-tight mb-4">
-          {title}
-        </h3>
-        <p className="text-lg text-on-surface-variant leading-relaxed max-w-2xl opacity-80 mb-6">
-          {description}
-        </p>
-        {highlights.length > 0 && (
-          <ul className="space-y-2 mb-6 max-w-2xl">
-            {highlights.map((h) => (
-              <li
-                key={h}
-                className="font-sans text-sm text-on-surface-variant/70 leading-relaxed pl-4 border-l border-outline-variant/20"
-              >
-                {h}
-              </li>
-            ))}
-          </ul>
-        )}
-        <div className="flex flex-wrap gap-2">
-          {tags.map((tag) => (
-            <span
-              key={tag}
-              className="font-sans text-[10px] tracking-widest uppercase text-neutral-400"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-      </div>
-    </article>
+      <div className="col">{children}</div>
+    </section>
   );
 }

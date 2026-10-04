@@ -3,49 +3,47 @@ import type { ReactNode } from "react";
 import { Link, Outlet, HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { Header } from "~/components/Header";
 import { Footer } from "~/components/Footer";
+import { KeyboardLayer } from "~/components/KeyboardLayer";
+import { staticOgImage } from "~/lib/og-images";
+import {
+  SITE_DESCRIPTION,
+  SITE_LOCALE,
+  SITE_NAME,
+  SITE_TITLE,
+  absoluteUrl,
+  imageMeta,
+} from "~/lib/seo";
 import appCss from "~/styles/app.css?url";
+import { fontPreloads } from "~/styles/fonts";
 
 export const Route = createRootRoute({
   notFoundComponent: NotFound,
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Ryan Yogan — Engineering Leader & Builder" },
-      {
-        name: "description",
-        content:
-          "Engineering leader with 20 years of experience building teams and products. Writing about distributed systems, Elixir, AI, and the craft of engineering.",
-      },
-      { property: "og:site_name", content: "Ryan Yogan" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { title: SITE_TITLE },
+      { name: "description", content: SITE_DESCRIPTION },
+      { property: "og:site_name", content: SITE_NAME },
+      { property: "og:locale", content: SITE_LOCALE },
       { property: "og:type", content: "website" },
-      { property: "og:title", content: "Ryan Yogan — Engineering Leader & Builder" },
-      {
-        property: "og:description",
-        content:
-          "Engineering leader with 20 years of experience building teams and products. Writing about distributed systems, Elixir, AI, and the craft of engineering.",
-      },
-      { property: "og:url", content: "https://ryanyogan.com" },
-      { property: "og:image", content: "https://ryanyogan.com/og-default.svg" },
-      { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:title", content: SITE_TITLE },
+      { property: "og:description", content: SITE_DESCRIPTION },
+      // Each public route names its own image through seo(); this is the fallback.
+      ...imageMeta(staticOgImage("/")),
       { name: "twitter:site", content: "@ryanyogan" },
       { name: "twitter:creator", content: "@ryanyogan" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "canonical", href: "https://ryanyogan.com" },
+      // No canonical here: each route sets its own through seo() or canonical().
       {
         rel: "alternate",
         type: "application/rss+xml",
-        title: "Ryan Yogan — Writing",
-        href: "https://ryanyogan.com/api/rss",
+        title: "Ryan Yogan, writing",
+        href: absoluteUrl("/rss.xml"),
       },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=STIX+Two+Text:ital,wght@0,400;0,700;1,400&display=swap",
-      },
+      ...fontPreloads,
     ],
   }),
   component: RootComponent,
@@ -57,23 +55,21 @@ function RootComponent() {
       <Header />
       <Outlet />
       <Footer />
+      <KeyboardLayer />
     </RootDocument>
   );
 }
 
 function NotFound() {
   return (
-    <main className="pt-28 md:pt-40 pb-16 md:pb-24 px-5 sm:px-6 md:px-8 max-w-7xl mx-auto">
-      <h1 className="font-sans text-4xl sm:text-6xl md:text-8xl font-extrabold tracking-tighter text-primary leading-[0.9] mb-8">
-        404
-      </h1>
-      <p className="font-serif text-xl text-on-surface-variant mb-12">This page doesn't exist.</p>
-      <Link
-        to="/"
-        className="inline-block bg-primary text-on-primary px-6 py-3 font-sans text-sm tracking-widest uppercase hover:opacity-90 transition-all"
-      >
-        Back to Home
-      </Link>
+    <main id="main" className="wrap pt-[clamp(40px,7vw,84px)] pb-[72px]">
+      <span className="lab mb-[18px] block">404</span>
+      <h1>This page doesn&rsquo;t exist.</h1>
+      <p className="mt-[22px]">
+        <Link to="/" className="link">
+          Back to home &rarr;
+        </Link>
+      </p>
     </main>
   );
 }
@@ -82,6 +78,10 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en">
       <head>
+        {/* Here, not in head(): the router keeps one meta per name, and this needs two. The
+            values are --paper in each scheme (styles/app.css). */}
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f5f1" />
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1c1e1f" />
         <HeadContent />
       </head>
       <body>
@@ -90,6 +90,12 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
             __html: `(function(){try{var t=localStorage.getItem("theme");if(t==="dark")document.documentElement.classList.add("dark");else if(t==="light")document.documentElement.classList.add("light")}catch(e){}}())`,
           }}
         />
+        <a
+          href="#main"
+          className="absolute -top-20 left-4 z-50 bg-ink px-4 py-3.5 font-sans text-[0.9375rem] font-medium text-paper focus:top-3"
+        >
+          Skip to content
+        </a>
         {children}
         <Scripts />
       </body>

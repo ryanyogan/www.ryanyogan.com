@@ -1,0 +1,794 @@
+import { execFileSync } from "node:child_process";
+import type { APIRequestContext, Page } from "@playwright/test";
+import {
+  ADMIN_ORIGIN,
+  GITHUB_STUB,
+  OG_MAX_BYTES,
+  adminFunctionIds,
+  draft,
+  expect,
+  pngSize,
+  test,
+} from "./fixtures";
+
+// /admin is not in `routes` (fixtures.ts) on purpose: it has no canonical, is noindex and
+// needs the owner. These tests cover it instead.
+
+const adminPages = [
+  "/admin",
+  "/admin/",
+  "/Admin",
+  "/admin/projects/new",
+  "/admin/import",
+  `/admin/projects/${draft.slug}`,
+  "/admin/projects/lincoln-project",
+  "/admin/nothing-here",
+];
+
+/** Text that only an admin page or admin data would contain. */
+const sensitive = [draft.title, draft.marker, "not public", "New project", "Source: seed"];
+
+function expectNothingSensitive(body: string, where: string) {
+  for (const text of sensitive) expect(body, where).not.toContain(text);
+}
+
+test.describe("signed out (no Access config, bypass off)", () => {
+  test("every admin page is refused and renders nothing", async ({ request }) => {
+    for (const path of adminPages) {
+      const response = await request.get(path, { maxRedirects: 0 });
+      expect([401, 403], path).toContain(response.status());
+      expect(response.headers()["cache-control"], path).toBe("no-store");
+      const body = await response.text();
+      expect(body.length, path).toBeLessThan(40);
+      expectNothingSensitive(body, path);
+    }
+  });
+
+  test("the admin page shows no admin markup in a browser", async ({ page, consoleErrors }) => {
+    const response = await page.goto("/admin");
+    expect([401, 403]).toContain(response?.status());
+    await expect(page.getByRole("heading")).toHaveCount(0);
+    await expect(page.getByText(draft.title)).toHaveCount(0);
+    // Chromium logs the 401/403 for the document itself; nothing else may be logged.
+    expect(consoleErrors.filter((e) => !/status of 40[13]/.test(e))).toEqual([]);
+    consoleErrors.length = 0;
+  });
+
+  test("headers cannot open it: forged identity, garbage and unsigned tokens", async ({
+    request,
+  }) => {
+    const b64 = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
+    const unsigned = `${b64({ alg: "none", typ: "JWT" })}.${b64({
+      email: "ryan.yogan@hey.com",
+      exp: 4_000_000_000,
+    })}.`;
+    const attempts: Record<string, string>[] = [
+      { "Cf-Access-Authenticated-User-Email": "ryan.yogan@hey.com" },
+      { "Cf-Access-Jwt-Assertion": "garbage" },
+      { "Cf-Access-Jwt-Assertion": unsigned },
+      { "Admin-Dev-Bypass": "1", "X-Admin-Dev-Bypass": "1", Cookie: "ADMIN_DEV_BYPASS=1" },
+    ];
+    for (const headers of attempts) {
+      const response = await request.get("/admin", { headers });
+      expect([401, 403], JSON.stringify(headers)).toContain(response.status());
+      expectNothingSensitive(await response.text(), JSON.stringify(headers));
+    }
+  });
+
+  test("every admin server function is refused and returns no project data", async ({
+    request,
+  }) => {
+    const ids = adminFunctionIds();
+    // list, get, create, update, move, delete, and the four GitHub ones (list repos, reload
+    // repos, import, refresh stats). A new admin function changes this number.
+    expect(ids).toHaveLength(11);
+    const headers = {
+      "x-tsr-serverFn": "true",
+      Origin: "http://localhost:4173",
+      "Sec-Fetch-Site": "same-origin",
+    };
+    for (const id of ids) {
+      const get = await request.get(`/_serverFn/${id}`, { headers });
+      const post = await request.post(`/_serverFn/${id}`, { headers, data: {} });
+      for (const response of [get, post]) {
+        expect([401, 403], id).toContain(response.status());
+        const body = await response.text();
+        expect(body.length, id).toBeLessThan(40);
+        expectNothingSensitive(body, id);
+        expect(body, id).not.toContain("slug");
+      }
+    }
+  });
+
+  test("no public page links to the admin", async ({ request }) => {
+    for (const path of ["/", "/work", "/projects", "/writing", "/projects/lincoln-project"]) {
+      expect(await (await request.get(path)).text(), path).not.toMatch(/href="\/admin/);
+    }
+  });
+});
+
+// --- Signed in: the second preview, bypass on, its own database -------------------------
+
+const widget = { slug: "e2e-widget", title: "Zephyr Widget", renamed: "Zephyr Widget Two" };
+
+async function gotoAdmin(page: Page, path: string) {
+  const response = await page.goto(`${ADMIN_ORIGIN}${path}`);
+  await expect(page.locator('main[data-hydrated="true"]')).toBeVisible();
+  return response;
+}
+
+async function publicHtml(request: APIRequestContext, path: string) {
+  const response = await request.get(`${ADMIN_ORIGIN}${path}`);
+  return { status: response.status(), html: await response.text() };
+}
+
+/** The edge-cache status of a public page: MISS (rendered), HIT, STALE, or null (not cacheable). */
+async function cacheStatus(request: APIRequestContext, path: string) {
+  const response = await request.get(`${ADMIN_ORIGIN}${path}`);
+  return response.headers()["x-cache"] ?? null;
+}
+
+/** A project's preview image as the public gets it. */
+async function ogImage(request: APIRequestContext, slug: string) {
+  const response = await request.get(`${ADMIN_ORIGIN}/og/projects/${slug}.png`);
+  const body = await response.body();
+  return {
+    status: response.status(),
+    type: response.headers()["content-type"] ?? "",
+    cache: response.headers()["x-cache"] ?? null,
+    body,
+  };
+}
+
+const ogImageUrl = (html: string) => /property="og:image" content="([^"]+)"/.exec(html)?.[1];
+
+async function save(page: Page) {
+  await page.getByRole("button", { name: "Save changes" }).click();
+  await expect(page.getByRole("status")).toContainText("Saved");
+}
+
+test.describe("signed in (local bypass, test-only database)", () => {
+  test.describe.configure({ mode: "serial" });
+
+  test("lists every project, drafts included, uncacheable and noindex", async ({ page }) => {
+    const response = await gotoAdmin(page, "/admin");
+    expect(response?.status()).toBe(200);
+    expect(response?.headers()["cache-control"]).toBe("no-store");
+    expect(response?.headers()["x-robots-tag"]).toContain("noindex");
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+    await expect(page.getByRole("heading", { level: 1, name: "Projects" })).toBeVisible();
+    const draftRow = page.locator(`li[data-slug="${draft.slug}"]`);
+    await expect(draftRow).toContainText(draft.title);
+    await expect(draftRow).toContainText("Draft");
+    await expect(page.locator('li[data-slug="lincoln-project"]')).toContainText("Published");
+    await expect(page.locator('li[data-slug="lincoln-project"]')).toContainText("Source: seed");
+  });
+
+  test("the keyboard layer is off inside /admin", async ({ page }) => {
+    await gotoAdmin(page, "/admin");
+    await page.keyboard.press("?");
+    await page.keyboard.press("/");
+    await page.keyboard.press("Control+k");
+    await page.waitForTimeout(300);
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+  });
+
+  test("admin pages fit a 360px screen", async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 740 });
+    const paths = [
+      "/admin",
+      "/admin/import",
+      "/admin/projects/new",
+      "/admin/projects/lincoln-project",
+    ];
+    for (const path of paths) {
+      await gotoAdmin(page, path);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow, path).toBeLessThanOrEqual(0);
+    }
+  });
+
+  test("form controls have a border of at least 3:1 against the page in both themes", async ({
+    page,
+  }) => {
+    await gotoAdmin(page, "/admin/projects/new");
+    for (const theme of ["light", "dark"]) {
+      const { ratio, border, token, rule } = await page.evaluate((name) => {
+        const root = document.documentElement;
+        root.classList.remove("light", "dark");
+        root.classList.add(name);
+        const rgb = (colour: string) => {
+          const probe = document.createElement("i");
+          probe.style.color = colour;
+          root.appendChild(probe);
+          const value = getComputedStyle(probe).color;
+          probe.remove();
+          return (value.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+        };
+        const luminance = (colour: string) => {
+          const [r, g, b] = rgb(colour).map((channel) => {
+            const c = channel / 255;
+            return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+          });
+          return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        };
+        const styles = getComputedStyle(root);
+        const token = styles.getPropertyValue("--control-border").trim();
+        const [hi, lo] = [
+          luminance(token),
+          luminance(styles.getPropertyValue("--paper").trim()),
+        ].sort((a, b) => b - a);
+        const input = document.querySelector<HTMLElement>("input.adm-input, textarea.adm-input")!;
+        input.style.transition = "none";
+        return {
+          ratio: (hi + 0.05) / (lo + 0.05),
+          border: rgb(getComputedStyle(input).borderTopColor).join(","),
+          token: rgb(token).join(","),
+          rule: rgb(styles.getPropertyValue("--rule").trim()).join(","),
+        };
+      }, theme);
+      expect(ratio, theme).toBeGreaterThanOrEqual(3);
+      expect(border, theme).toBe(token);
+      // The hairlines between content keep their own, lighter tone.
+      expect(rule, theme).not.toBe(token);
+    }
+  });
+
+  test("a cross-origin write is refused even when signed in", async ({ request }) => {
+    for (const id of adminFunctionIds()) {
+      const attempts: Record<string, string>[] = [
+        { Origin: "https://evil.example" },
+        { Origin: ADMIN_ORIGIN, "Sec-Fetch-Site": "cross-site" },
+        { "Sec-Fetch-Site": "same-site" },
+      ];
+      for (const headers of attempts) {
+        const response = await request.post(`${ADMIN_ORIGIN}/_serverFn/${id}`, {
+          headers,
+          data: {},
+        });
+        expect(response.status(), id).toBe(403);
+      }
+    }
+  });
+
+  test("create a draft: validation errors inline, then absent from public pages", async ({
+    page,
+    request,
+  }) => {
+    await gotoAdmin(page, "/admin/projects/new");
+    await page.getByLabel("Title").fill(widget.title);
+    await page.getByLabel("Slug").fill("Not A Slug");
+    await page.getByLabel("GitHub URL").fill("http://example.com/insecure");
+    await page.getByRole("button", { name: "Create project" }).click();
+    await expect(page.getByRole("status")).toContainText("2 fields need fixing");
+    await expect(page.getByLabel("Slug")).toHaveAttribute("aria-invalid", "true");
+    await expect(page.getByText("Must be an https:// URL.")).toBeVisible();
+
+    // A slug that is already taken.
+    await page.getByLabel("GitHub URL").fill("https://github.com/ryanyogan/zephyr");
+    await page.getByLabel("Slug").fill("lincoln-project");
+    await page.getByRole("button", { name: "Create project" }).click();
+    await expect(page.getByText("That slug is already in use.")).toBeVisible();
+
+    await page.getByLabel("Slug").fill(widget.slug);
+    await page.getByLabel("Summary").fill("Widget summary zq4");
+    await page.getByLabel("Tagline").fill("Widget tagline zq4");
+    await page.getByLabel("Tech").fill("Zig, SQLite");
+    // The body is text the owner types, rendered to HTML. Markup in it must stay inert, in
+    // the preview here and on the public page once published (checked below).
+    await page
+      .getByLabel("Body (markdown)")
+      .fill(
+        "## Widget heading zq4\n\nSome **bold** text.\n\n" +
+          "<script>window.pwnedZq4 = 1</script>\n\n" +
+          '<img src="/nope.png" onerror="window.pwnedZq4 = 1">\n\n' +
+          "[hostile link zq4](javascript:window.pwnedZq4=1)",
+      );
+    const preview = page.getByTestId("body-preview");
+    await expect(preview.getByRole("heading", { name: "Widget heading zq4" })).toBeVisible();
+    await expect(preview.locator("strong")).toHaveText("bold");
+    await expect(preview.getByText("window.pwnedZq4 = 1</script>")).toBeVisible();
+    await expect(preview.locator("script, img, [onerror], a[href^='javascript']")).toHaveCount(0);
+    expect(await page.evaluate(() => "pwnedZq4" in window)).toBe(false);
+    await page.getByRole("button", { name: "Create project" }).click();
+    await expect(page).toHaveURL(`${ADMIN_ORIGIN}/admin/projects/${widget.slug}`);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(`Edit ${widget.title}`);
+
+    const list = await publicHtml(request, "/projects");
+    expect(list.html).not.toContain(widget.title);
+    expect(list.html).not.toContain("zq4");
+    expect((await publicHtml(request, "/")).html).not.toContain(widget.title);
+    expect((await publicHtml(request, `/projects/${widget.slug}`)).status).toBe(404);
+  });
+
+  test("publish it: it appears on /projects with no rebuild", async ({ page, request }) => {
+    // Both lists are in the edge cache without the widget, and the draft's 404 is not: a
+    // draft never enters the cache however often it is asked for.
+    for (const path of ["/", "/projects"]) {
+      await cacheStatus(request, path);
+      expect(await cacheStatus(request, path), path).toBe("HIT");
+      expect((await publicHtml(request, path)).html, path).not.toContain(widget.title);
+    }
+    for (let i = 0; i < 2; i += 1) {
+      const response = await request.get(`${ADMIN_ORIGIN}/projects/${widget.slug}`);
+      expect(response.status()).toBe(404);
+      expect(response.headers()["x-cache"]).toBeUndefined();
+      expect(response.headers()["cache-control"]).toBe("no-store");
+      // Nor is a draft ever drawn.
+      const image = await ogImage(request, widget.slug);
+      expect([image.status, image.cache, image.type.includes("image/")]).toEqual([
+        404,
+        null,
+        false,
+      ]);
+    }
+
+    await gotoAdmin(page, `/admin/projects/${widget.slug}`);
+    await page.getByLabel("Published").check();
+    await save(page);
+    expect((await ogImage(request, widget.slug)).status).toBe(200);
+
+    // The save purged them: the very next request is rendered from D1, well inside the TTL.
+    const response = await request.get(`${ADMIN_ORIGIN}/projects`);
+    expect(response.headers()["x-cache"]).toBe("MISS");
+    expect(await response.text()).toContain(widget.title);
+    expect(await cacheStatus(request, "/")).toBe("MISS");
+    const list = await publicHtml(request, "/projects");
+    expect(list.html).toContain(widget.title);
+    const detail = await publicHtml(request, `/projects/${widget.slug}`);
+    expect(detail.status).toBe(200);
+    expect(detail.html).toContain("Widget heading zq4");
+
+    // The hostile markup from the body arrives as text: nothing runs, nothing is an element.
+    await page.goto(`${ADMIN_ORIGIN}/projects/${widget.slug}`);
+    const prose = page.locator("article");
+    await expect(prose.getByText("window.pwnedZq4 = 1</script>")).toBeVisible();
+    await expect(prose.locator("script, [onerror], a[href^='javascript']")).toHaveCount(0);
+    await prose.getByText("hostile link zq4").click();
+    expect(await page.evaluate(() => "pwnedZq4" in window)).toBe(false);
+    expect(await cacheStatus(request, `/projects/${widget.slug}`)).toBe("HIT");
+
+    await page.goto(`${ADMIN_ORIGIN}/projects`);
+    await expect(page.getByRole("link", { name: widget.title, exact: true })).toBeVisible();
+  });
+
+  test("edit it: the public pages show the new text", async ({ page, request }) => {
+    // The preview image with the old title is in the edge cache.
+    await ogImage(request, widget.slug);
+    const before = await ogImage(request, widget.slug);
+    expect([before.status, before.type, before.cache]).toEqual([200, "image/png", "HIT"]);
+    expect(pngSize(before.body)).toEqual({ width: 1200, height: 630 });
+    const urlBefore = ogImageUrl((await publicHtml(request, `/projects/${widget.slug}`)).html);
+
+    await gotoAdmin(page, `/admin/projects/${widget.slug}`);
+    await page.getByLabel("Title").fill(widget.renamed);
+    await page.getByLabel("Status label").fill("Zq4 label");
+    await page.getByLabel("Live URL").fill("https://example.com/zephyr");
+    await save(page);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(`Edit ${widget.renamed}`);
+
+    const list = await publicHtml(request, "/projects");
+    expect(list.html).toContain(widget.renamed);
+    expect(list.html).toContain("Zq4 label");
+    expect(list.html).toContain("https://example.com/zephyr");
+    // The detail page was cached by the previous test; the edit purged it too.
+    const detail = await request.get(`${ADMIN_ORIGIN}/projects/${widget.slug}`);
+    expect(detail.headers()["x-cache"]).toBe("MISS");
+    const html = await detail.text();
+    expect(html).toContain(widget.renamed);
+
+    // So was the image: the next request draws the new title, and the page names a new URL
+    // for it, so a platform that keeps images by URL fetches it again.
+    const after = await ogImage(request, widget.slug);
+    expect([after.status, after.type, after.cache]).toEqual([200, "image/png", "MISS"]);
+    expect(pngSize(after.body)).toEqual({ width: 1200, height: 630 });
+    expect(after.body.length).toBeLessThan(OG_MAX_BYTES);
+    expect(after.body.equals(before.body)).toBe(false);
+    expect(ogImageUrl(html)).toContain(`/og/projects/${widget.slug}.png?v=`);
+    expect(ogImageUrl(html)).not.toBe(urlBefore);
+  });
+
+  test("a title with </script> cannot break out of the JSON-LD block", async ({
+    page,
+    request,
+  }) => {
+    const hostile = `Zephyr </script><script>window.__pwned = 1</script><!-- & Co`;
+    const path = `/projects/${widget.slug}`;
+    await gotoAdmin(page, `/admin${path}`);
+    await page.getByLabel("Title").fill(hostile);
+    await save(page);
+
+    for (const route of [path, "/projects", "/"]) {
+      const { status, html } = await publicHtml(request, route);
+      expect(status, route).toBe(200);
+      // The title is never in the markup as typed: not in the JSON-LD, the loader data or the text.
+      expect(html, route).not.toContain("<script>window.__pwned");
+      const blocks = [
+        ...html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g),
+      ];
+      expect(blocks, route).toHaveLength(1);
+      expect(blocks[0][1], route).not.toMatch(/[<>]/);
+      const graph = JSON.parse(blocks[0][1])["@graph"] as Record<string, unknown>[];
+      expect(graph.length, route).toBeGreaterThan(0);
+      if (route === path) {
+        // Escaped on the way out, and the same string again once parsed.
+        expect(graph[0].name).toBe(hostile);
+        const crumbs = graph[1].itemListElement as { name: string }[];
+        expect(crumbs.at(-1)?.name).toBe(hostile);
+      }
+    }
+
+    // In a browser: nothing ran, and the page shows the title as text.
+    await page.goto(`${ADMIN_ORIGIN}${path}`);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(hostile);
+    expect(await page.evaluate(() => "__pwned" in window)).toBe(false);
+    const parsed = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('script[type="application/ld+json"]'), (el) =>
+        JSON.parse(el.textContent ?? ""),
+      ),
+    );
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0]["@graph"][0].name).toBe(hostile);
+
+    // The write purged the sitemap with the pages: the published project is in it.
+    const sitemap = await request.get(`${ADMIN_ORIGIN}/sitemap.xml`);
+    expect(await sitemap.text()).toContain(`<loc>https://ryanyogan.com${path}</loc>`);
+
+    await gotoAdmin(page, `/admin${path}`);
+    await page.getByLabel("Title").fill(widget.renamed);
+    await save(page);
+    expect((await publicHtml(request, path)).html).not.toContain("__pwned");
+  });
+
+  test("change its slug: validated, unique, and the old URL is a 404", async ({
+    page,
+    request,
+  }) => {
+    const moved = `${widget.slug}-moved`;
+    await gotoAdmin(page, `/admin/projects/${widget.slug}`);
+    const slug = page.getByLabel("Slug");
+    const saveButton = page.getByRole("button", { name: "Save changes" });
+
+    await slug.fill("Not A Slug");
+    await saveButton.click();
+    await expect(
+      page.getByText("Lower-case letters, digits and single hyphens only"),
+    ).toBeVisible();
+    await slug.fill("perfumery");
+    await saveButton.click();
+    await expect(page.getByText("That slug is already in use.")).toBeVisible();
+    // Neither attempt changed anything.
+    expect((await publicHtml(request, `/projects/${widget.slug}`)).status).toBe(200);
+    await gotoAdmin(page, "/admin");
+    await expect(page.locator('li[data-slug="perfumery"]')).not.toContainText(widget.renamed);
+    await gotoAdmin(page, `/admin/projects/${widget.slug}`);
+
+    await slug.fill(moved);
+    await saveButton.click();
+    await expect(page).toHaveURL(`${ADMIN_ORIGIN}/admin/projects/${moved}`);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(`Edit ${widget.renamed}`);
+
+    // No redirect: the old address is gone (it was cached a moment ago), the new one is live.
+    const old = await request.get(`${ADMIN_ORIGIN}/projects/${widget.slug}`, { maxRedirects: 0 });
+    expect(old.status()).toBe(404);
+    expect((await request.get(`${ADMIN_ORIGIN}/admin/projects/${widget.slug}`)).status()).toBe(404);
+    const live = await publicHtml(request, `/projects/${moved}`);
+    expect(live.status).toBe(200);
+    expect(live.html).toContain(widget.renamed);
+    const list = (await publicHtml(request, "/projects")).html;
+    expect(list).toContain(`href="/projects/${moved}"`);
+    expect(list).not.toContain(`href="/projects/${widget.slug}"`);
+
+    // Back again for the tests below; the first name is free to reuse.
+    await page.getByLabel("Slug").fill(widget.slug);
+    await page.getByRole("button", { name: "Save changes" }).click();
+    await expect(page).toHaveURL(`${ADMIN_ORIGIN}/admin/projects/${widget.slug}`);
+    expect((await publicHtml(request, `/projects/${moved}`)).status).toBe(404);
+    expect((await publicHtml(request, `/projects/${widget.slug}`)).status).toBe(200);
+  });
+
+  test("editing a seeded project marks it manual", async ({ page }) => {
+    await gotoAdmin(page, "/admin/projects/perfumery");
+    await page.getByLabel("Status label").fill("Edited in e2e");
+    await save(page);
+    await gotoAdmin(page, "/admin");
+    await expect(page.locator('li[data-slug="perfumery"]')).toContainText("Source: manual");
+  });
+
+  test("reorder within the group: the public order follows", async ({ page, request }) => {
+    await gotoAdmin(page, "/admin");
+    const shipped = page.locator("section", {
+      has: page.getByRole("heading", { level: 2, name: /Shipped/ }),
+    });
+    const slugs = () =>
+      shipped.locator("li[data-slug]").evaluateAll((items) => items.map((li) => li.dataset.slug));
+    const before = (await slugs()) as string[];
+    expect(before.at(-1)).toBe(widget.slug);
+    await expect(page.getByRole("button", { name: `Move ${widget.renamed} down` })).toBeDisabled();
+
+    await page.getByRole("button", { name: `Move ${widget.renamed} up` }).click();
+    await expect(page.getByRole("status")).toContainText("Moved");
+    const after = [...before];
+    after.splice(-2, 2, before.at(-1)!, before.at(-2)!);
+    await expect.poll(slugs).toEqual(after);
+
+    const { html } = await publicHtml(request, "/projects");
+    const at = (slug: string) => html.indexOf(`href="/projects/${slug}"`);
+    expect(at(widget.slug)).toBeGreaterThan(-1);
+    expect(at(widget.slug)).toBeLessThan(at(before.at(-2)!));
+  });
+
+  test("unpublish it: gone from the public pages again", async ({ page, request }) => {
+    await gotoAdmin(page, `/admin/projects/${widget.slug}`);
+    await page.getByLabel("Published").uncheck();
+    await save(page);
+    expect((await publicHtml(request, "/projects")).html).not.toContain(widget.renamed);
+    expect((await publicHtml(request, `/projects/${widget.slug}`)).status).toBe(404);
+    expect((await publicHtml(request, "/sitemap.xml")).html).not.toContain(widget.slug);
+    // The image was cached while it was public; unpublishing takes it away at once.
+    const image = await ogImage(request, widget.slug);
+    expect([image.status, image.cache]).toEqual([404, null]);
+  });
+
+  test("delete it, after a confirmation", async ({ page, request }) => {
+    await gotoAdmin(page, `/admin/projects/${widget.slug}`);
+    await page.getByRole("button", { name: "Delete project" }).click();
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(page.getByRole("button", { name: "Yes, delete it" })).toHaveCount(0);
+    await page.getByRole("button", { name: "Delete project" }).click();
+    await page.getByRole("button", { name: "Yes, delete it" }).click();
+    await expect(page).toHaveURL(`${ADMIN_ORIGIN}/admin`);
+    await expect(page.getByRole("heading", { level: 1, name: "Projects" })).toBeVisible();
+    await expect(page.locator(`li[data-slug="${widget.slug}"]`)).toHaveCount(0);
+
+    const response = await request.get(`${ADMIN_ORIGIN}/admin/projects/${widget.slug}`);
+    expect(response.status()).toBe(404);
+  });
+
+  test("a deleted seed project stays deleted when the seed is run again", async ({
+    page,
+    request,
+  }) => {
+    const seeded = { slug: "omatop", title: "Omatop" };
+    expect((await publicHtml(request, `/projects/${seeded.slug}`)).status).toBe(200);
+    expect(await cacheStatus(request, `/projects/${seeded.slug}`)).toBe("HIT");
+
+    await gotoAdmin(page, `/admin/projects/${seeded.slug}`);
+    await page.getByRole("button", { name: "Delete project" }).click();
+    await page.getByRole("button", { name: "Yes, delete it" }).click();
+    await expect(page).toHaveURL(`${ADMIN_ORIGIN}/admin`);
+    expect((await publicHtml(request, `/projects/${seeded.slug}`)).status).toBe(404);
+
+    // The owner's `db:seed:local`, against this preview's database (db/seed.sql was written
+    // by `pnpm db:e2e`). It runs in another process, so the Worker's cache is not purged:
+    // asking with an unknown query parameter skips the cache and reads D1.
+    execFileSync(
+      "pnpm",
+      [
+        "exec",
+        "wrangler",
+        "d1",
+        "execute",
+        "DB",
+        "--local",
+        "--persist-to",
+        ".wrangler/e2e-admin",
+        "--file",
+        "db/seed.sql",
+      ],
+      { stdio: "pipe" },
+    );
+    expect((await publicHtml(request, `/projects/${seeded.slug}?fresh=1`)).status).toBe(404);
+    expect((await publicHtml(request, "/projects?fresh=1")).html).not.toContain(
+      `href="/projects/${seeded.slug}"`,
+    );
+    // The seed did run: an untouched seed row is still there, and the edited one kept its edit.
+    expect((await publicHtml(request, "/projects/lincoln-project?fresh=1")).status).toBe(200);
+    await gotoAdmin(page, "/admin");
+    await expect(page.locator(`li[data-slug="${seeded.slug}"]`)).toHaveCount(0);
+    await expect(page.locator('li[data-slug="perfumery"]')).toContainText("Source: manual");
+  });
+
+  // --- GitHub import. The Worker's GITHUB_API_BASE points at e2e/github-stub.mjs (five
+  // fixture repos, paged two at a time); nothing here reaches github.com.
+
+  const imported = {
+    repo: "stub-import-demo",
+    slug: "stub-import-demo",
+    title: "Stub Import Demo",
+  };
+  const repoRow = (page: Page, name: string) => page.locator(`li[data-repo="${name}"]`);
+
+  test("import page: public repos, default filters, search and sort", async ({ page }) => {
+    await gotoAdmin(page, "/admin");
+    await page.getByRole("link", { name: "Import from GitHub" }).click();
+    await expect(page.getByRole("heading", { level: 1, name: "Import from GitHub" })).toBeVisible();
+    // All three pages of the stub's list arrived; forks, archived and undescribed are hidden.
+    await expect(page.getByTestId("repo-counts")).toContainText("5 public repositories, 2 shown");
+    await expect(repoRow(page, imported.repo)).toContainText("Stub demo xk7 description");
+    await expect(repoRow(page, imported.repo)).toContainText("Zig");
+    await expect(repoRow(page, imported.repo)).toContainText("Stars: 41");
+    await expect(repoRow(page, imported.repo)).toContainText("2026-03-04");
+    await expect(repoRow(page, imported.repo)).not.toContainText("Imported");
+    for (const hidden of ["stub-forked", "stub-archived", "stub-nodesc"]) {
+      await expect(repoRow(page, hidden)).toHaveCount(0);
+    }
+
+    await page.getByLabel("Show forks").check();
+    await expect(repoRow(page, "stub-forked")).toContainText("Fork");
+    await page.getByLabel("Show archived").check();
+    await page.getByLabel("Show repos with no description").check();
+    await expect(page.locator("li[data-repo]")).toHaveCount(5);
+
+    await page.getByLabel("Sort by").selectOption("stars");
+    await expect(page.locator("li[data-repo]").first()).toHaveAttribute(
+      "data-repo",
+      "stub-http-home",
+    );
+    await page.getByRole("searchbox", { name: "Search repositories" }).fill("import-demo");
+    await expect(page.locator("li[data-repo]")).toHaveCount(1);
+
+    await page.getByRole("button", { name: "Reload from GitHub" }).click();
+    await expect(page.getByRole("status")).toContainText("Reloaded 5 repositories");
+  });
+
+  test("import a repo: it is a draft and absent from the public pages", async ({
+    page,
+    request,
+  }) => {
+    await gotoAdmin(page, "/admin/import");
+    await page.getByRole("button", { name: `Import ${imported.repo} as a draft` }).click();
+    await expect(page).toHaveURL(`${ADMIN_ORIGIN}/admin/projects/${imported.slug}`);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(`Edit ${imported.title}`);
+    await expect(page.getByText("source: github")).toBeVisible();
+    await expect(page.getByLabel("Published")).not.toBeChecked();
+    await expect(page.getByLabel("Tagline")).toHaveValue("Stub demo xk7 description");
+    await expect(page.getByLabel("Summary")).toHaveValue("Stub demo xk7 description");
+    await expect(page.getByLabel("Tech")).toHaveValue(/Zig.*C.*wasm.*cli/);
+    await expect(page.getByLabel("GitHub URL")).toHaveValue(
+      `https://github.com/ryanyogan/${imported.repo}`,
+    );
+    await expect(page.getByLabel("Live URL")).toHaveValue("https://example.com/stub-demo");
+    await expect(page.getByLabel("Body (markdown)")).toHaveValue(/has not been written yet/);
+    // The README is context for a later draft, never copied into the body.
+    await expect(page.getByLabel("Body (markdown)")).not.toHaveValue(/secret-readme-text/);
+    await expect(page.getByTestId("github-stats")).toContainText("Stars: 41");
+    await expect(page.getByTestId("github-stats")).toContainText("Last push: 2026-03-04");
+
+    for (const path of ["/", "/projects"]) {
+      const { html } = await publicHtml(request, path);
+      expect(html, path).not.toContain(imported.title);
+      expect(html, path).not.toContain("xk7");
+    }
+    expect((await publicHtml(request, `/projects/${imported.slug}`)).status).toBe(404);
+
+    await gotoAdmin(page, "/admin");
+    const row = page.locator(`li[data-slug="${imported.slug}"]`);
+    await expect(row).toContainText("Draft");
+    await expect(row).toContainText("Source: github");
+    await gotoAdmin(page, "/admin/import");
+    await expect(repoRow(page, imported.repo)).toContainText("Imported");
+    await expect(
+      page.getByRole("button", { name: `Import ${imported.repo} as a draft` }),
+    ).toHaveCount(0);
+  });
+
+  test("refresh from GitHub updates stars and keeps hand-edited text", async ({ page }) => {
+    await gotoAdmin(page, `/admin/projects/${imported.slug}`);
+    await page.getByLabel("Tagline").fill("Hand edited xk7 tagline");
+    await save(page);
+    await page.getByRole("button", { name: "Refresh from GitHub" }).click();
+    await expect(page.getByTestId("github-refresh-message")).toHaveText(
+      "Stars and last push updated.",
+    );
+    // The stub reports one more star on each read of the repo.
+    await expect(page.getByTestId("github-stats")).toContainText("Stars: 42");
+
+    await gotoAdmin(page, `/admin/projects/${imported.slug}`);
+    await expect(page.getByTestId("github-stats")).toContainText("Stars: 42");
+    await expect(page.getByLabel("Tagline")).toHaveValue("Hand edited xk7 tagline");
+    await expect(page.getByLabel("Published")).not.toBeChecked();
+    await expect(page.getByText("source: github")).toBeVisible();
+    // A project that did not come from GitHub has no such action.
+    await gotoAdmin(page, "/admin/projects/lincoln-project");
+    await expect(page.getByRole("button", { name: "Refresh from GitHub" })).toHaveCount(0);
+  });
+
+  // --- Draft with AI. AI_STUB_URL points the Worker at e2e/ai-stub.mjs; no model is called.
+
+  test("draft with AI: a proposal with caveats, saved only by Save, never published", async ({
+    page,
+    context,
+    request,
+  }) => {
+    await gotoAdmin(page, "/admin/projects/lincoln-project");
+    await expect(page.getByRole("button", { name: "Draft with AI" })).toHaveCount(0);
+
+    await gotoAdmin(page, `/admin/projects/${imported.slug}`);
+    await expect(page.getByTestId("ai-generated-at")).toHaveCount(0);
+    await page.getByRole("button", { name: "Draft with AI" }).click();
+    await expect(page.getByTestId("ai-caveats")).toContainText("could not confirm");
+    await expect(page.getByTestId("ai-caveats")).toContainText("Stub caveat zq4");
+    await expect(page.getByTestId("ai-proposed-tagline")).toHaveText("Stub AI tagline zq4");
+    await expect(page.getByTestId("ai-field-tagline")).toContainText("Hand edited xk7 tagline");
+    // The model was sent the README, inside its delimiters (the stub echoes what it saw).
+    await expect(page.getByTestId("ai-proposed-body")).toContainText("readme-delimited:yes");
+
+    await page.getByTestId("ai-field-summary").getByRole("button", { name: "Use this" }).click();
+    await expect(page.getByLabel("Summary")).toHaveValue("Stub AI summary zq4 sentence.");
+    await expect(page.getByLabel("Tagline")).toHaveValue("Hand edited xk7 tagline");
+    await page.getByRole("button", { name: "Use all" }).click();
+    await expect(page.getByLabel("Tagline")).toHaveValue("Stub AI tagline zq4");
+    await expect(page.getByLabel("Tech")).toHaveValue("Zig, WebAssembly");
+    await expect(page.getByLabel("Body (markdown)")).toHaveValue(/Stub AI body zq4/);
+    await expect(page.getByLabel("Published")).not.toBeChecked();
+    await expect(page.getByTestId("ai-unsaved")).toBeVisible();
+
+    // Nothing is in the database yet: a second tab still shows the old text.
+    const other = await context.newPage();
+    await gotoAdmin(other, `/admin/projects/${imported.slug}`);
+    await expect(other.getByLabel("Tagline")).toHaveValue("Hand edited xk7 tagline");
+    await expect(other.getByTestId("ai-generated-at")).toHaveCount(0);
+    await other.close();
+
+    await save(page);
+    await gotoAdmin(page, `/admin/projects/${imported.slug}`);
+    await expect(page.getByLabel("Tagline")).toHaveValue("Stub AI tagline zq4");
+    await expect(page.getByLabel("Body (markdown)")).toHaveValue(/Stub AI body zq4/);
+    await expect(page.getByTestId("ai-generated-at")).toContainText("AI draft text accepted 20");
+    await expect(page.getByLabel("Published")).not.toBeChecked();
+    expect((await publicHtml(request, `/projects/${imported.slug}`)).status).toBe(404);
+    expect((await publicHtml(request, "/projects")).html).not.toContain("zq4");
+  });
+
+  test("draft with AI: a rate-limited model is an error message, the form is untouched", async ({
+    page,
+  }) => {
+    await gotoAdmin(page, "/admin/import");
+    await page.getByRole("button", { name: "Import stub-http-home as a draft" }).click();
+    await expect(page).toHaveURL(`${ADMIN_ORIGIN}/admin/projects/stub-http-home`);
+    await page.getByRole("button", { name: "Draft with AI" }).click();
+    await expect(page.getByTestId("ai-error")).toContainText("rate limited");
+    await expect(page.getByTestId("ai-caveats")).toHaveCount(0);
+    await expect(page.getByLabel("Tagline")).toHaveValue("Fixture repository stub-http-home");
+  });
+
+  test("publish the import: only then is it public", async ({ page, request }) => {
+    await gotoAdmin(page, `/admin/projects/${imported.slug}`);
+    await page.getByLabel("Published").check();
+    await save(page);
+    const list = await publicHtml(request, "/projects");
+    expect(list.html).toContain(imported.title);
+    expect(list.html).toContain("Stub AI tagline zq4");
+    const detail = await publicHtml(request, `/projects/${imported.slug}`);
+    expect(detail.status).toBe(200);
+    expect(detail.html).not.toContain("secret-readme-text");
+  });
+
+  // Last, and inside the serial block: the stub's list is switched to fail for a moment,
+  // which would break the import tests above if they ran at the same time.
+  test("import page: a rate limit and a GitHub error are shown, then it recovers", async ({
+    page,
+    request,
+  }) => {
+    await gotoAdmin(page, "/admin/import");
+    const reload = page.getByRole("button", { name: "Reload from GitHub" });
+    try {
+      for (const [code, message] of [
+        [403, /rate limit/i],
+        [500, /GitHub answered 500/],
+      ] as const) {
+        await request.post(`${GITHUB_STUB}/__list-status?code=${code}`);
+        await reload.click();
+        await expect(page.getByTestId("github-error")).toHaveText(message);
+      }
+    } finally {
+      await request.post(`${GITHUB_STUB}/__list-status?code=0`);
+    }
+    await reload.click();
+    await expect(page.getByRole("status")).toContainText("Reloaded 5 repositories");
+    await expect(page.getByTestId("github-error")).toHaveCount(0);
+  });
+});

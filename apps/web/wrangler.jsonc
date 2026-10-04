@@ -4,6 +4,34 @@
   "compatibility_date": "2026-04-06",
   "compatibility_flags": ["nodejs_compat"],
   "main": "@tanstack/react-start/server-entry",
+  // The asset directory is set by the build. A trailing-slash URL goes to the Worker first,
+  // which redirects it to the bare path with a 308 (src/lib/trailing-slash.ts); the asset
+  // server alone would answer a prerendered page's slash form with a temporary 307.
+  "assets": {
+    "run_worker_first": ["/*/"],
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ryanyogan-com",
+      // The remote database (created 2026-10-02). Local dev, preview and tests use a local
+      // copy under .wrangler, keyed by this id.
+      "database_id": "0b4cc2df-6c70-4707-9e6e-e0467987cf00",
+      "migrations_dir": "migrations",
+    },
+  ],
+  // Workers AI, for "Draft with AI" in /admin (src/lib/admin/ai.ts). Nothing to create or
+  // set: the binding exists on deploy. In local dev it calls the real service (billed).
+  "ai": {
+    "binding": "AI",
+  },
+  // Cloudflare Access for /admin (src/lib/admin/access.ts). Neither value is sensitive. The
+  // third setting, ADMIN_EMAIL, is a secret (`wrangler secret put ADMIN_EMAIL`) and is never
+  // written to a file; until it is set, /admin stays closed.
+  "vars": {
+    "ACCESS_TEAM_DOMAIN": "ryanyogan.cloudflareaccess.com",
+    "ACCESS_AUD": "dd6b5f8cb39a6e729e738e9ba470828b18e81b373c0de7d4c1f1e5f76f322428",
+  },
   "observability": {
     "enabled": true,
   },

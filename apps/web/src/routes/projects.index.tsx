@@ -1,140 +1,164 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { projectDetails } from "~/lib/content";
-import type { ProjectDetail } from "~/lib/content";
+import { contactEmail, projectGroups } from "@repo/shared";
+import type { Project, ProjectStatus } from "@repo/shared";
+import { StatusMarks } from "~/components/PageArt";
+import { ProjectLinks } from "~/components/ProjectLinks";
+import { StatusPill } from "~/components/StatusPill";
+import { PROJECT_PAGE_CACHE, fetchProjects } from "~/lib/projects.functions";
+import { collectionNode, pageTitle, seo } from "~/lib/seo";
+import { staticOgImage } from "~/lib/og-images";
+
+const description =
+  "Agent memory, MCP servers, durable AI workflows and desktop tools. Everything I've built, with its real status.";
 
 export const Route = createFileRoute("/projects/")({
-  head: () => ({
-    meta: [
-      { title: "Projects — Ryan Yogan" },
-      {
-        name: "description",
-        content:
-          "AI systems, developer experience tools, and open source experiments in Elixir, TypeScript, and whatever else gets the job done.",
-      },
-      { property: "og:title", content: "Projects — Ryan Yogan" },
-      {
-        property: "og:description",
-        content:
-          "AI systems, developer experience tools, and open source experiments in Elixir, TypeScript, and whatever else gets the job done.",
-      },
-      { property: "og:url", content: "https://ryanyogan.com/projects" },
-    ],
-  }),
+  // loaderData is missing when the loader failed (a 500): the page then has no item list.
+  head: ({ loaderData }) =>
+    seo({
+      title: pageTitle("Projects"),
+      description,
+      path: "/projects",
+      image: staticOgImage("/projects"),
+      graph: [
+        collectionNode({
+          name: pageTitle("Projects"),
+          description,
+          path: "/projects",
+          items: (loaderData ?? []).map((project) => ({
+            name: project.title,
+            path: `/projects/${project.slug}`,
+          })),
+        }),
+      ],
+    }),
+  loader: () => fetchProjects(),
+  headers: () => ({ "Cache-Control": PROJECT_PAGE_CACHE }),
   component: ProjectsPage,
 });
 
-function ProjectsPage() {
-  const grouped = projectDetails.reduce<Record<string, ProjectDetail[]>>((acc, project) => {
-    if (!acc[project.year]) acc[project.year] = [];
-    acc[project.year].push(project);
-    return acc;
-  }, {});
+type Filter = "all" | "running" | "prototype";
 
-  const years = Object.keys(grouped).sort((a, b) => Number(b) - Number(a));
-  const totalProjects = projectDetails.length;
+const filters: { id: Filter; label: string; statuses: ProjectStatus[] | null }[] = [
+  { id: "all", label: "All", statuses: null },
+  { id: "running", label: "Running or live", statuses: ["running", "live"] },
+  { id: "prototype", label: "Prototype", statuses: ["prototype"] },
+];
+
+function ProjectsPage() {
+  const all = Route.useLoaderData();
+  const total = all.length;
+  const [filter, setFilter] = useState<Filter>("all");
+  const statuses = filters.find((f) => f.id === filter)?.statuses ?? null;
+
+  const groups = projectGroups
+    .map((info) => ({
+      info,
+      projects: all.filter(
+        (p) => p.group === info.id && (!statuses || statuses.includes(p.status)),
+      ),
+    }))
+    .filter((g) => g.projects.length > 0);
+  const shown = groups.reduce((n, g) => n + g.projects.length, 0);
 
   return (
-    <main className="pt-28 md:pt-40 pb-16 md:pb-24 px-5 sm:px-6 md:px-8 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-0">
-      <aside className="hidden md:block md:col-span-3">
-        <div className="sticky top-40 space-y-8">
-          <div className="space-y-1">
-            <span className="block font-sans text-[10px] tracking-[0.2em] uppercase text-on-surface-variant opacity-60">
-              Archive
-            </span>
-            <span className="block font-sans text-sm font-bold uppercase tracking-tight">
-              Projects
-            </span>
-          </div>
-          <p className="font-sans text-xs leading-relaxed text-on-surface-variant pr-12">
-            Selected engineering works, open-source contributions, and technical experiments.
+    <main id="main" className="wrap">
+      <section className="row first" aria-labelledby="proj-h">
+        <div className="gut">
+          <p className="who">
+            <b>Projects</b>The build side, in full.
           </p>
         </div>
-      </aside>
+        <div className="col hero">
+          <div>
+            <h1 id="proj-h">Everything I&rsquo;ve built, with its real status.</h1>
+            <p className="lede">
+              Live means you can open it. Prototype means prototype. Private means I will describe
+              it and not link it. Nothing here is rounded up.
+            </p>
+            <div role="group" aria-label="Filter projects by status" className="pick">
+              <span>Show</span>
+              {filters.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  aria-pressed={filter === f.id}
+                  onClick={() => setFilter(f.id)}
+                >
+                  {f.label}
+                </button>
+              ))}
+              <span role="status">
+                Showing {shown} of {total}
+              </span>
+            </div>
+          </div>
+          <StatusMarks projects={all} />
+        </div>
+      </section>
 
-      <section className="md:col-span-9">
-        <header className="mb-12 md:mb-24">
-          <h1 className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-extrabold tracking-tighter text-primary leading-[0.9] mb-8">
-            The Workshop.
-          </h1>
-          <div className="h-px w-full bg-outline-variant opacity-20" />
-        </header>
+      {groups.map(({ info, projects }) => (
+        <section
+          key={info.id}
+          id={info.id}
+          aria-labelledby={`${info.id}-h`}
+          className="row scroll-mt-24"
+        >
+          <div className="gut">
+            <h2 id={`${info.id}-h`} className="lab">
+              {info.title}
+            </h2>
+            <p className="gnote">{info.blurb}</p>
+          </div>
+          <div className="col">
+            {projects.map((project) => (
+              <ProjectRow key={project.slug} project={project} />
+            ))}
+          </div>
+        </section>
+      ))}
 
-        {years.map((year) => (
-          <YearCollection key={year} year={year} projects={grouped[year]} />
-        ))}
-
-        <div className="pt-12 flex justify-between items-center border-t border-outline-variant/10">
-          <span className="font-sans text-[10px] tracking-widest uppercase text-neutral-400">
-            {totalProjects} projects
-          </span>
+      <section className="row" aria-labelledby="proj-open-h">
+        <div className="gut">
+          <p className="lab">If one of these is close to what you need</p>
+        </div>
+        <div className="col">
+          <h2 id="proj-open-h" className="h-xl">
+            I take on a small number of builds.
+          </h2>
+          <p className="after mt-3!">
+            MCP servers, agent memory, and Cloudflare-native AI products.{" "}
+            <Link to="/work" hash="work-open" className="tlink">
+              The full list of what I&rsquo;m open to &rarr;
+            </Link>
+          </p>
+          <p>
+            <a className="mail" href={`mailto:${contactEmail}`}>
+              {contactEmail}
+            </a>
+          </p>
         </div>
       </section>
     </main>
   );
 }
 
-function YearCollection({ year, projects }: { year: string; projects: ProjectDetail[] }) {
+function ProjectRow({ project }: { project: Project }) {
   return (
-    <div className="mb-16 md:mb-32">
-      <div className="flex items-baseline gap-4 mb-8 md:mb-12">
-        <h2 className="font-sans text-xs font-bold tracking-[0.3em] uppercase text-on-surface-variant">
-          {year}
-        </h2>
-        <div className="h-px flex-grow bg-outline-variant opacity-10" />
+    <article className="proj">
+      <header>
+        <h3>
+          <Link to="/projects/$slug" params={{ slug: project.slug }} data-kb-item>
+            {project.title}
+          </Link>
+        </h3>
+        <StatusPill status={project.status} label={project.statusLabel} />
+      </header>
+      <p>{project.tagline}</p>
+      <div className="meta">
+        <span className="tech">{project.tech.join(" · ")}</span>
+        <ProjectLinks project={project} />
       </div>
-
-      <div className="space-y-10 md:space-y-16">
-        {projects.map((project) => (
-          <article key={project.slug} className="grid grid-cols-1 md:grid-cols-4 gap-4 group">
-            <div className="flex flex-wrap gap-2 pt-1.5">
-              {project.tech.slice(0, 3).map((tag) => (
-                <span
-                  key={tag}
-                  className="font-sans text-[10px] tracking-widest uppercase text-neutral-400"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-            <div className="md:col-span-3">
-              <Link
-                to="/projects/$slug"
-                params={{ slug: project.slug }}
-                className="block font-sans text-xl sm:text-2xl md:text-3xl font-bold tracking-tight hover:text-neutral-500 transition-colors duration-300"
-              >
-                {project.title}
-              </Link>
-              <p className="mt-4 text-lg text-on-surface-variant leading-relaxed max-w-2xl opacity-80">
-                {project.tagline}
-              </p>
-              {(project.github || project.live) && (
-                <div className="mt-3 flex items-center gap-4">
-                  {project.github && (
-                    <a
-                      href={project.github}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-sans text-[10px] tracking-widest uppercase text-neutral-400 hover:text-primary transition-colors"
-                    >
-                      GitHub
-                    </a>
-                  )}
-                  {project.live && (
-                    <a
-                      href={project.live}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-sans text-[10px] tracking-widest uppercase text-neutral-400 hover:text-primary transition-colors"
-                    >
-                      Live
-                    </a>
-                  )}
-                </div>
-              )}
-            </div>
-          </article>
-        ))}
-      </div>
-    </div>
+    </article>
   );
 }

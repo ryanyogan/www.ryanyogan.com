@@ -1,20 +1,28 @@
 ---
-title: "Nexus MCP"
-tagline: "MCP server giving AI assistants persistent memory, real-time library documentation, and stack-specific prompts. Your AI stops hallucinating API signatures and starts remembering your project conventions."
+title: "Nexus"
+summary: "Shared memory and docs search for agents over MCP"
+tagline: "Shared memory and documentation search for agents over MCP, running on Cloudflare Workers. Memory is spread across D1, R2 and Vectorize, with importance and scope on every entry."
 tech:
   - TypeScript
   - MCP
   - Cloudflare Workers
   - D1
+  - R2
   - Vectorize
-github: "https://github.com/ryanyogan/nexus-mcp"
+github: "https://github.com/ryanyogan/nexus"
+live: "https://nexus.yogan.dev"
 year: "2026"
 featured: true
+group: agents-memory
+status: live
+order: 2
 ---
 
-MCP server providing AI assistants with library documentation, project memory, and development knowledge. Supports semantic search, persistent context, and stack-specific prompts. Think of it as a knowledge backbone for your AI coding workflow — every tool, every library, every decision you've made, available to your assistant instantly.
+Shared memory and documentation search for agents over MCP, live at [nexus.yogan.dev](https://nexus.yogan.dev). Supports semantic search, persistent context, and stack-specific prompts. Think of it as a knowledge backbone for your AI coding workflow — every tool, every library, every decision you've made, available to your assistant instantly.
 
 ## Available Tools
+
+Nexus exposes 14 MCP tools and 3 prompts over HTTP. There is no published CLI or SDK. Some of the tools:
 
 - **resolve-library** — Resolve a package name to its documentation ID. Supports npm, PyPI, crates.io, and more. Returns versioned documentation references that can be queried.
 - **query-docs** — Semantic search across library documentation. Ask natural language questions like "how do I set up authentication in Next.js" and get relevant code examples and explanations.
@@ -33,19 +41,4 @@ MCP server providing AI assistants with library documentation, project memory, a
 
 ## How It Works
 
-Nexus runs as a local MCP server that your editor connects to. Documentation is fetched on-demand and cached locally in a SQLite database. Memories are stored with vector embeddings for semantic retrieval. The server is lightweight — under 50MB memory footprint — and requires no external dependencies beyond Node.js.
-
-## Quick Start
-
-```json
-{
-  "mcpServers": {
-    "nexus": {
-      "command": "npx",
-      "args": ["-y", "nexus-mcp"]
-    }
-  }
-}
-```
-
-Add the configuration above to your editor's MCP settings (Claude Desktop, Cursor, VS Code, etc.) and the tools become immediately available to your AI assistant.
+Nexus runs on Cloudflare Workers. Memory is stored across D1, R2 and Vectorize, and every memory carries an importance and a scope, so several agents can share one memory layer without reading each other's noise.
