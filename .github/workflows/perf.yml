@@ -56,7 +56,7 @@ jobs:
         run: |
           google-chrome --version
           pnpm dlx lighthouse@13.5.0 --version
-          du -sh "$(pnpm store path)"
+          du -sh ~/.cache/pnpm/dlx || ls ~/.cache ~/.cache/pnpm
 
       - name: Lighthouse
         run: pnpm perf "$BASE_URL"
