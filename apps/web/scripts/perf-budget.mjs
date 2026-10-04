@@ -53,10 +53,11 @@ const FONT_BUDGET = 150 * KB;
  * post. Before the shared modules were one chunk a page made 25 to 28. Production adds three
  * this run does not see (the favicon and Cloudflare's analytics script and its beacon).
  *
- * `html` is a ceiling on the longest post's document, set just above what it measured once
- * the body was no longer in it a second time as loader data (src/lib/content.ts).
+ * `html` is a ceiling on the longest post's document, gzip, just above the 25.9 KB (91.6 KB
+ * raw) it measured once the body was no longer in it a second time as loader data
+ * (src/lib/content.ts); with both copies it was 37.4 KB.
  */
-const POST_HTML_BUDGET = 30 * KB;
+const POST_HTML_BUDGET = 27 * KB;
 const routes = [
   { path: "/", js: JS_BUDGET, requests: 9 },
   { path: "/work", js: JS_BUDGET, requests: 9 },
