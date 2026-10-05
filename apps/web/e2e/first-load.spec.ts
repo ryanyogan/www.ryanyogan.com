@@ -26,6 +26,9 @@ type Seen = {
   fcp?: number;
   /** Faces on the page at the first frame, and now. */
   faces: number[];
+  /** When the first frame ran, and the frame that last found another number of faces, in ms. */
+  firstFrame?: number;
+  facesChanged?: number;
   /** The last time a watched text was laid out but not drawn (WebKit, below), in ms. */
   undrawn?: number;
 };
@@ -101,6 +104,9 @@ function watch(blocks: boolean) {
   };
   const frame = () => {
     seen.frames += 1;
+    seen.firstFrame ??= Math.round(performance.now());
+    if (seen.faces.length && seen.faces[1] !== document.fonts.size)
+      seen.facesChanged = Math.round(performance.now());
     seen.faces = [seen.faces[0] ?? document.fonts.size, document.fonts.size];
     for (const selector of selectors) {
       const element = document.querySelector(selector);
@@ -363,13 +369,27 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
   });
 
   test("once cached they are on the page from the first frame", async ({ page, browserName }) => {
-    // This post has such text on its first screen, so a first visit leaves the faces out.
+    // This post has such text on its first screen, so a first visit leaves the faces out
+    // unless they beat the first frame. They can: the files are asked for after the load event,
+    // and when everything is local and quick that event, and both files, come before the
+    // browser has run a frame (seen in CI, run 37248067670, Chromium: load within 37 ms, both
+    // files by 80 ms, first screencast frame at 122 ms, all four faces on the page). Nothing
+    // had been drawn, so nothing changed. So a first visit is held to what every load is held
+    // to: none of the four, or all of them from the first frame, and no text changing after.
+    await watching(page, browserName);
     await page.goto(post);
     await hydrated(page);
     await lateFontsLoaded(page);
     await page.evaluate(() => document.fonts.ready);
     await frames(page, 6);
     const firstVisit = await lateFaces(page);
+    const first = await seen(page);
+    const timing = await page.evaluate(() => ({
+      load: Math.round(performance.getEntriesByType("navigation")[0]?.duration ?? -1),
+      files: (performance.getEntriesByType("resource") as PerformanceResourceTiming[])
+        .filter((entry) => /-(400-italic|600-normal)-[^/]*\.woff2$/.test(entry.name))
+        .map((entry) => Math.round(entry.responseEnd)),
+    }));
 
     // A cached file is asked for at once and is usually there before the first frame, and
     // then the faces are in that frame. On a busy machine it is not always (seen in CI,
@@ -378,7 +398,6 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
     // out. Every load is held to that: all four in the first frame, or none at all. That a
     // cached load does put them in the first frame is held too: the page is loaded again, a
     // few times at most, until one has.
-    await watching(page, browserName);
     const visits: object[] = [];
     let inFirstFrame = false;
     for (let visit = 2; visit <= 6 && !inFirstFrame; visit += 1) {
@@ -413,9 +432,29 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
     }
     test.info().annotations.push({
       type: "measure",
-      description: JSON.stringify({ firstVisit, visits }),
+      description: JSON.stringify({
+        firstVisit,
+        first: {
+          atFirstFrame: first.faces[0] === first.faces[1],
+          faces: first.faces,
+          firstFrame: first.firstFrame,
+          facesChanged: first.facesChanged,
+          fcp: first.fcp,
+          ...timing,
+          changedBeforeFirstPaint: first.unseen.length,
+          changes: first.changes.slice(0, 2),
+        },
+        visits,
+      }),
     });
-    expect(firstVisit, "faces added on the first visit").toBe(0);
+    expect([0, 4], "faces added on the first visit").toContain(firstVisit);
+    expect(first.faces[0], "first visit: faces at the first frame, and at the end").toBe(
+      first.faces[1],
+    );
+    expect(
+      first.changes,
+      "first visit: text that changed face or moved after it was on screen",
+    ).toEqual([]);
     // The cached files are back before the first frame on an ordinary load, so the faces are
     // in it: in Chromium with the roman, in WebKit ahead of it (the script does not wait for
     // the roman there, see styles/fonts.ts; seen in CI, run 37245548513, on the second visit).

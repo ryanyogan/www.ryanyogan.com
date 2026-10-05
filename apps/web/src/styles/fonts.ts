@@ -52,7 +52,10 @@ export const LATE_FONTS_KEY = "fonts";
  * is on its way, so the script waits for the roman, as it does for its own two files, before
  * it asks.
  *
- * On a first visit the files are fetched after the load event, clear of the first paint. Once
+ * On a first visit the files are fetched after the load event, out of the way of what the first
+ * paint needs. That is usually after the first frame, but not always: on a quick connection the
+ * load event and both files can come before the browser has run one, and then the faces are in
+ * it (seen in CI, Chromium, a local server; e2e/first-load.spec.ts allows it). Once
  * they are cached (noted in localStorage, by file name, so a new build starts over) they are
  * asked for at once, and so is the roman's Latin face (`rf`; its file is preloaded). No browser
  * holds the first frame for any of this. Measured in CI (PR #32):
