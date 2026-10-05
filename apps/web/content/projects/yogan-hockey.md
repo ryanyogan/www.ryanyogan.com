@@ -1,7 +1,7 @@
 ---
 title: "Yogan Hockey"
 summary: "Real-time NHL dashboard that also tracks my brother's pro stats in Germany"
-tagline: "Every hockey season my family gathers around screens. I got tired of slow, ad-infested sports apps, so I built a real-time NHL dashboard on Phoenix LiveView that also tracks my brother's pro stats in Germany."
+tagline: "Every hockey season my family gathers around screens. I wanted a fast, clean way to follow the season, so I built a real-time NHL dashboard on Phoenix LiveView that also tracks my brother's pro stats in Germany."
 tech:
   - Elixir
   - Phoenix LiveView
