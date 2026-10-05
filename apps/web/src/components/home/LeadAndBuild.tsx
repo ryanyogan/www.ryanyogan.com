@@ -30,14 +30,14 @@ export function LeadAndBuild() {
             <p>&ldquo;The team you build is more important than the product you build.&rdquo;</p>
           </blockquote>
           <p className="more">
-            <Link to="/work">Read the manual for working with me &rarr;</Link>
+            <Link to="/work">Work with me: here&rsquo;s how I like to work &rarr;</Link>
           </p>
         </div>
         <div>
           <h3 className="h-m">I build</h3>
           <p>
-            Not prototypes handed to someone else. Systems I designed, wrote and keep running, with
-            the status stated plainly.
+            I see things through. Systems I designed, wrote and keep running, with the status stated
+            plainly.
           </p>
           <blockquote className="said">
             <p>&ldquo;I would rather publish a negative result than another feature.&rdquo;</p>

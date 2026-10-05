@@ -7,7 +7,7 @@ export function OpenTo() {
         <h2 id="open-h" className="lab">
           Open to
         </h2>
-        <p className="gnote">Three kinds of work, and not many of each.</p>
+        <p className="gnote">Three kinds of work, a few at a time, so each gets real attention.</p>
       </div>
       <div className="col">
         <ol className="open">
@@ -24,7 +24,7 @@ export function OpenTo() {
             </span>
           </li>
         </ol>
-        <p className="open-way">One way in. Tell me what you are building and where it is stuck.</p>
+        <p className="open-way">Say hello. Tell me what you are building and where it is stuck.</p>
         <p>
           <a className="mail" href={`mailto:${contactEmail}`}>
             {contactEmail}

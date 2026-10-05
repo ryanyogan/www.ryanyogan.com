@@ -66,7 +66,7 @@ function NotFound() {
   return (
     <main id="main" className="wrap pt-[clamp(40px,7vw,84px)] pb-[72px]">
       <span className="lab mb-[18px] block">404</span>
-      <h1>This page doesn&rsquo;t exist.</h1>
+      <h1>I couldn&rsquo;t find that page.</h1>
       <p className="mt-[22px]">
         <Link to="/" className="link">
           Back to home &rarr;

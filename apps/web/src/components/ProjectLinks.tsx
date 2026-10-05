@@ -9,7 +9,9 @@ export function ProjectLinks({ project }: { project: Project }) {
   if (!project.github && !project.live) {
     return (
       <p className="ext none">
-        {project.status === "private" ? "Private. No link." : "No public link."}
+        {project.status === "private"
+          ? "Private, so there is no link."
+          : "There is no public link for this one."}
       </p>
     );
   }

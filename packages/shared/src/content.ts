@@ -232,7 +232,7 @@ export const projectGroups: ProjectGroupInfo[] = [
   {
     id: "shipped",
     title: "Shipped products",
-    blurb: "Things with users in mind, not just an idea.",
+    blurb: "Made with users in mind, then shipped.",
   },
   {
     id: "desktop-tools",

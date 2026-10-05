@@ -36,7 +36,9 @@ test("the palette does not find an unpublished project", async ({ page }) => {
   await expect(palette.getByRole("option").first()).toContainText("Lincoln");
   for (const query of [draft.title, draft.marker, draft.slug]) {
     await input.fill(query);
-    await expect(palette.getByText(`Nothing matches “${query}”.`)).toBeVisible();
+    await expect(
+      palette.getByText(`No match for “${query}”. A shorter word may find it.`),
+    ).toBeVisible();
     await expect(palette.getByRole("option")).toHaveCount(0);
   }
 });

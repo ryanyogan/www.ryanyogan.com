@@ -129,10 +129,11 @@ function ProjectsPage() {
         </div>
         <div className="col">
           <h2 id="proj-open-h" className="h-xl">
-            I take on a small number of builds.
+            I&rsquo;d be glad to hear about it.
           </h2>
           <p className="after mt-3!">
-            MCP servers, agent memory, and Cloudflare-native AI products.{" "}
+            I take on a small number of builds: MCP servers, agent memory, and Cloudflare-native AI
+            products.{" "}
             <Link to="/work" hash="work-open" className="tlink">
               The full list of what I&rsquo;m open to &rarr;
             </Link>

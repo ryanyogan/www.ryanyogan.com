@@ -10,7 +10,7 @@ export const Route = createFileRoute("/work")({
     seo({
       title: pageTitle("Work"),
       description:
-        "How to work with Ryan Yogan: how he leads, what he has scaled, what he is building now, what he is open to, and a compact timeline.",
+        "Work with Ryan Yogan. Here is how he likes to work: how he leads, what he has scaled, what he is building now, what he is open to, and a compact timeline.",
       path: "/work",
       image: staticOgImage("/work"),
       type: "profile",
@@ -126,14 +126,14 @@ function WorkPage() {
       <section className="row first" aria-labelledby="work-h">
         <div className="gut">
           <p className="who">
-            <b>Work</b>A manual, not a resume.
+            <b>Work</b>More a manual than a resume.
           </p>
         </div>
         <div className="col">
-          <h1 id="work-h">How to work with me.</h1>
+          <h1 id="work-h">Work with me.</h1>
           <p className="lede">
-            How I lead, what I have scaled, what I am building now, and what I am open to. The
-            timeline comes last.
+            Here&rsquo;s how I like to work. How I lead, what I have scaled, what I am building now,
+            and what I am open to. The timeline comes last.
           </p>
         </div>
       </section>
@@ -214,7 +214,7 @@ function WorkPage() {
             </li>
           ))}
         </ul>
-        <p className="after">One way in. Tell me what you are building and where it is stuck.</p>
+        <p className="after">Say hello. Tell me what you are building and where it is stuck.</p>
         <p>
           <a className="mail" href={`mailto:${contactEmail}`}>
             {contactEmail}
