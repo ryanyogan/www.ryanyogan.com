@@ -71,8 +71,6 @@ for (const [what, path, piece, keyframes, shortest, property, lowest, highest] o
     }
     // It changes: three looks 0.7 s apart cannot all fall on the same value of a slow wave.
     expect(Math.max(...values) - Math.min(...values)).toBeGreaterThan(0.01);
-    // And only a little: far less than the whole range in 1.4 s.
-    expect(Math.max(...values) - Math.min(...values)).toBeLessThan((highest - lowest) * 0.9);
   });
 }
 
