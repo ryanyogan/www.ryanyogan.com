@@ -86,11 +86,24 @@ test("/now is dated at the top from its markdown file, and is in the nav and the
   await expect(time).toHaveText(updated);
   // The date comes before the text it dates.
   const date = await time.boundingBox();
-  const heading = await page.locator("main .prose h2").first().boundingBox();
+  const heading = await page.locator("main section h2").first().boundingBox();
   expect(date!.y).toBeGreaterThan((await page.locator("h1").boundingBox())!.y);
   expect(date!.y + date!.height).toBeLessThan(heading!.y);
-  // One h2 per section of the file, and nothing left to fill in.
-  await expect(page.locator("main .prose h2")).toHaveCount(source.match(/^## /gm)!.length);
+  // One section per heading of the file, each named by its h2 and holding its own prose, and
+  // nothing left to fill in.
+  const sections = source.match(/^## /gm)!.length;
+  await expect(page.locator("main section h2")).toHaveCount(sections);
+  await expect(page.locator("main section > .col > .prose")).toHaveCount(sections);
+  for (const section of await page.locator("main article > section").all()) {
+    await expect(section).toHaveAccessibleName(/\S/);
+  }
+  // The drawings are pictures with a name, and no link leaves the page without rel=noopener.
+  for (const art of await page.locator("main svg.art").all()) {
+    await expect(art).toHaveAttribute("aria-label", /\S/);
+  }
+  for (const link of await page.locator('main a[href^="http"]').all()) {
+    await expect(link).toHaveAttribute("rel", /noopener/);
+  }
   await expect(page.locator("main")).not.toContainText(/TODO|TBD|lorem/i);
 
   await expect(page.locator('#site-nav a[href="/now"]')).toHaveAttribute("aria-current", "page");

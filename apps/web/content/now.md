@@ -1,19 +1,53 @@
 ---
-updated: "October 4, 2026"
+updated: "October 5, 2026"
 place: "Chicago"
 ---
 
+Work at Chromatic, software built with agents, an electronic drum kit, and a lot of time at hockey rinks. Here is what has my attention this fall.
+
 ## Working on
 
-By day I lead AI engineering at Chromatic, and I build too: AI, MCP and core services.
+By day I lead AI engineering at Chromatic, and I build too: MCP servers for coding agents, the evaluation that tells us whether they work, and the core services underneath.
 
-Two apps for my household: one for coordination, and [Noodle](/projects/noodle), for the budget. Noodle is a week old. Both are agent-driven builds: I write the tickets and the decision records.
+Outside work I build with agents. Two apps for my household came out of that this fall: one for coordination, and [Noodle](/projects/noodle), for the budget. I write the tickets and the decision records. This site was rebuilt the same way. It is quieter now.
 
-I rebuilt this site again. It is quieter now.
+[Cook](https://github.com/ryanyogan/cook) is the newest thing: a warm end-to-end test runner for Phoenix apps. A daemon keeps a browser and a booted copy of the app running, so a run skips the slow parts and returns one JSON verdict that a person or an agent can act on. It is built agent-first: one run, one answer. It is an early prototype.
 
-I am also cleaning up after myself. I have 778 public repos on GitHub and a plan that keeps about 54 of them. While I was in there I went back through my own READMEs and corrected the claims the code does not support. Those fixes are sitting in open pull requests.
+[Lincoln](/projects/lincoln-project) is paused while its next experiment waits its turn. I [designed it in September](/writing/lincoln-six-months-later) and have not run it yet: the same local model under three conditions, judged on behavior. I would rather publish a negative result than another feature.
 
-[Lincoln](/projects/lincoln-project) is waiting on an experiment. I [designed it in September](/writing/lincoln-six-months-later) and have not run it yet: the same local model under three conditions, judged on behavior. I would rather publish a negative result than another feature.
+Next on the list is tidying my GitHub down to the repos worth a visit.
+
+## Drums
+
+I am learning the drums. Two months in, on an electronic kit, a few hours a day, and I am loving it.
+
+I am learning with Drumeo and Musora. Both are on YouTube: here is [Drumeo's channel](https://www.youtube.com/@DrumeoOfficial), and here is [Musora's](https://www.youtube.com/@MusoraOfficial).
+
+## Listening to
+
+- twenty one pilots, live
+- Metallica
+- Alice in Chains
+- Dream Theater
+- Tool
+- Jazz
+
+There are a lot of good drummers on that list.
+
+## Hockey family
+
+We are a hockey family. We spend most of our time at rinks, and that is where a lot of our ideas come from. Two of the projects on this site exist because of it: [Yogan Hockey](/projects/yogan-hockey) and [Puck Pro](/projects/puck-pro).
+
+I am a hockey dad and a coach. We tailgate. We are also big into RVs, and now that hockey has us traveling, we are planning which one to get.
+
+## Reading and learning
+
+- Music theory books.
+- A lot of AI courses at masters.dev.
+- Too much of [Theo's YouTube channel](https://www.youtube.com/@t3dotgg).
+- _Greenlights_ by Matthew McConaughey.
+- _Skygods: The Fall of Pan Am_ by Robert Gandt.
+- Papers on agent memory, starting with the survey "Memory in the Age of AI Agents". My post [Lincoln, Six Months Later](/writing/lincoln-six-months-later) cites the ones I lean on.
 
 ## Thinking about
 
@@ -31,16 +65,12 @@ I am looking for people to think with on this.
 
 ## Linux and Omarchy
 
-I run Omarchy.
+I run Omarchy, with vim keys in everything.
 
 Two of my performance patches landed upstream this fall: one decodes the wallpaper at screen size instead of shipped size, the other stops the agent usage widget from re-reading every transcript on every refresh. Two more are open.
 
-I wrote the Catppuccin Latte theme that ships with Omarchy last year and was embarrassed by the state it was in, so I redid it. The refresh lives in its own repo now.
+I wrote the Catppuccin Latte theme that ships with Omarchy last year. I redid it in September, and the refresh lives in its own repo now.
 
-I run [omarchythemes.dev](https://omarchythemes.dev), a site for Omarchy themes.
-
-I have five plugins for the Omarchy bar. [Omatop](/projects/omatop), the system monitor, is the one other people send pull requests to.
+I run [omarchythemes.dev](https://omarchythemes.dev), a site for Omarchy themes, and I have five plugins for the Omarchy bar. [Omatop](/projects/omatop), the system monitor, is the one other people send pull requests to.
 
 I also got Affinity running on Omarchy and wrote down how.
-
-Vim keys in everything.

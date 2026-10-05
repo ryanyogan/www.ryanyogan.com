@@ -1,3 +1,6 @@
+import { splitNow } from "./now";
+import type { NowBody } from "./now";
+
 export interface WritingPost {
   slug: string;
   title: string;
@@ -119,20 +122,35 @@ export const nowPage: NowPage = {
   place: nowData.place as string,
 };
 
-// The body of /now, kept out of the loader's data and read back from the server's element when
-// the page is opened by its URL, as a post's is (above).
-let nowBody: string | undefined;
+// The body of /now, kept out of the loader's data and read back from the server's elements when
+// the page is opened by its URL, as a post's is (above). The page sets it as sections
+// (lib/now.ts), so that is how it is read back: the lede, then each section's heading and prose.
+let nowBody: NowBody | undefined;
 
 if (!import.meta.env.SSR && /^\/now\/?$/.test(location.pathname)) {
-  nowBody = document.querySelector(".post-body > .prose")?.innerHTML;
+  const sent = document.querySelector("main.now-page");
+  const sections = [...(sent?.querySelectorAll("article > section") ?? [])];
+  if (sent && sections.length > 0) {
+    nowBody = {
+      lede: sent.querySelector(".now-lede")?.innerHTML ?? "",
+      sections: sections.map((section) => {
+        const heading = section.querySelector("h2");
+        return {
+          id: heading?.id ?? "",
+          title: heading?.innerHTML ?? "",
+          html: section.querySelector(".prose")?.innerHTML ?? "",
+        };
+      }),
+    };
+  }
 }
 
 /** Loads the rendered body of /now: the page's loader waits for it. */
 export async function loadNowHtml(): Promise<void> {
-  nowBody ??= await nowHtml["../../content/now.md"]();
+  nowBody ??= splitNow(await nowHtml["../../content/now.md"]());
 }
 
-/** The body `loadNowHtml` has loaded. */
-export function nowBodyHtml(): string {
-  return nowBody ?? "";
+/** The body `loadNowHtml` has loaded: the lede and the sections of content/now.md. */
+export function nowSections(): NowBody {
+  return nowBody ?? { lede: "", sections: [] };
 }
