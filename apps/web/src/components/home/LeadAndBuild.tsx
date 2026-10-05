@@ -30,7 +30,7 @@ export function LeadAndBuild() {
             <p>&ldquo;The team you build is more important than the product you build.&rdquo;</p>
           </blockquote>
           <p className="more">
-            <Link to="/work">Work with me: here&rsquo;s how I like to work &rarr;</Link>
+            <Link to="/work">Work with me: here&rsquo;s how I work &rarr;</Link>
           </p>
         </div>
         <div>
