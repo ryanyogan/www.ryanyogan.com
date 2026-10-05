@@ -20,12 +20,19 @@ export const MARK = {
   /** --paper and --ink in styles/app.css. PNGs are always light; the SVG follows the scheme. */
   light: { paper: "#f6f5f1", ink: "#25272a" },
   dark: { paper: "#1c1e1f", ink: "#dddcd6" },
-  /** How much of the square's width the letters take. A tab shows the icon at 16px. */
-  favicon: 0.82,
+  /**
+   * How much of the square's width the letters take. A tab shows the icon at 16px, and this
+   * share makes them 8 of those pixels tall, the top and the foot each on a pixel edge.
+   */
+  favicon: 0.78,
   /** iOS rounds the corners of the home screen icon itself: the letters keep well inside. */
   touch: 0.5,
-  /** An optical correction to the centring, as a share of the square: right, down. */
-  nudge: [0, 0],
+  /**
+   * A correction to the centring, as a share of the square: right, down. A quarter of a tab
+   * pixel to the right puts the R's stem on a pixel edge, and the open side of the Y, which
+   * weighs less than the stem, gets the narrower margin.
+   */
+  nudge: [0.015, 0],
 } as const;
 
 /** The side of the square every icon is drawn in. Whole units: a tenth of a pixel at 100px. */
