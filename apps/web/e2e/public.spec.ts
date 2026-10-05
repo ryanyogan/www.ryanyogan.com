@@ -381,7 +381,7 @@ test("the site icon is three small files that every page links to; other icon na
   const files: [path: string, type: RegExp, ceiling: number][] = [
     ["/favicon.svg", /^image\/svg\+xml/, 1500],
     ["/favicon.ico", /^image\/(x-icon|vnd\.microsoft\.icon)/, 2000],
-    ["/apple-touch-icon.png", /^image\/png/, 8000],
+    ["/apple-touch-icon.png", /^image\/png/, 4000],
   ];
   const bodies: Buffer[] = [];
   for (const [path, type, ceiling] of files) {

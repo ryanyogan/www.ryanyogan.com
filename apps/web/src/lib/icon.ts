@@ -1,4 +1,4 @@
-// The site's icon: the letters RY in the header wordmark's face and weight, ink on paper,
+// The site's icon: the letters RY in the header wordmark's face, a step bolder, ink on paper,
 // and nothing else. It is a stand-in until there is a real mark. This file is the whole
 // definition; the build draws the three files from it (vite-plugin-icons.ts) and no icon
 // file is committed.
@@ -9,16 +9,19 @@
 
 export const MARK = {
   text: "RY",
-  /** Hanken Grotesk at the wordmark's weight (Header.tsx: font-semibold). */
-  font: "src/lib/og/hanken-grotesk-latin-600.woff.bin",
-  weight: 600,
-  /** Space added between the letters, in em. */
-  tracking: 0,
+  /**
+   * Hanken Grotesk one step heavier than the wordmark (Header.tsx: font-semibold). In a tab
+   * the letters are 8px tall, and at 600 their stems were a thin pixel.
+   */
+  font: "src/lib/og/hanken-grotesk-latin-700.woff.bin",
+  weight: 700,
+  /** Space added between the letters, in em: the R's leg sits a little under the Y's arm. */
+  tracking: -0.03,
   /** --paper and --ink in styles/app.css. PNGs are always light; the SVG follows the scheme. */
   light: { paper: "#f6f5f1", ink: "#25272a" },
   dark: { paper: "#1c1e1f", ink: "#dddcd6" },
   /** How much of the square's width the letters take. A tab shows the icon at 16px. */
-  favicon: 0.78,
+  favicon: 0.82,
   /** iOS rounds the corners of the home screen icon itself: the letters keep well inside. */
   touch: 0.5,
   /** An optical correction to the centring, as a share of the square: right, down. */
