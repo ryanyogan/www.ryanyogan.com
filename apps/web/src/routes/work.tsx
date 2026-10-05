@@ -213,8 +213,8 @@ function WorkPage() {
           Recurring themes: {themes.slice(0, -1).join(", ")}, and {themes.at(-1)}.
         </p>
         <p className="small mt-2 max-w-[36rem]">
-          Lincoln is paused for now, with its next experiment designed and ready to run. GitHub
-          contributions more than doubled year over year.{" "}
+          Lincoln's September experiment has run, and lived history helped. GitHub contributions
+          more than doubled year over year.{" "}
           <Link to="/projects" className="tlink">
             The rest is on the Projects page &rarr;
           </Link>

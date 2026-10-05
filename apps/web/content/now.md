@@ -13,7 +13,7 @@ Outside work I build with agents. Two apps for my household came out of that thi
 
 [Cook](https://github.com/ryanyogan/cook) is the newest thing: a warm end-to-end test runner for Phoenix apps. A daemon keeps a browser and a booted copy of the app running, so a run skips the slow parts and returns one JSON verdict that a person or an agent can act on. It is built agent-first: one run, one answer. It is an early prototype.
 
-[Lincoln](/projects/lincoln-project) is paused while its next experiment waits its turn. I [designed it in September](/writing/lincoln-six-months-later) and have not run it yet: the same local model under three conditions, judged on behavior. I would rather publish a negative result than another feature.
+[Lincoln](/projects/lincoln-project) has a result. I [designed the experiment in September](/writing/lincoln-six-months-later) and have now run it: the same local model under three conditions, judged on behavior. Full Lincoln did better than retrieval alone, so lived history changed what the agent did later.
 
 Next on the list is tidying my GitHub down to the repos worth a visit.
 
@@ -53,7 +53,7 @@ I am a hockey dad and a coach. We tailgate. We are also big into RVs, and now th
 
 Rehearsal is not corroboration. If a system can raise its own confidence, it will. Lincoln did, and I had to rebuild the loop so reflection cannot move the number.
 
-Whether lived history changes what an agent does later, beyond what good retrieval and a persona prompt already give you. I have not shown that it does.
+Whether lived history changes what an agent does later, beyond what good retrieval and a persona prompt already give you. The first experiment says it does. One run is a start.
 
 System 1 as different machinery, not a faster call to the same model.
 
