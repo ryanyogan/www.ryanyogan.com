@@ -128,7 +128,7 @@ export const nowPage: NowPage = {
 let nowBody: NowBody | undefined;
 
 if (!import.meta.env.SSR && /^\/now\/?$/.test(location.pathname)) {
-  const sent = document.querySelector("main.now");
+  const sent = document.querySelector("main.now-page");
   const sections = [...(sent?.querySelectorAll("article > section") ?? [])];
   if (sent && sections.length > 0) {
     nowBody = {

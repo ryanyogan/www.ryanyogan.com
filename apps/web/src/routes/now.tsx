@@ -51,7 +51,7 @@ export const Route = createFileRoute("/now")({
 function NowPage() {
   const { lede, sections } = nowSections();
   return (
-    <main id="main" className="wrap now">
+    <main id="main" className="wrap now-page">
       <article>
         <header className="row post-head">
           <p className="gut lab">Now</p>

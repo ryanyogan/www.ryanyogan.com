@@ -2166,9 +2166,9 @@ summary {
 /*
  * /now (N1). The page is content/now.md cut at its headings (lib/now.ts): each section is a
  * row, opened as Home's are by a hairline and its label in ink, with its prose in the reading
- * column and, for some, a drawing. Everything here is under .now; nothing else changes.
+ * column and, for some, a drawing. Everything here is under .now-page (/work has a .now of its own); nothing else changes.
  */
-.now .post-head {
+.now-page .post-head {
   padding-bottom: 56px;
 }
 
@@ -2179,7 +2179,7 @@ summary {
   color: var(--ink-soft);
 }
 
-.now section.row {
+.now-page section.row {
   padding-bottom: 56px;
 }
 
@@ -2204,13 +2204,13 @@ summary {
 }
 
 /* Lists are rows between hairlines, not bullets. */
-.now .prose ul {
+.now-page .prose ul {
   padding: 0;
   list-style: none;
   border-bottom: 1px solid var(--rule);
 }
 
-.now .prose li {
+.now-page .prose li {
   margin: 0;
   padding: 0.5em 0;
   border-top: 1px solid var(--rule);
@@ -2218,17 +2218,17 @@ summary {
 }
 
 @media (min-width: 640.02px) {
-  .now section.row {
+  .now-page section.row {
     border-top: 1px solid var(--rule);
     padding-top: 32px;
     padding-bottom: 72px;
   }
 
-  .now h2.lab {
+  .now-page h2.lab {
     color: var(--ink);
   }
 
-  .now .cols ul {
+  .now-page .cols ul {
     columns: 2;
     column-gap: 40px;
   }
