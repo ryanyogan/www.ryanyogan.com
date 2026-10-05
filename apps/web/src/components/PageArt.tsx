@@ -251,7 +251,7 @@ export function DrumKit() {
           <line className="kit-stick" x1="72" y1="158" x2="106" y2="126" />
         </g>
       </svg>
-      <figcaption>A kit from above. The seat is mine.</figcaption>
+      <figcaption>The metronome and I are still negotiating.</figcaption>
     </figure>
   );
 }
