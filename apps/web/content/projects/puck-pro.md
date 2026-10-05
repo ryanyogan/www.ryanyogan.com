@@ -1,7 +1,7 @@
 ---
 title: "Puck Pro"
 summary: "Pose detection and vision-model feedback on my kids' hockey shots"
-tagline: "A prototype: in-browser pose detection plus vision-model feedback on my kids' hockey shots. Born from refusing to pay $150/hour for a shooting coach."
+tagline: "A prototype: in-browser pose detection plus vision-model feedback on my kids' hockey shots. Built so my kids can get feedback between sessions with a coach."
 tech:
   - Elixir
   - Phoenix LiveView
@@ -16,7 +16,7 @@ status: prototype
 order: 4
 ---
 
-A prototype hockey training app with real-time pose detection. It uses MediaPipe in the browser to detect shots, and a vision model for coaching feedback afterwards. Born from a father's refusal to pay $150/hour for a shooting coach.
+A prototype hockey training app with real-time pose detection. It uses MediaPipe in the browser to detect shots, and a vision model for coaching feedback afterwards.
 
 ## Pose Detection in the Browser
 

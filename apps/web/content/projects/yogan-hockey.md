@@ -1,7 +1,7 @@
 ---
 title: "Yogan Hockey"
 summary: "Real-time NHL dashboard that also tracks my brother's pro stats in Germany"
-tagline: "Every hockey season my family gathers around screens. I got tired of slow, ad-infested sports apps, so I built a real-time NHL dashboard on Phoenix LiveView that also tracks my brother's pro stats in Germany."
+tagline: "Every hockey season my family gathers around screens. I wanted a fast, clean way to follow the season, so I built a real-time NHL dashboard on Phoenix LiveView that also tracks my brother's pro stats in Germany."
 tech:
   - Elixir
   - Phoenix LiveView
@@ -17,7 +17,7 @@ status: live
 order: 1
 ---
 
-A live NHL scores and stats dashboard, with a dedicated tracker for my brother Andrew's season in Germany's DEL2. Pages update without a refresh. It runs on a single small Fly.io machine. Built because every existing hockey app is either slow, ad-infested, or both.
+A live NHL scores and stats dashboard, with a dedicated tracker for my brother Andrew's season in Germany's DEL2. Pages update without a refresh. It runs on a single small Fly.io machine.
 
 ## Features
 
