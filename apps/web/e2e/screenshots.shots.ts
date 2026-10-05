@@ -44,6 +44,24 @@ for (const colorScheme of ["light", "dark"] as const) {
   });
 }
 
+// The header drawings on Work and Writing in a wide window (they show from 1280 up): the top
+// of the page only, since that is where they sit.
+for (const width of [1920, 2560]) {
+  for (const colorScheme of ["light", "dark"] as const) {
+    test.describe(`${width} ${colorScheme}`, () => {
+      test.use({ viewport: { width, height: 1000 }, colorScheme });
+
+      for (const name of ["work", "writing"]) {
+        test(name, async ({ page }) => {
+          await page.goto(`/${name}`);
+          await page.evaluate(() => document.fonts.ready);
+          await page.screenshot({ path: `screenshots/${name}-${width}-${colorScheme}.png` });
+        });
+      }
+    });
+  }
+}
+
 // Ticket A1: the drawings that move, twice each, two seconds apart (half the fade's period, a
 // quarter of the dash's), enlarged three times so the difference can be seen in a still.
 test.describe("motion", () => {

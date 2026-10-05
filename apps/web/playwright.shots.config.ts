@@ -12,7 +12,7 @@ export default defineConfig({
   ...base,
   // visual.spec.ts as well: CI runs this config with --update-snapshots=changed, which
   // redraws the committed pictures that no longer match (see the top of that spec).
-  testMatch: /(screenshots\.shots|visual\.spec)\.ts$/,
+  testMatch: /(screenshots\.shots|webkit\.shots|visual\.spec)\.ts$/,
   reporter: [["line"]],
   // Its own directory, so a run does not wipe the suite's traces in test-results/.
   outputDir: "screenshots/.playwright",
@@ -24,6 +24,14 @@ export default defineConfig({
         ...devices["Desktop Chrome"],
         launchOptions: { args: ["--enable-features=OverlayScrollbar"] },
       },
+      testIgnore: /webkit\.shots\.ts$/,
+    },
+    // Safari's engine, for its own few pictures only (e2e/webkit.shots.ts): the committed
+    // pictures of visual.spec.ts are Chromium's and must not be redrawn by another engine.
+    {
+      name: "shots-webkit",
+      use: { ...devices["Desktop Safari"] },
+      testMatch: /webkit\.shots\.ts$/,
     },
   ],
   // Only the public preview: no admin, no stubs.
