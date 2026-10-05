@@ -15,6 +15,7 @@ import {
   ogCard,
   postKicker,
 } from "./src/lib/og/template";
+import { typographicQuotes } from "./src/lib/quotes";
 
 /**
  * Social preview images for the pages whose text is known when the site is built: Home,
@@ -69,7 +70,8 @@ function cards(root: string): (OgCard & { route: string; file: string })[] {
       return {
         route: `/writing/${slug}`,
         file: `writing/${slug}`,
-        title: String(data.title),
+        // As the post's own <h1> has it (vite-plugin-posts.ts).
+        title: typographicQuotes(String(data.title)),
         kicker: postKicker(isoDay(String(data.date))),
       };
     });

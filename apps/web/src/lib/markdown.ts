@@ -10,7 +10,7 @@
 // attributes and URL schemes, and the last step replaces the attributes of every element it
 // knows with a fixed set (no classes, apart from the highlighter's own on code; a heading's id
 // and a footnote's two ids are made here). See markdown.test.ts.
-import type { Element, ElementContent, Properties, Root, RootContent } from "hast";
+import type { Element, ElementContent, Properties, Root, RootContent, Text } from "hast";
 import elixir from "highlight.js/lib/languages/elixir";
 import { common } from "lowlight";
 import rehypeHighlight from "rehype-highlight";
@@ -20,6 +20,7 @@ import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
+import { BREAK, OPAQUE, typographicQuotes } from "./quotes";
 
 /**
  * Elements that keep no attribute at all. The look comes from the `.prose` rules in
@@ -317,6 +318,69 @@ function rawAsText(node: Root | Element): void {
 
 const rehypeRawAsText = () => (tree: Root) => rawAsText(tree);
 
+/** Phrasing elements: a sentence, and a quotation in it, runs on through them. */
+const PHRASING = new Set(["a", "em", "strong", "del", "sup", "sub", "br", "input"]);
+/** Text that is shown as typed: its quotes are part of what it says. */
+const VERBATIM = new Set(["code", "kbd", "samp", "var"]);
+const VERBATIM_BLOCK = new Set(["pre", "script", "style"]);
+
+/** A link whose text is its own address, as `<https://example.com>` or a bare one is. */
+function isAddress(node: Element): boolean {
+  if (node.tagName !== "a") return false;
+  const href = text(node.properties.href);
+  const shown = plain(node);
+  return href === shown || href === `mailto:${shown}` || href === `http://${shown}`;
+}
+
+/**
+ * Typographic quotes in the prose of a body (lib/quotes.ts). Only text nodes change, and the
+ * alt and title of an image (the title is its caption): no tag, no URL (one shown as a
+ * link's text included), no id, nothing in code. Each block's text is read as one run, so a quote that opens before an `<em>` and
+ * closes after it is still a pair, and inline code or an image in the run counts as a word.
+ * A heading's id is made later from the same text and comes out as before: `headingId` drops
+ * both kinds of apostrophe, and either kind of double quote is a hyphen to it.
+ */
+function typeset(tree: Root): void {
+  const found: { node: Text; start: number }[] = [];
+  let run = "";
+  const walk = (parent: Root | Element): void => {
+    for (const child of parent.children) {
+      const type: string = child.type;
+      if (child.type === "text") {
+        found.push({ node: child, start: run.length });
+        run += child.value;
+      } else if (type === "raw") {
+        // HTML typed into the source, which the next step shows as the text it is.
+        run += OPAQUE;
+      } else if (child.type === "element") {
+        const tag = child.tagName;
+        if (tag === "img") {
+          const { alt, title } = child.properties;
+          if (typeof alt === "string") child.properties.alt = typographicQuotes(alt);
+          if (typeof title === "string") child.properties.title = typographicQuotes(title);
+          run += OPAQUE;
+        } else if (VERBATIM.has(tag) || isAddress(child)) run += OPAQUE;
+        else if (PHRASING.has(tag)) walk(child);
+        else {
+          run += BREAK;
+          if (!VERBATIM_BLOCK.has(tag)) walk(child);
+          run += BREAK;
+        }
+      }
+    }
+  };
+  walk(tree);
+  const set = typographicQuotes(run);
+  for (const { node, start } of found) {
+    node.value = set.slice(start, start + node.value.length);
+  }
+}
+
+// Asked for by the caller, per body (renderMarkdown below).
+const rehypeTypeset = () => (tree: Root, file: { data: object }) => {
+  if ((file.data as { typographic?: boolean }).typographic) typeset(tree);
+};
+
 // The caller's image record travels with the file being processed (renderMarkdown below).
 const rehypeProseStyle = () => (tree: Root, file: { data: object }) => {
   const context: Context = {
@@ -338,6 +402,8 @@ function build() {
       // into text, and nothing here ever parses one.
       // A footnote's way back is the word, not remark's arrow (generated-look.test.ts).
       .use(remarkRehype, { allowDangerousHtml: true, footnoteBackContent: "Back" })
+      // Before raw HTML becomes text: what was typed as markup is not prose.
+      .use(rehypeTypeset)
       .use(rehypeRawAsText)
       .use(rehypeSanitize)
       // After the sanitiser: these two only add attributes this file controls.
@@ -355,10 +421,17 @@ let processor: ReturnType<typeof build> | undefined;
 /**
  * GitHub-flavoured markdown as sanitised, highlighted HTML. Synchronous.
  * `images` is the build's record of public/images; without it images are plain `<img>`.
+ * `typographic` sets the prose's straight quotes as typographic ones: the build asks for it
+ * for the posts and /now. A project body, which the owner types in the admin and sees in its
+ * preview, is rendered as typed.
  */
-export function renderMarkdown(markdown: string, images: ProseImages = {}): string {
+export function renderMarkdown(
+  markdown: string,
+  images: ProseImages = {},
+  { typographic = false }: { typographic?: boolean } = {},
+): string {
   // Built on first use: registering the highlighter's grammars is not free, and the Worker
   // should not pay for it at startup.
   processor ??= build();
-  return String(processor.processSync({ value: markdown, data: { images } }));
+  return String(processor.processSync({ value: markdown, data: { images, typographic } }));
 }

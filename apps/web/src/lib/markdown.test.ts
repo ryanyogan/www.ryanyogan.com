@@ -4,7 +4,10 @@ import type { Element, Root } from "hast";
 import rehypeParse from "rehype-parse";
 import { unified } from "unified";
 import { describe, expect, it } from "vitest";
+import { typesetMeta } from "../../vite-plugin-posts";
+import { parseFrontmatter } from "./frontmatter";
 import { type ProseImages, renderMarkdown } from "./markdown";
+import { straightQuotes } from "./quotes";
 
 // What the build hands over for a file in public/images (vite-plugin-images.ts).
 const images: ProseImages = {
@@ -315,5 +318,154 @@ describe("renderMarkdown: a project body is untrusted text", () => {
       ].join("\n\n"),
     );
     inert(html);
+  });
+});
+
+// What the build asks for (vite-plugin-posts.ts); a project body is rendered without it.
+const typeset = (markdown: string) => renderMarkdown(markdown, {}, { typographic: true });
+
+/** A rendered body taken apart: its tags with their attributes, its prose and its code. */
+function parts(html: string): { tags: string[]; prose: string; code: string; ids: string[] } {
+  const tree = unified().use(rehypeParse, { fragment: true }).parse(html) as Root;
+  const found = { tags: [] as string[], prose: "", code: "", ids: [] as string[] };
+  const walk = (node: Root | Element, verbatim: boolean): void => {
+    for (const child of node.children) {
+      if (child.type === "text") {
+        if (verbatim) found.code += child.value;
+        else found.prose += child.value;
+      } else if (child.type === "element") {
+        // An image's alt is prose; every other attribute has to come out as it went in.
+        const { alt, ...rest } = child.properties;
+        found.tags.push(`${child.tagName} ${JSON.stringify(rest)}`);
+        if (typeof alt === "string") found.prose += `\n${alt}\n`;
+        if (/^h[1-6]$/.test(child.tagName)) found.ids.push(String(child.properties.id));
+        walk(child, verbatim || ["code", "pre", "kbd", "samp"].includes(child.tagName));
+      }
+    }
+  };
+  walk(tree, false);
+  return found;
+}
+
+describe("renderMarkdown: typographic quotes in prose", () => {
+  it("leaves a body as typed unless it is asked", () => {
+    expect(renderMarkdown(`It didn't "hold".`)).toBe(`<p>It didn't "hold".</p>`);
+    expect(typeset(`It didn't "hold".`)).toBe("<p>It didn’t “hold”.</p>");
+  });
+
+  it("pairs a quote across inline markup", () => {
+    expect(typeset('"*impossible* in Python"')).toBe("<p>“<em>impossible</em> in Python”</p>");
+    expect(typeset('*"impossible"* and **"so"**')).toBe(
+      "<p><em>“impossible”</em> and <strong>“so”</strong></p>",
+    );
+    expect(typeset('the ["paper"](/writing/a) and [paper](/writing/a)\'s claim')).toBe(
+      '<p>the <a href="/writing/a">“paper”</a> and <a href="/writing/a">paper</a>’s claim</p>',
+    );
+    expect(typeset("a `GenServer`'s state, \"`mix`\" and '`iex`'")).toBe(
+      "<p>a <code>GenServer</code>’s state, “<code>mix</code>” and ‘<code>iex</code>’</p>",
+    );
+  });
+
+  it("does not carry a quote from one block into the next", () => {
+    expect(typeset('"One\n\n"Two" three\n\n- "a\n- b" c')).toBe(
+      "<p>“One</p>\n<p>“Two” three</p>\n<ul>\n<li>“a</li>\n<li>b” c</li>\n</ul>",
+    );
+    // A paragraph typed over two lines is one block.
+    expect(typeset('"One\ntwo"')).toBe("<p>“One\ntwo”</p>");
+  });
+
+  it("changes nothing in code, in a URL or in HTML that was typed", () => {
+    const html = typeset(
+      [
+        'Run `echo "it\'s"` now.',
+        "",
+        "```js",
+        'const a = "it\'s";',
+        "```",
+        "",
+        "    indented 'code'",
+        "",
+        "[it's](/a?q='b') and <https://example.com/it's>",
+        "",
+        '<b class="x">it\'s</b>',
+      ].join("\n"),
+    );
+    const { code, prose, tags } = parts(html);
+    expect(code).toContain(`echo "it's"`);
+    expect(code).toContain(`const a = "it's";`);
+    expect(code).toContain("indented 'code'");
+    expect(code).not.toMatch(/[‘’“”]/);
+    expect(tags.join("\n")).not.toMatch(/[‘’“”]/);
+    expect(html).toContain(`<a href="/a?q='b'">it\u2019s</a>`);
+    // An address shown as a link's text is the address.
+    expect(html).toContain(`>https://example.com/it's</a>`);
+    expect(html).toContain(`href="https://example.com/it's"`);
+    // The markup that was typed is shown as typed; the words in it are prose.
+    expect(prose).toContain(`<b class="x">it’s</b>`);
+  });
+
+  it("gives a heading the id it has without them", () => {
+    const source = `## What Didn't Hold\n\n## The "Impossible" Claim\n\n### Lincoln's 'Loop'\n\n## What Didn't Hold`;
+    const ids = ["what-didnt-hold", "the-impossible-claim", "lincolns-loop", "what-didnt-hold-1"];
+    expect(parts(renderMarkdown(source)).ids).toEqual(ids);
+    expect(parts(typeset(source)).ids).toEqual(ids);
+    expect(typeset("## What Didn't Hold")).toBe('<h2 id="what-didnt-hold">What Didn’t Hold</h2>');
+  });
+
+  it("sets an image's alt and caption, and still reads a size from its title", () => {
+    const html = typeset(`Text.\n\n![Ryan's "graph"](/a.png "1200x800 The graph's first week.")`);
+    expect(html).toContain(
+      '<img src="/a.png" alt="Ryan’s “graph”" width="1200" height="800" loading="lazy" decoding="async">',
+    );
+    expect(html).toContain("<figcaption>The graph’s first week.</figcaption>");
+  });
+
+  const contentDir = fileURLToPath(new URL("../../content", import.meta.url));
+  const files = [
+    ...readdirSync(`${contentDir}/writing`).map((name) => `writing/${name}`),
+    "now.md",
+  ].filter((name) => name.endsWith(".md"));
+
+  it("changes only the quotes of every post and of /now, and only in prose", () => {
+    expect(files.length).toBeGreaterThan(5);
+    let changed = 0;
+    let quotedCode = 0;
+    for (const name of files) {
+      const { content } = parseFrontmatter(readFileSync(`${contentDir}/${name}`, "utf8"));
+      const typed = parts(renderMarkdown(content));
+      const set = parts(typeset(content));
+      // Same elements, same attributes (ids, hrefs, classes), same code.
+      expect(set.tags, name).toEqual(typed.tags);
+      expect(set.ids, name).toEqual(typed.ids);
+      expect(set.code, name).toBe(typed.code);
+      // The prose differs by its quotes and nothing else,
+      expect(straightQuotes(set.prose), name).toBe(typed.prose);
+      // and the only straight one left stands after a digit: a prime.
+      const left = [...set.prose.matchAll(/.{0,30}(?<!\d)['"].{0,30}/gs)].map((m) => m[0]);
+      expect(left, name).toEqual([]);
+      if (set.prose !== typed.prose) changed += 1;
+      if (/['"]/.test(set.code)) quotedCode += 1;
+    }
+    // The posts do have quotes to set, and code with quotes to keep.
+    expect(changed).toBeGreaterThan(5);
+    expect(quotedCode).toBeGreaterThan(2);
+  });
+
+  it("sets the title and the excerpt of a post, and no other field", () => {
+    const { data } = parseFrontmatter(
+      readFileSync(`${contentDir}/writing/lincoln-six-months-later.md`, "utf8"),
+    );
+    const set = typesetMeta(data);
+    expect(set.title).toBe(
+      "Lincoln, Six Months Later: What Held, What Didn’t, and a Model Named After a Paradox",
+    );
+    expect(set.excerpt).toContain("TypeSafe’s new Jev model");
+    expect({ ...set, title: "", excerpt: "" }).toEqual({ ...data, title: "", excerpt: "" });
+    for (const name of files.filter((file) => file.startsWith("writing/"))) {
+      const meta = typesetMeta(
+        parseFrontmatter(readFileSync(`${contentDir}/${name}`, "utf8")).data,
+      );
+      expect(`${String(meta.title)} ${String(meta.excerpt)}`, name).not.toMatch(/(?<!\d)['"]/);
+    }
   });
 });

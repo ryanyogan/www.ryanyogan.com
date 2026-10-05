@@ -1,6 +1,7 @@
 import { contactEmail, footerLinks, navLinks, projectGroups } from "@repo/shared";
 import type { Project } from "@repo/shared";
 import { writingPosts } from "./content";
+import { straightQuotes } from "./quotes";
 
 // Loaded on demand by the command palette. Pages, posts and actions come from the
 // same modules the pages render from; projects are the published rows in D1,
@@ -17,7 +18,7 @@ export interface SearchItem {
   /** Internal path, or the external URL / value an action works on. */
   href: string;
   action?: SearchAction;
-  /** Lowercased text searched after the title. */
+  /** Text searched after the title, folded as `search` folds the query. */
   text: string;
 }
 
@@ -28,11 +29,17 @@ export const searchTypes: { type: SearchType; label: string }[] = [
   { type: "action", label: "Actions" },
 ];
 
+/**
+ * How text is compared: lower case, and quotes as a keyboard types them. A post's title has
+ * typographic ones (Didn’t), and a reader looking for it types "didn't".
+ */
+const fold = (text: string) => straightQuotes(text).toLowerCase();
+
 const github = footerLinks.find((link) => link.label === "GitHub");
 
 function item(entry: Omit<SearchItem, "text"> & { extra?: string }): SearchItem {
   const { extra = "", ...rest } = entry;
-  return { ...rest, text: `${rest.detail} ${extra}`.toLowerCase() };
+  return { ...rest, text: fold(`${rest.detail} ${extra}`) };
 }
 
 /** The palette index. `projects` is the published list, already in display order. */
@@ -109,7 +116,7 @@ function subsequence(needle: string, hay: string): boolean {
 
 /** Lower is better; -1 is no match. Every word of the query has to match somewhere. */
 function score(entry: SearchItem, words: string[]): number {
-  const title = entry.title.toLowerCase();
+  const title = fold(entry.title);
   let total = 0;
   for (const word of words) {
     const at = title.indexOf(word);
@@ -128,7 +135,7 @@ function score(entry: SearchItem, words: string[]): number {
  * query only pages and actions are offered.
  */
 export function search(searchItems: SearchItem[], query: string): SearchItem[] {
-  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const words = fold(query).split(/\s+/).filter(Boolean);
   if (words.length === 0) {
     return searchItems.filter((entry) => entry.type === "page" || entry.type === "action");
   }
