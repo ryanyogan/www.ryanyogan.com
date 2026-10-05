@@ -1,13 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { writingPosts } from "~/lib/content";
+import { straightQuotes } from "~/lib/quotes";
 import { SITE_DESCRIPTION, SITE_NAME, absoluteUrl } from "~/lib/seo";
 
 // llms.txt (llmstxt.org): a community proposal, not a standard, and no large crawler is
 // known to read it. It is kept because it is cheap: prerendered, built from the same data as
-// the feed, and it states nothing the pages do not.
+// the feed, and it states nothing the pages do not. It is plain text for a program to read,
+// so its quotes are the keyboard's, as the markdown files have them.
 function buildLlmsTxt(): string {
   const posts = writingPosts
-    .map((post) => `- [${post.title}](${absoluteUrl(`/writing/${post.slug}`)}): ${post.excerpt}`)
+    .map(
+      (post) =>
+        `- [${straightQuotes(post.title)}](${absoluteUrl(`/writing/${post.slug}`)}): ${straightQuotes(post.excerpt)}`,
+    )
     .join("\n");
   return `# ${SITE_NAME}
 
