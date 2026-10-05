@@ -416,17 +416,16 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
       description: JSON.stringify({ firstVisit, visits }),
     });
     expect(firstVisit, "faces added on the first visit").toBe(0);
-    // In Chromium the cached files are back before the first frame on an ordinary load, so
-    // the faces are in it. Another engine may draw first, and then leaves them out again.
-    if (browserName === "chromium") {
-      expect(inFirstFrame, "a cached load with the faces in its first frame").toBe(true);
-    }
+    // The cached files are back before the first frame on an ordinary load, so the faces are
+    // in it: in Chromium with the roman, in WebKit ahead of it (the script does not wait for
+    // the roman there, see styles/fonts.ts; seen in CI, run 37245548513, on the second visit).
+    expect(inFirstFrame, "a cached load with the faces in its first frame").toBe(true);
   });
 
   // In WebKit the script adds cached files that are there before the first frame without
   // asking about the roman (the accepted exception in styles/fonts.ts), so there this load ends
   // with none of the four or with all of them from its first frame, by whether the files were
-  // there in time (both seen in CI). Nothing changes or moves after the first paint either way.
+  // there in time. Nothing changes or moves after the first paint either way.
   test("once cached, a roman that misses the first paint keeps them out (WebKit: out, or in from the first frame)", async ({
     page,
     browserName,
