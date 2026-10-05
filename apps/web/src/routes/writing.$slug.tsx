@@ -83,9 +83,12 @@ function WritingDetail() {
             <h1>{post.title}</h1>
             <p className="lede">{post.excerpt}</p>
             <p className="small post-meta">
+              <time dateTime={post.isoDate}>{post.date}</time>{" "}
               <span>
-                <time dateTime={post.isoDate}>{post.date}</time> &middot; {post.minutes} min read
-                &middot; {post.author}
+                <span className="dot">&middot;</span> {post.minutes} min read
+              </span>{" "}
+              <span>
+                <span className="dot">&middot;</span> {post.author}
               </span>
               <PostViews slug={slug} />
             </p>

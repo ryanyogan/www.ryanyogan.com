@@ -722,6 +722,29 @@
     }
   }
 
+  /* Home on a tablet (V3): one column under a stacked label, so it takes the phone's closer
+     sections (the hero's 64px above each rule). The project list has the row less the
+     graph's own 220px, not half of it, and the rink is drawn at the size it has on a desktop
+     instead of the width of the page. */
+  @media (min-width: 640.02px) and (max-width: 860px) {
+    .home .row {
+      padding-bottom: 64px;
+    }
+
+    .home .idx {
+      grid-template-columns: minmax(0, 1fr) 220px;
+      column-gap: 40px;
+    }
+
+    .home .plist .sum {
+      text-wrap: pretty;
+    }
+
+    .home .rink {
+      max-width: 28rem;
+    }
+  }
+
   @media (max-width: 640px) {
     .hero,
     .idx,
@@ -1472,17 +1495,34 @@
     padding-bottom: 44px;
   }
 
+  /* A headline, not a column: a long title runs past the lede and sets in two lines where
+     the page has the room, balanced (h1 in the base layer). */
   .post-head h1 {
-    max-width: 24ch;
+    max-width: 21em;
   }
 
-  /* Date, reading time and author, then the view count, which moves to a line of its own
-     when the two do not fit side by side. */
+  /* Date, reading time, author and the view count, each a whole item: the line breaks
+     between items only. A middle dot sits in the gap before its item, outside the item's
+     box, so at the start of a line it is beyond the edge and clipped: no dot ends or
+     starts a line. */
   .post-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 0 16px;
+    gap: 0 1em;
     margin-top: 18px;
+    overflow: hidden;
+  }
+
+  .post-meta > * {
+    position: relative;
+    white-space: nowrap;
+  }
+
+  .post-meta .dot {
+    position: absolute;
+    right: 100%;
+    width: 1em;
+    text-align: center;
   }
 
   /* A view count (components/ViewCount.tsx). The number arrives after the page has loaded,
