@@ -1,3 +1,4 @@
+import { workSections } from "@repo/shared";
 import { describe, expect, it } from "vitest";
 import { absoluteUrl, jsonLd, personNode, projectNode, safeJson, seo } from "./seo";
 
@@ -20,14 +21,23 @@ describe("safeJson", () => {
 });
 
 describe("structured data", () => {
-  it("describes the person without an employer or a gmail address", () => {
+  it("describes the person with the employer and title /work states, and no gmail address", () => {
     const person = personNode();
     expect(person.name).toBe("Ryan Yogan");
     expect(person.sameAs).toEqual([
       "https://github.com/ryanyogan",
       "https://linkedin.com/in/ryanyogan",
     ]);
-    expect(person).not.toHaveProperty("worksFor");
+    // The owner approved naming Chromatic (2026-10-05). Both values are the current role
+    // in the /work timeline, and nothing else about the employer is said.
+    const current = workSections[0].roles[0];
+    expect(current.dates).toMatch(/Present$/);
+    expect(person.jobTitle).toBe(current.title);
+    expect(person.worksFor).toEqual({
+      "@type": "Organization",
+      name: current.company,
+      url: "https://www.chromatic.com",
+    });
     expect(person).not.toHaveProperty("email");
     expect(JSON.stringify(person)).not.toMatch(/gmail|procore|sonian/i);
   });

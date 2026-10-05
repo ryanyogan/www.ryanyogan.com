@@ -72,14 +72,9 @@ const scale: { from?: string; value: string; label: string }[] = [
 
 const arc: { when: string; title: string; body: string; quote?: string }[] = [
   {
-    when: "2025",
-    title: "Study.",
-    body: "Sandboxed coding agents, Cloudflare Workflows, structured output, and an LLM-from-scratch course.",
-  },
-  {
-    when: "Feb to Apr 2026",
-    title: "Original work begins.",
-    body: "An autonomous memory agent on Durable Objects, then a shared memory layer over MCP, then a deployed workflow product, then a published MCP server, then Lincoln: 140 commits in April alone.",
+    when: "2025 to Apr 2026",
+    title: "Study, then original work.",
+    body: "Sandboxed coding agents, Cloudflare Workflows and an LLM-from-scratch course. Then a memory agent, a shared memory layer over MCP, a published MCP server, and Lincoln: 140 commits in April alone.",
   },
   {
     when: "May to Jul 2026",
@@ -87,10 +82,30 @@ const arc: { when: string; title: string; body: string; quote?: string }[] = [
     body: "I built my own terminal coding agent from first principles, twice.",
   },
   {
+    when: "Jun 2026",
+    title: "Joined Chromatic.",
+    body: "I lead AI engineering and still write code: MCP servers that let coding agents work with a product, evaluation of whether an agent finishes a workflow, core services, and observability.",
+  },
+  {
+    when: "Aug 2026",
+    title: "The Linux desktop.",
+    body: "Five plugins for the bar in Omarchy, the Linux setup I run. Since then two performance patches have landed upstream with credit, and a gallery of themes is live at omarchythemes.dev.",
+  },
+  {
     when: "Sep 2026",
     title: "The audit.",
     body: "I went back to Lincoln and published an audit of my own claims.",
     quote: "I would rather publish a negative result than another feature.",
+  },
+  {
+    when: "Sep to Oct 2026",
+    title: "Building with agents.",
+    body: "Two household apps and this site. I write the tickets and the decision records, and agents do the building.",
+  },
+  {
+    when: "Oct 2026",
+    title: "Cook.",
+    body: "A warm end-to-end test runner for Phoenix apps, and an early prototype. It keeps a browser and the app running so a run skips the slow start, then returns one verdict a person or an agent can act on.",
   },
 ];
 
@@ -99,6 +114,8 @@ const themes = [
   "MCP",
   "durable background execution",
   "cost-aware model routing",
+  "agent-driven development",
+  "test tooling built for agents",
 ];
 
 const offers: { label: string; title: string; detail?: string; basis: string }[] = [
@@ -193,8 +210,8 @@ function WorkPage() {
           Recurring themes: {themes.slice(0, -1).join(", ")}, and {themes.at(-1)}.
         </p>
         <p className="small mt-2 max-w-[36rem]">
-          GitHub contributions doubled year over year: 812, then 1,656. By day I lead AI engineering
-          at Chromatic, and I build too: AI, MCP and core services.{" "}
+          Lincoln is paused for now, with its next experiment designed and ready to run. GitHub
+          contributions more than doubled year over year.{" "}
           <Link to="/projects" className="tlink">
             The rest is on the Projects page &rarr;
           </Link>
