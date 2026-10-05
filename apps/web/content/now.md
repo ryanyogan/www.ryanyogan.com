@@ -25,14 +25,14 @@ I am learning with Drumeo and Musora. Both are on YouTube: here is [Drumeo's cha
 
 ## Listening to
 
-- twenty one pilots, live in Mexico
+- twenty one pilots, live
 - Metallica
 - Alice in Chains
 - Dream Theater
 - Tool
 - Jazz
 
-There are a lot of good drummers on that list.
+The twenty one pilots is the live set from Mexico, not the studio records. There are a lot of good drummers on that list.
 
 ## Hockey family
 
