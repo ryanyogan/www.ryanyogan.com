@@ -2256,3 +2256,59 @@ summary {
     font-size: 0.75rem;
   }
 }
+
+/* Work and Writing: a small drawing beside the page header, from the width at which the lede
+   beside it keeps its full measure. Narrower, the header is as it was, without the drawing. */
+.org,
+.sheet {
+  display: none;
+  color: var(--ink-soft);
+}
+
+@media (min-width: 1280px) {
+  .head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 190px;
+    column-gap: 40px;
+    align-items: start;
+  }
+
+  .org,
+  .sheet {
+    display: block;
+    margin-top: 6px;
+  }
+
+  .sheet {
+    width: 121px;
+    justify-self: end;
+  }
+}
+
+/* Drawings, alive (A1): the accent of four of them moves, slowly. The point on the lakefront,
+   the node at the top of the org chart and the cursor on the sheet fade and return; the pass
+   on the rink travels one dash, in small steps. A keyframe says only where a piece goes, so
+   each starts as it is drawn. Opacity and dash offset only: nothing is laid out again. */
+@media (prefers-reduced-motion: no-preference) {
+  .lake circle,
+  .org .me,
+  .sheet .cur {
+    animation: art-pulse 4s ease-in-out infinite;
+  }
+
+  .rink .pass {
+    animation: art-drift 8s steps(40) infinite;
+  }
+}
+
+@keyframes art-pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes art-drift {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
