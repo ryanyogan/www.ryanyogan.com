@@ -146,11 +146,13 @@ export function DrumKit() {
         width="210"
         height="184"
         role="img"
-        aria-label="Plan drawing of a drum kit from above: a kick with its pedal, a snare, three toms, a hi-hat, two cymbals and a seat, with a pair of sticks left on the snare"
+        aria-label="Plan drawing of a drum kit from above: a kick, a snare, three toms, a hi-hat, two cymbals and a seat, with a pair of sticks left on the snare"
       >
         <g fill="var(--paper)" stroke="currentColor" strokeWidth="1">
-          <rect className="kit-kick" x="98" y="24" width="48" height="42" rx="3" />
-          <rect className="kit-pedal" x="118" y="70" width="8" height="28" />
+          <g className="kit-kick">
+            <rect x="98" y="24" width="48" height="42" rx="3" />
+            <path d="M98 30h48M98 60h48" />
+          </g>
           <g className="kit-tom">
             <circle cx="100" cy="86" r="16" />
             <circle cx="100" cy="86" r="13" />
@@ -182,8 +184,8 @@ export function DrumKit() {
           </g>
         </g>
         <g fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round">
-          <line className="kit-stick" x1="62" y1="146" x2="104" y2="116" />
-          <line className="kit-stick" x1="70" y1="156" x2="108" y2="128" />
+          <line className="kit-stick" x1="60" y1="148" x2="104" y2="114" />
+          <line className="kit-stick" x1="72" y1="158" x2="106" y2="126" />
         </g>
       </svg>
       <figcaption>A kit from above. The seat is mine.</figcaption>
