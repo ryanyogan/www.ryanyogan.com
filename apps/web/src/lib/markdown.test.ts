@@ -459,7 +459,7 @@ describe("renderMarkdown: typographic quotes in prose", () => {
     );
     const set = typesetMeta(data);
     expect(set.title).toBe(
-      "Lincoln, Six Months Later: What Held, What Didn’t, and a Model Named After a Paradox",
+      "Lincoln, Six Months Later: What Held, What\u00a0Didn’t, and a Model Named After a Paradox",
     );
     expect(set.excerpt).toContain("TypeSafe’s new Jev model");
     expect({ ...set, title: "", excerpt: "" }).toEqual({ ...data, title: "", excerpt: "" });

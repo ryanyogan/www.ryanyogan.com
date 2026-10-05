@@ -7,8 +7,9 @@ import { expect, postSlugs, test } from "./fixtures";
 
 const POST = "/writing/lincoln-six-months-later";
 const TITLE =
-  "Lincoln, Six Months Later: What Held, What Didn’t, and a Model Named After a Paradox";
-const TYPED = TITLE.replace("’", "'");
+  "Lincoln, Six Months Later: What Held, What\u00a0Didn’t, and a Model Named After a Paradox";
+/** As the file has it but for its no-break space, which keeps "What Didn't" on one line. */
+const TYPED = TITLE.replace("’", "'").replace("\u00a0", " ");
 /** A straight quote that is not a prime after a digit. */
 const STRAIGHT = /(?<!\d)['"]/;
 
@@ -63,6 +64,7 @@ test("a post's title is the same text on its page, in its tags, lists and the fe
   const content = (selector: string) => page.locator(selector).getAttribute("content");
   expect(await content('meta[property="og:title"]')).toBe(TITLE);
   expect(await content('meta[name="description"]')).toContain("TypeSafe’s");
+  // What the card says, and the card is drawn with a plain space (vite-plugin-og.ts).
   expect(await content('meta[property="og:image:alt"]')).toContain("What Didn’t");
   const graph = JSON.parse(
     (await page.locator('script[type="application/ld+json"]').first().textContent())!,
@@ -99,5 +101,7 @@ test("the palette finds a title by the quotes a keyboard types, and by its own",
     await expect(palette.getByRole("option").first(), query).toContainText("’");
   }
   await input.fill("what didn't");
-  await expect(palette.getByRole("option").first()).toHaveText(new RegExp(TITLE));
+  await expect(palette.getByRole("option").first()).toHaveText(
+    new RegExp(TITLE.replace("\u00a0", "\\s")),
+  );
 });

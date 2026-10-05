@@ -1,5 +1,5 @@
 ---
-title: "Lincoln, Six Months Later: What Held, What Didn't, and a Model Named After a Paradox"
+title: "Lincoln, Six Months Later: What Held, What Didn't, and a Model Named After a Paradox"
 date: "September 22, 2026"
 year: "2026"
 author: "Ryan Yogan"

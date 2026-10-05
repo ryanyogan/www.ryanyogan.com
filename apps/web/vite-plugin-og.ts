@@ -70,8 +70,9 @@ function cards(root: string): (OgCard & { route: string; file: string })[] {
       return {
         route: `/writing/${slug}`,
         file: `writing/${slug}`,
-        // As the post's own <h1> has it (vite-plugin-posts.ts).
-        title: typographicQuotes(String(data.title)),
+        // As the post's own <h1> has it (vite-plugin-posts.ts), but for a no-break space: the
+        // card has its own lines, and is drawn with a plain one.
+        title: typographicQuotes(String(data.title)).replace(/\u00a0/g, " "),
         kicker: postKicker(isoDay(String(data.date))),
       };
     });

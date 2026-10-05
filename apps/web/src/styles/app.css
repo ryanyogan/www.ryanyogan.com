@@ -743,6 +743,11 @@
     .home .rink {
       max-width: 28rem;
     }
+
+    /* A heading sits as near its own text as it does on a phone and beside the gutter. */
+    .home .twin .h-m + * {
+      margin-top: 8px;
+    }
   }
 
   @media (max-width: 640px) {

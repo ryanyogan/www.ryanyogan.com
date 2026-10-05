@@ -103,9 +103,13 @@ export function typographicQuotes(text: string): string {
 }
 
 /**
- * The other way, for matching: a reader types ' and " into the search box, and a title that
- * says Didn’t has to answer to "didn't".
+ * The other way, for matching and for plain text: a reader types ' and " into the search box,
+ * and a title that says Didn’t has to answer to "didn't". A no-break space (a title keeps two
+ * words on one line with it) is the space bar's too.
  */
 export function straightQuotes(text: string): string {
-  return text.replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"');
+  return text
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201c\u201d]/g, '"')
+    .replace(/\u00a0/g, " ");
 }
