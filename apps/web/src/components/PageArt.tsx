@@ -142,35 +142,48 @@ export function DrumKit() {
     <figure className="now-art">
       <svg
         className="art kit"
-        viewBox="16 10 212 182"
-        width="212"
-        height="182"
+        viewBox="18 16 210 184"
+        width="210"
+        height="184"
         role="img"
-        aria-label="Plan drawing of a drum kit from above: a kick, a snare, three toms, a hi-hat, two cymbals and a seat, with a pair of sticks resting on the snare"
+        aria-label="Plan drawing of a drum kit from above: a kick with its pedal, a snare, three toms, a hi-hat, two cymbals and a seat, with a pair of sticks left on the snare"
       >
         <g fill="var(--paper)" stroke="currentColor" strokeWidth="1">
-          <rect className="kit-kick" x="100" y="30" width="40" height="50" rx="3" />
-          <circle className="kit-tom" cx="98" cy="74" r="17" />
-          <circle className="kit-tom" cx="142" cy="74" r="17" />
-          <circle className="kit-snare" cx="84" cy="122" r="20" />
-          <circle className="kit-floor" cx="166" cy="122" r="22" />
-          <circle className="kit-seat" cx="124" cy="166" r="15" opacity=".5" />
+          <rect className="kit-kick" x="98" y="24" width="48" height="42" rx="3" />
+          <rect className="kit-pedal" x="118" y="70" width="8" height="28" />
+          <g className="kit-tom">
+            <circle cx="100" cy="86" r="16" />
+            <circle cx="100" cy="86" r="13" />
+          </g>
+          <g className="kit-tom">
+            <circle cx="144" cy="86" r="16" />
+            <circle cx="144" cy="86" r="13" />
+          </g>
+          <g className="kit-snare">
+            <circle cx="82" cy="132" r="20" />
+            <circle cx="82" cy="132" r="17" />
+          </g>
+          <g className="kit-floor">
+            <circle cx="168" cy="134" r="22" />
+            <circle cx="168" cy="134" r="19" />
+          </g>
+          <circle className="kit-seat" cx="124" cy="176" r="15" opacity=".5" />
           <g className="kit-hat">
-            <circle cx="46" cy="104" r="19" />
-            <circle cx="46" cy="104" r="3" />
+            <circle cx="44" cy="112" r="19" />
+            <circle cx="44" cy="112" r="3" />
           </g>
           <g className="kit-crash">
-            <circle cx="60" cy="44" r="24" />
-            <circle cx="60" cy="44" r="4" />
+            <circle cx="58" cy="50" r="25" />
+            <circle cx="58" cy="50" r="4" />
           </g>
           <g className="kit-ride">
-            <circle cx="188" cy="58" r="28" />
-            <circle cx="188" cy="58" r="7" />
+            <circle cx="192" cy="66" r="28" />
+            <circle cx="192" cy="66" r="7" />
           </g>
         </g>
         <g fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round">
-          <line className="kit-stick" x1="64" y1="136" x2="104" y2="112" />
-          <line className="kit-stick" x1="70" y1="106" x2="100" y2="140" />
+          <line className="kit-stick" x1="62" y1="146" x2="104" y2="116" />
+          <line className="kit-stick" x1="70" y1="156" x2="108" y2="128" />
         </g>
       </svg>
       <figcaption>A kit from above. The seat is mine.</figcaption>
