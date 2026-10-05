@@ -44,10 +44,10 @@ describe("the site icon", () => {
   it("wraps a PNG as a one-image .ico", () => {
     const png = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 1, 2, 3]);
     const file = ico(png, 32);
-    expect([...file.slice(0, 22)]).toEqual([
+    expect(Array.from(file.slice(0, 22))).toEqual([
       0, 0, 1, 0, 1, 0, 32, 32, 0, 0, 1, 0, 32, 0, 7, 0, 0, 0, 22, 0, 0, 0,
     ]);
-    expect([...file.slice(22)]).toEqual([...png]);
+    expect(Array.from(file.slice(22))).toEqual(Array.from(png));
   });
 
   it("links the .ico with a size, the SVG with its type, and the home screen icon", () => {
