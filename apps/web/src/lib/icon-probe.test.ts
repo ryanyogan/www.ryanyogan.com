@@ -1,16 +1,15 @@
 import { describe, expect, it } from "vitest";
+import { ICON_PATHS } from "./icon";
 import { iconProbeResponse } from "./icon-probe";
 
 const request = (path: string, method = "GET") =>
   new Request(`https://ryanyogan.com${path}`, { method });
 
 describe("iconProbeResponse", () => {
-  it("answers the icon paths with an empty 404 that no cache keeps", async () => {
+  it("answers the icon names that have no file with an empty 404 that no cache keeps", async () => {
     for (const path of [
-      "/favicon.ico",
-      "/favicon.ico?v=2",
-      "/apple-touch-icon.png",
       "/apple-touch-icon-precomposed.png",
+      "/apple-touch-icon-precomposed.png?v=2",
       "/apple-touch-icon-120x120.png",
       "/apple-touch-icon-120x120-precomposed.png",
     ]) {
@@ -19,13 +18,20 @@ describe("iconProbeResponse", () => {
       expect(response?.headers.get("cache-control"), path).toBe("no-store");
       expect(await response?.text(), path).toBe("");
     }
-    expect(iconProbeResponse(request("/favicon.ico", "HEAD"))?.status).toBe(404);
+    const head = iconProbeResponse(request("/apple-touch-icon-precomposed.png", "HEAD"));
+    expect(head?.status).toBe(404);
   });
 
-  it("leaves everything else to the router", () => {
-    for (const path of ["/", "/favicon.svg", "/writing/favicon.ico", "/favicon.ico/", "/no-such"]) {
+  it("leaves the three icon files, and everything else, alone", () => {
+    for (const path of [
+      ...Object.values(ICON_PATHS),
+      "/",
+      "/writing/apple-touch-icon-precomposed.png",
+      "/apple-touch-icon-precomposed.png/",
+      "/no-such",
+    ]) {
       expect(iconProbeResponse(request(path)), path).toBeNull();
     }
-    expect(iconProbeResponse(request("/favicon.ico", "POST"))).toBeNull();
+    expect(iconProbeResponse(request("/apple-touch-icon-precomposed.png", "POST"))).toBeNull();
   });
 });

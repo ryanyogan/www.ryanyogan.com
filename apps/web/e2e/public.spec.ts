@@ -374,15 +374,46 @@ test("404 responses are not cacheable; the prerendered and dynamic pages are", a
   }
 });
 
-test("an icon path is an empty 404, and every page tells the browser not to ask", async ({
+test("the site icon is three small files that every page links to; other icon names are an empty 404", async ({
   request,
 }) => {
-  // No icon files exist. /favicon.ico used to be the whole rendered 404 page (56.8 KB).
-  for (const path of [
-    "/favicon.ico",
-    "/apple-touch-icon.png",
-    "/apple-touch-icon-precomposed.png",
-  ]) {
+  // Drawn by the build (vite-plugin-icons.ts). Not hashed, so kept for a day (public/_headers).
+  const files: [path: string, type: RegExp, ceiling: number][] = [
+    ["/favicon.svg", /^image\/svg\+xml/, 1500],
+    ["/favicon.ico", /^image\/(x-icon|vnd\.microsoft\.icon)/, 2000],
+    ["/apple-touch-icon.png", /^image\/png/, 4000],
+  ];
+  const bodies: Buffer[] = [];
+  for (const [path, type, ceiling] of files) {
+    const response = await request.get(path);
+    expect(response.status(), path).toBe(200);
+    expect(response.headers()["content-type"], path).toMatch(type);
+    expect(response.headers()["cache-control"], path).toBe("public, max-age=86400");
+    const body = await response.body();
+    expect(body.length, path).toBeGreaterThan(200);
+    expect(body.length, path).toBeLessThan(ceiling);
+    bodies.push(body);
+  }
+  const [svg, ico, touch] = bodies;
+  // Outlines in the page's two pairs of colours (styles/app.css), and no font to load.
+  const text = svg.toString("utf8");
+  expect(text).toMatch(/^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" viewBox="0 0 1000 1000">/);
+  expect(text).toContain('fill="#f6f5f1"');
+  expect(text).toContain('fill="#25272a"');
+  expect(text).toContain(
+    "@media (prefers-color-scheme:dark){rect{fill:#1c1e1f}path{fill:#dddcd6}}",
+  );
+  expect(text).not.toMatch(/<text|font-family|<image|url\(/);
+  // A .ico holding one 32px PNG; a 180px PNG.
+  const PNG = "89504e470d0a1a0a";
+  expect(ico.subarray(0, 8).toString("hex")).toBe("0000010001002020");
+  expect(ico.subarray(22, 30).toString("hex")).toBe(PNG);
+  expect([ico.readUInt32BE(38), ico.readUInt32BE(42)]).toEqual([32, 32]);
+  expect(touch.subarray(0, 8).toString("hex")).toBe(PNG);
+  expect([touch.readUInt32BE(16), touch.readUInt32BE(20)]).toEqual([180, 180]);
+
+  // The names iOS also tries have no file. Each used to be the whole rendered 404 page (56.8 KB).
+  for (const path of ["/apple-touch-icon-precomposed.png", "/apple-touch-icon-120x120.png"]) {
     const response = await request.get(path);
     expect(response.status(), path).toBe(404);
     expect(response.headers()["cache-control"], path).toBe("no-store");
@@ -391,8 +422,17 @@ test("an icon path is an empty 404, and every page tells the browser not to ask"
   for (const path of [...routes, "/no-such-page"]) {
     const html = await (await request.get(path)).text();
     const icons = html.match(/<link\b[^>]*\srel="[^"]*icon[^"]*"[^>]*>/g) ?? [];
-    expect(icons, path).toHaveLength(1);
-    expect(icons[0], path).toContain('href="data:,"');
+    expect(icons, path).toHaveLength(3);
+    const [fallback, vector, homeScreen] = icons;
+    for (const part of ['rel="icon"', 'href="/favicon.ico"', 'sizes="32x32"']) {
+      expect(fallback, path).toContain(part);
+    }
+    for (const part of ['rel="icon"', 'href="/favicon.svg"', 'type="image/svg+xml"']) {
+      expect(vector, path).toContain(part);
+    }
+    for (const part of ['rel="apple-touch-icon"', 'href="/apple-touch-icon.png"']) {
+      expect(homeScreen, path).toContain(part);
+    }
   }
 });
 

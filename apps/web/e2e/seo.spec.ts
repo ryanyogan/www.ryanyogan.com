@@ -360,7 +360,9 @@ test("a project image is cached, and exists only for a published project", async
 test("the old SVG image is gone and nothing names it", async ({ request }) => {
   expect(existsSync(`${CLIENT_DIR}/og-default.svg`)).toBe(false);
   for (const route of publicRoutes) {
-    expect(await html(request, route), route).not.toContain('.svg"');
+    // The one SVG a page names is the site icon (src/lib/icon.ts).
+    const body = (await html(request, route)).replace('href="/favicon.svg"', "");
+    expect(body, route).not.toContain('.svg"');
   }
   // Images are not pages: the sitemap does not list them, and robots.txt does not hide them.
   expect(await (await request.get("/sitemap.xml")).text()).not.toContain("/og/");
