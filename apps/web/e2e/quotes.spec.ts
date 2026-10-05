@@ -64,7 +64,8 @@ test("a post's title is the same text on its page, in its tags, lists and the fe
   const content = (selector: string) => page.locator(selector).getAttribute("content");
   expect(await content('meta[property="og:title"]')).toBe(TITLE);
   expect(await content('meta[name="description"]')).toContain("TypeSafe’s");
-  expect(await content('meta[property="og:image:alt"]')).toContain("What\u00a0Didn’t");
+  // What the card says, and the card is drawn with a plain space (vite-plugin-og.ts).
+  expect(await content('meta[property="og:image:alt"]')).toContain("What Didn’t");
   const graph = JSON.parse(
     (await page.locator('script[type="application/ld+json"]').first().textContent())!,
   ) as { "@graph": { "@type": string; headline?: string }[] };
