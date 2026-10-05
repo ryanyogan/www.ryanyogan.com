@@ -1,7 +1,7 @@
 ---
 title: "Puck Pro"
 summary: "Pose detection and vision-model feedback on my kids' hockey shots"
-tagline: "A prototype: in-browser pose detection plus vision-model feedback on my kids' hockey shots. Built so my kids can get feedback between sessions with a coach."
+tagline: "A prototype: in-browser pose detection plus vision-model feedback on my kids' hockey shots. Built so they can get feedback between sessions with a coach."
 tech:
   - Elixir
   - Phoenix LiveView

@@ -25,7 +25,7 @@ I am learning with Drumeo and Musora. Both are on YouTube: here is [Drumeo's cha
 
 ## Listening to
 
-- twenty one pilots, live
+- twenty one pilots, live in Mexico
 - Metallica
 - Alice in Chains
 - Dream Theater
@@ -43,7 +43,7 @@ I am a hockey dad and a coach. We tailgate. We are also big into RVs, and now th
 ## Reading and learning
 
 - Music theory books.
-- A lot of AI courses at masters.dev.
+- A lot of AI courses at [Master.dev](https://master.dev), which used to be Frontend Masters.
 - Too much of [Theo's YouTube channel](https://www.youtube.com/@t3dotgg).
 - _Greenlights_ by Matthew McConaughey.
 - _Skygods: The Fall of Pan Am_ by Robert Gandt.
