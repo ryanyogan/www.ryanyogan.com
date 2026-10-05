@@ -92,6 +92,13 @@ export default defineConfig({
       testMatch: /(viewports|mobile|pages|views|chunks|post-body|first-load|public)\.spec\.ts$/,
       grep: /(viewports|mobile|pages|views|chunks|post-body|first-load)\.spec\.ts|hydrates without a mismatch/,
     },
+    // Safari's engine at desktop size, for the one thing the phone-size project cannot reach:
+    // the drawings (hidden at a phone's width) and their slow motion (art-motion.spec.ts).
+    {
+      name: "webkit-desktop",
+      use: { ...devices["Desktop Safari"] },
+      testMatch: /art-motion\.spec\.ts$/,
+    },
   ],
   webServer: [
     {

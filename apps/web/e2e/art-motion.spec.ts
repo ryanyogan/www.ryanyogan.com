@@ -4,8 +4,8 @@ import type { Page } from "@playwright/test";
 // Ticket A1: four drawings have one slow accent each, by CSS alone (styles/app.css, at the
 // end). A still cannot show motion, so this does: each piece has one endless CSS animation of
 // at least the stated length, its value changes a little between looks and stays in its range,
-// and under reduced motion, or where the drawing is hidden, nothing runs. Chromium only (the
-// other projects pick specs by name).
+// and under reduced motion, or where the drawing is hidden, nothing runs. In Chromium and in
+// Safari's engine at desktop size (the "webkit-desktop" project).
 const moving = [
   // [what, page, piece, keyframes, shortest ms, property, lowest, highest]
   ["the point on the lakefront", "/", ".lake circle", "art-pulse", 3000, "opacity", 0.3, 1],
