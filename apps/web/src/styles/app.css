@@ -2162,3 +2162,90 @@ summary {
     flex: 0 0 100%;
   }
 }
+
+/*
+ * /now (N1). The page is content/now.md cut at its headings (lib/now.ts): each section is a
+ * row, opened as Home's are by a hairline and its label in ink, with its prose in the reading
+ * column and, for some, a drawing. Everything here is under .now; nothing else changes.
+ */
+.now .post-head {
+  padding-bottom: 56px;
+}
+
+.now-lede {
+  max-width: 33em;
+  margin-top: 22px;
+  font-size: 1.1875rem;
+  color: var(--ink-soft);
+}
+
+.now section.row {
+  padding-bottom: 56px;
+}
+
+.now-sec {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px 56px;
+  align-items: start;
+}
+
+/* A drawing opens its section where the page is one column, and sits beside it on a desktop. */
+.now-art {
+  order: -1;
+  max-width: 13rem;
+  color: var(--ink-soft);
+}
+
+.now-art figcaption {
+  margin-top: 8px;
+  font: 400 0.875rem/1.5 var(--font-sans);
+  color: var(--muted);
+}
+
+/* Lists are rows between hairlines, not bullets. */
+.now .prose ul {
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--rule);
+}
+
+.now .prose li {
+  margin: 0;
+  padding: 0.5em 0;
+  border-top: 1px solid var(--rule);
+  break-inside: avoid;
+}
+
+@media (min-width: 640.02px) {
+  .now section.row {
+    border-top: 1px solid var(--rule);
+    padding-top: 32px;
+    padding-bottom: 72px;
+  }
+
+  .now h2.lab {
+    color: var(--ink);
+  }
+
+  .now .cols ul {
+    columns: 2;
+    column-gap: 40px;
+  }
+}
+
+@media (min-width: 1240px) {
+  .now-sec.has-art {
+    grid-template-columns: minmax(0, 38rem) minmax(0, 13rem);
+    justify-content: space-between;
+  }
+
+  .now-art {
+    order: 0;
+    max-width: none;
+  }
+
+  .now-art figcaption {
+    font-size: 0.75rem;
+  }
+}

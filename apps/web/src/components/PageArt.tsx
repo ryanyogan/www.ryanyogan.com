@@ -1,7 +1,7 @@
 import { projectGroups } from "@repo/shared";
 import type { Project, ProjectStatus } from "@repo/shared";
 
-/** Line drawings for Work and Projects, in the same hand as components/home/HomeArt.tsx. */
+/** Line drawings for Work, Projects and Now, in the same hand as components/home/HomeArt.tsx. */
 
 export function AgentLoop() {
   return (
@@ -130,5 +130,100 @@ export function StatusMarks({ projects }: { projects: Project[] }) {
         </g>
       ))}
     </svg>
+  );
+}
+
+/**
+ * Plan of a drum kit, from above, the player's seat at the bottom. The sticks are the accent.
+ * Each piece is an element of its own, with a class, so a later change can move one.
+ */
+export function DrumKit() {
+  return (
+    <figure className="now-art">
+      <svg
+        className="art kit"
+        viewBox="16 10 212 182"
+        width="212"
+        height="182"
+        role="img"
+        aria-label="Plan drawing of a drum kit from above: a kick, a snare, three toms, a hi-hat, two cymbals and a seat, with a pair of sticks resting on the snare"
+      >
+        <g fill="var(--paper)" stroke="currentColor" strokeWidth="1">
+          <rect className="kit-kick" x="100" y="30" width="40" height="50" rx="3" />
+          <circle className="kit-tom" cx="98" cy="74" r="17" />
+          <circle className="kit-tom" cx="142" cy="74" r="17" />
+          <circle className="kit-snare" cx="84" cy="122" r="20" />
+          <circle className="kit-floor" cx="166" cy="122" r="22" />
+          <circle className="kit-seat" cx="124" cy="166" r="15" opacity=".5" />
+          <g className="kit-hat">
+            <circle cx="46" cy="104" r="19" />
+            <circle cx="46" cy="104" r="3" />
+          </g>
+          <g className="kit-crash">
+            <circle cx="60" cy="44" r="24" />
+            <circle cx="60" cy="44" r="4" />
+          </g>
+          <g className="kit-ride">
+            <circle cx="188" cy="58" r="28" />
+            <circle cx="188" cy="58" r="7" />
+          </g>
+        </g>
+        <g fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round">
+          <line className="kit-stick" x1="64" y1="136" x2="104" y2="112" />
+          <line className="kit-stick" x1="70" y1="106" x2="100" y2="140" />
+        </g>
+      </svg>
+      <figcaption>A kit from above. The seat is mine.</figcaption>
+    </figure>
+  );
+}
+
+/** A motorhome from the side, a hockey stick leaning on the back. The stick and puck are the accent. */
+export function Camper() {
+  return (
+    <figure className="now-art">
+      <svg
+        className="art camper"
+        viewBox="-4 30 248 106"
+        width="248"
+        height="106"
+        role="img"
+        aria-label="Side drawing of a motorhome, with a hockey stick leaning against the back of it and a puck on the ground"
+      >
+        <path d="M-2 128h244" fill="none" stroke="currentColor" strokeWidth="1" opacity=".35" />
+        <g fill="none" stroke="currentColor" strokeWidth="1" strokeLinejoin="round">
+          <path
+            className="rv-body"
+            d="M46 44h166a6 6 0 0 1 6 6v16h-18l12 22h16a6 6 0 0 1 6 6v18h-194v-62a6 6 0 0 1 6-6z"
+          />
+          <rect x="96" y="38" width="26" height="6" />
+          <rect x="56" y="58" width="34" height="18" />
+          <rect x="102" y="58" width="34" height="18" />
+          <rect x="150" y="58" width="22" height="54" />
+          <path d="M150 84h22M190 88v24M194 70l8 14" />
+        </g>
+        <g fill="var(--paper)" stroke="currentColor" strokeWidth="1">
+          <g className="rv-wheel">
+            <circle cx="76" cy="114" r="13" />
+            <circle cx="76" cy="114" r="4" />
+          </g>
+          <g className="rv-wheel">
+            <circle cx="204" cy="114" r="13" />
+            <circle cx="204" cy="114" r="4" />
+          </g>
+        </g>
+        <path
+          className="rv-stick"
+          d="M33 58l-9 67l-13 3"
+          fill="none"
+          stroke="var(--accent)"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <rect className="rv-puck" x="0" y="124.5" width="8" height="3.5" fill="var(--accent)" />
+      </svg>
+      <figcaption>Still choosing the one for hockey trips.</figcaption>
+    </figure>
   );
 }

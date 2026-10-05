@@ -31,6 +31,19 @@ for (const width of [320, 390, 1280]) {
   }
 }
 
+// /now on a tablet as well: its drawings sit above their sections until there is room beside.
+for (const colorScheme of ["light", "dark"] as const) {
+  test.describe(`768 ${colorScheme}`, () => {
+    test.use({ viewport: { width: 768, height: 900 }, colorScheme });
+
+    test("now", async ({ page }) => {
+      await page.goto("/now");
+      await page.evaluate(() => document.fonts.ready);
+      await page.screenshot({ path: `screenshots/now-768-${colorScheme}.png`, fullPage: true });
+    });
+  });
+}
+
 // The open phone menu, which no page shot shows.
 test.describe("menu", () => {
   test.use({ viewport: { width: 390, height: 900 } });
