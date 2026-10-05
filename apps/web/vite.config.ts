@@ -3,6 +3,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import { siteIcons } from "./vite-plugin-icons";
 import { proseImages } from "./vite-plugin-images";
 import { ogImages } from "./vite-plugin-og";
 import { posts } from "./vite-plugin-posts";
@@ -75,6 +76,7 @@ export default defineConfig(({ command, isPreview }) => ({
     images,
     posts(images.manifest),
     ogImages(),
+    siteIcons(),
     cloudflare({
       viteEnvironment: { name: "ssr" },
       // Local D1 lives in .wrangler/state, where `wrangler d1 ... --local` also writes.

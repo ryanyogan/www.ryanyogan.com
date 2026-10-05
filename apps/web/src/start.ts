@@ -28,7 +28,7 @@ const bareUrls = createMiddleware().server(({ next, request }) => {
   return trailingSlashRedirect(request) ?? next();
 });
 
-/** There are no icon files: /favicon.ico is an empty 404, not the rendered 404 page. */
+/** An icon name with no file (lib/icon-probe.ts) is an empty 404, not the rendered 404 page. */
 const iconProbes = createMiddleware().server(({ next, request }) => {
   return iconProbeResponse(request) ?? next();
 });
