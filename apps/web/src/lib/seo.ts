@@ -42,14 +42,18 @@ export const PERSON_ID = `${SITE_URL}/#ryan`;
 
 const PROFILE_LABELS = new Set(["GitHub", "LinkedIn"]);
 
-/** The site's owner. Only what the site itself states: no employer, no address. */
+/**
+ * The site's owner. Only what the site itself states: the employer and the title are the
+ * first row of the /work timeline (a unit test compares them). No address.
+ */
 export function personNode(): JsonLdNode {
   return {
     "@type": "Person",
     "@id": PERSON_ID,
     name: SITE_NAME,
     url: absoluteUrl("/"),
-    jobTitle: "Engineering leader and agent systems builder",
+    jobTitle: "Senior Staff Engineer",
+    worksFor: { "@type": "Organization", name: "Chromatic", url: "https://www.chromatic.com" },
     description: SITE_DESCRIPTION,
     knowsAbout: [
       "Engineering leadership",
@@ -58,6 +62,7 @@ export function personNode(): JsonLdNode {
       "Model Context Protocol (MCP)",
       "Durable background execution",
       "Cost-aware model routing",
+      "Agent-driven development",
     ],
     sameAs: footerLinks.filter((link) => PROFILE_LABELS.has(link.label)).map((link) => link.href),
   };

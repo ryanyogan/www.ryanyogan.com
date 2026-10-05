@@ -36,8 +36,9 @@ function graphOf(html: string, where: string): Node[] {
   const data = JSON.parse(blocks[0]) as { "@context": string; "@graph": Node[] };
   expect(data["@context"], where).toBe("https://schema.org");
   for (const node of data["@graph"]) expect(typeof node["@type"], where).toBe("string");
-  // Nothing the owner has not put on the site: no employer, no private address.
-  expect(blocks[0], where).not.toMatch(/gmail\.com|worksFor|"email"/i);
+  // Nothing the owner has not put on the site: no private address. (The employer is on the
+  // site and in the Person node since 2026-10-05; expectPerson checks its exact value.)
+  expect(blocks[0], where).not.toMatch(/gmail\.com|"email"/i);
   return data["@graph"];
 }
 
@@ -63,8 +64,13 @@ function expectPerson(person: Node, where: string) {
     "https://github.com/ryanyogan",
     "https://linkedin.com/in/ryanyogan",
   ]);
-  expect(typeof person.jobTitle, where).toBe("string");
-  expect(person.jobTitle as string, where).not.toMatch(/\b(at|@)\b/i);
+  // The current employer and title, as the first row of the /work timeline has them.
+  expect(person.jobTitle, where).toBe("Senior Staff Engineer");
+  expect(person.worksFor, where).toEqual({
+    "@type": "Organization",
+    name: "Chromatic",
+    url: "https://www.chromatic.com",
+  });
   expect((person.knowsAbout as string[]).length, where).toBeGreaterThan(2);
 }
 
