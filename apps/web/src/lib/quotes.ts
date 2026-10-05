@@ -26,7 +26,7 @@ export const BREAK = "\u2029";
  */
 const ELISION = /^(?:em|tis|twas|twere|til|n|bout|nuff)(?![\p{L}\p{N}])/iu;
 /** A decade or a year: '90s, '08. */
-const DECADE = /^\d{2}(?:s|(?![\p{L}\p{N}]))/;
+const DECADE = /^\d{2}(?:s|(?![\p{L}\p{N}]))/u;
 
 const isWord = (ch: string) => ch === OPAQUE || /[\p{L}\p{N}]/u.test(ch);
 const isDigit = (ch: string) => /\p{N}/u.test(ch);
