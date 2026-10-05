@@ -396,10 +396,12 @@ describe("renderMarkdown: typographic quotes in prose", () => {
     expect(code).toContain("indented 'code'");
     expect(code).not.toMatch(/[‘’“”]/);
     expect(tags.join("\n")).not.toMatch(/[‘’“”]/);
-    expect(html).toContain(`<a href="/a?q='b'">it\u2019s</a>`);
+    // A URL is as typed (the page writes its apostrophe as an entity, as it did before).
+    expect(tags).toContain(`a {"href":"/a?q='b'"}`);
+    expect(tags.some((tag) => tag.startsWith(`a {"href":"https://example.com/it's"`))).toBe(true);
+    expect(html).toContain(">it’s</a> and ");
     // An address shown as a link's text is the address.
     expect(html).toContain(`>https://example.com/it's</a>`);
-    expect(html).toContain(`href="https://example.com/it's"`);
     // The markup that was typed is shown as typed; the words in it are prose.
     expect(prose).toContain(`<b class="x">it’s</b>`);
   });
