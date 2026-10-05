@@ -17,7 +17,7 @@ status: live
 order: 1
 ---
 
-A live NHL scores and stats dashboard, with a dedicated tracker for my brother Andrew's season in Germany's DEL2. Pages update without a refresh. It runs on a single small Fly.io machine. Built because every existing hockey app is either slow, ad-infested, or both.
+A live NHL scores and stats dashboard, with a dedicated tracker for my brother Andrew's season in Germany's DEL2. Pages update without a refresh. It runs on a single small Fly.io machine.
 
 ## Features
 

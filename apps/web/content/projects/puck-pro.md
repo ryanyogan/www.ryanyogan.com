@@ -16,7 +16,7 @@ status: prototype
 order: 4
 ---
 
-A prototype hockey training app with real-time pose detection. It uses MediaPipe in the browser to detect shots, and a vision model for coaching feedback afterwards. Born from a father's refusal to pay $150/hour for a shooting coach.
+A prototype hockey training app with real-time pose detection. It uses MediaPipe in the browser to detect shots, and a vision model for coaching feedback afterwards.
 
 ## Pose Detection in the Browser
 
