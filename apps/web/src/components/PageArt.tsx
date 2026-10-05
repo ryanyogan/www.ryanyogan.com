@@ -47,6 +47,69 @@ export function AgentLoop() {
   );
 }
 
+/**
+ * An org chart for the Work header: one node, three under it, eleven under those (the eleven
+ * squads). Drawn at its own size, one unit to the pixel. The node at the top is the accent.
+ */
+export function OrgTree() {
+  const leaves = Array.from({ length: 11 }, (_, i) => 15.5 + i * 16);
+  return (
+    <svg
+      className="art org"
+      viewBox="0 0 190 88"
+      width="190"
+      height="88"
+      role="img"
+      aria-label="A small org chart: one node at the top, three under it, and eleven along the bottom"
+    >
+      <path
+        d="M95.5 12.5v28M39.5 40.5v-12h112v12M39.5 48.5v16M15.5 76.5v-12h48v12M31.5 64.5v12M47.5 64.5v12M95.5 48.5v28M79.5 76.5v-12h32v12M151.5 48.5v16M127.5 76.5v-12h48v12M143.5 64.5v12M159.5 64.5v12"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1"
+        opacity=".7"
+      />
+      <g fill="var(--paper)" stroke="currentColor" strokeWidth="1">
+        <circle cx="39.5" cy="44.5" r="4" />
+        <circle cx="95.5" cy="44.5" r="4" />
+        <circle cx="151.5" cy="44.5" r="4" />
+        {leaves.map((x) => (
+          <circle key={x} cx={x} cy="80.5" r="4" />
+        ))}
+      </g>
+      <circle className="me" cx="95.5" cy="8.5" r="4.5" fill="var(--accent)" />
+    </svg>
+  );
+}
+
+/**
+ * A written sheet on another, for the Writing header: a title, two paragraphs of ruled lines,
+ * and a cursor where the last line stops. The cursor is the accent.
+ */
+export function Sheet() {
+  return (
+    <svg
+      className="art sheet"
+      viewBox="0 0 121 151"
+      width="121"
+      height="151"
+      role="img"
+      aria-label="A sheet of paper with a title and two paragraphs drawn as lines, a cursor after the last one, and a second sheet behind it"
+    >
+      <g fill="none" stroke="currentColor" strokeWidth="1" strokeLinejoin="round">
+        <path d="M8.5 10.5v-8h98l14 14v126h-8" opacity=".5" />
+        <path d="M.5 10.5h98l14 14v126h-112zM98.5 10.5v14h14" />
+        <path
+          d="M12.5 48.5h78M12.5 57.5h70M12.5 66.5h80M12.5 75.5h38M12.5 92.5h74M12.5 101.5h80M12.5 110.5h66M12.5 119.5h76M12.5 128.5h24"
+          opacity=".55"
+        />
+        <path d="M12.5 32.5h46" stroke="var(--ink)" />
+      </g>
+      <path className="cur" d="M40.5 123v11" fill="none" stroke="var(--accent)" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
 type Mark = "filled" | "open" | "dashed";
 
 const markOf: Record<ProjectStatus, Mark> = {

@@ -1,7 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { contactEmail, workSections } from "@repo/shared";
 import type { ReactNode } from "react";
-import { AgentLoop } from "~/components/PageArt";
+import { AgentLoop, OrgTree } from "~/components/PageArt";
 import { PERSON_BIO, WEBSITE_ID, absoluteUrl, pageTitle, personNode, seo } from "~/lib/seo";
 import { staticOgImage } from "~/lib/og-images";
 
@@ -146,12 +146,15 @@ function WorkPage() {
             <b>Work</b>More a manual than a resume.
           </p>
         </div>
-        <div className="col">
-          <h1 id="work-h">Work with me.</h1>
-          <p className="lede">
-            Here&rsquo;s how I like to work. How I lead, what I have scaled, what I am building now,
-            and what I am open to. The timeline comes last.
-          </p>
+        <div className="col head">
+          <div>
+            <h1 id="work-h">Work with me.</h1>
+            <p className="lede">
+              Here&rsquo;s how I like to work. How I lead, what I have scaled, what I am building
+              now, and what I am open to. The timeline comes last.
+            </p>
+          </div>
+          <OrgTree />
         </div>
       </section>
 

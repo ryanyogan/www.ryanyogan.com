@@ -44,6 +44,29 @@ for (const colorScheme of ["light", "dark"] as const) {
   });
 }
 
+// Ticket A1: the drawings that move, twice each, two seconds apart (half the fade's period, a
+// quarter of the dash's), enlarged three times so the difference can be seen in a still.
+test.describe("motion", () => {
+  test.use({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 3 });
+
+  for (const [name, path, art] of [
+    ["lake", "/", ".lake .art"],
+    ["rink", "/", ".rink"],
+    ["org", "/work", ".org"],
+    ["sheet", "/writing", ".sheet"],
+  ] as const) {
+    test(name, async ({ page }) => {
+      await page.goto(path);
+      await page.evaluate(() => document.fonts.ready);
+      const drawing = page.locator(art);
+      await drawing.scrollIntoViewIfNeeded();
+      await drawing.screenshot({ path: `screenshots/motion-${name}-a.png` });
+      await page.waitForTimeout(2000);
+      await drawing.screenshot({ path: `screenshots/motion-${name}-b.png` });
+    });
+  }
+});
+
 // The open phone menu, which no page shot shows.
 test.describe("menu", () => {
   test.use({ viewport: { width: 390, height: 900 } });

@@ -181,8 +181,8 @@ const ALLOWED = [
   ...allow("motion", [
     [
       "styles/app.css",
-      4,
-      "the search dialog's 140ms entrance (2); a view count's 180ms fade in, opacity only, asked for by the owner (2)",
+      8,
+      "the search dialog's 140ms entrance (2); a view count's 180ms fade in, opacity only, asked for by the owner (2); the drawings' slow accents, asked for by the owner: a 4s fade and an 8s dash, each an `animation` and its `@keyframes` (4)",
     ],
   ]),
   ...allow("mono", [["styles/app.css", 3, "inline code, code blocks, the admin code field"]]),
