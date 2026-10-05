@@ -20,7 +20,7 @@ function buildLlmsTxt(): string {
 
 ## Pages
 
-- [Work](${absoluteUrl("/work")}): how he leads, what he has scaled, what he is building now, and a timeline
+- [Work](${absoluteUrl("/work")}): how he likes to work, how he leads, what he has scaled, what he is building now, what he is open to, and a timeline
 - [Now](${absoluteUrl("/now")}): what he is working on and thinking about, with the date it was last updated
 - [Projects](${absoluteUrl("/projects")}): everything he has built, with its real status
 - [Writing](${absoluteUrl("/writing")}): all posts

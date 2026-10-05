@@ -330,7 +330,9 @@ function Palette({ onClose }: { onClose: () => void }) {
         className="max-h-[min(440px,62dvh)] min-h-0 overflow-y-auto p-2"
       >
         {index && results.length === 0 ? (
-          <p className="px-3 py-6 text-center text-muted">Nothing matches &ldquo;{query}&rdquo;.</p>
+          <p className="px-3 py-6 text-center text-muted">
+            No match for &ldquo;{query}&rdquo;. A shorter word may find it.
+          </p>
         ) : null}
         {index?.types.map(({ type, label }) => {
           const hits = results

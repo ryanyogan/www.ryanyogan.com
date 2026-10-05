@@ -37,7 +37,7 @@ const PAGES: (OgCard & { route: string; file: string })[] = [
     file: "home",
     title: "I lead engineering teams and build agent systems myself.",
   },
-  { route: "/work", file: "work", title: "How to work with me.", kicker: "Work" },
+  { route: "/work", file: "work", title: "Work with me.", kicker: "Work" },
   { route: "/now", file: "now", title: "What I am doing now.", kicker: "Now" },
   {
     route: "/projects",

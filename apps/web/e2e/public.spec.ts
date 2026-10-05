@@ -306,7 +306,9 @@ test("each project page shows its status, group and links from the database", as
     const hrefs = await external.evaluateAll((links) => links.map((a) => a.getAttribute("href")));
     expect(hrefs, slug).toEqual([want.live, want.github].filter(Boolean));
     if (!hrefs.length)
-      await expect(header.getByText(/No public link\.|Private\. No link\./)).toBeVisible();
+      await expect(
+        header.getByText(/There is no public link for this one\.|Private, so there is no link\./),
+      ).toBeVisible();
   }
 });
 
