@@ -15,6 +15,8 @@ const DELAY = 1500;
 const FONT = /\.woff2$/;
 /** The files styles/fonts.ts loads from its script. */
 const LATE = /-(400-italic|600-normal)-[^/]*\.woff2$/;
+/** The files the stylesheet names and the document preloads: the two romans. */
+const ROMAN = /-(wght-normal|400-normal)-[^/]*\.woff2$/;
 
 type Change = { t: number; what: string; from: string; to: string };
 type Seen = {
@@ -414,10 +416,74 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
       description: JSON.stringify({ firstVisit, visits }),
     });
     expect(firstVisit, "faces added on the first visit").toBe(0);
-    // Chromium holds the first frame for an `optional` face loaded from a script, so the
-    // faces are in it. Another engine may draw first, and then leaves them out again.
-    if (browserName === "chromium") {
-      expect(inFirstFrame, "a cached load with the faces in its first frame").toBe(true);
-    }
+    // The cached files are back before the first frame on an ordinary load, so the faces are
+    // in it: in Chromium with the roman, in WebKit ahead of it (the script does not wait for
+    // the roman there, see styles/fonts.ts; seen in CI, run 37245548513, on the second visit).
+    expect(inFirstFrame, "a cached load with the faces in its first frame").toBe(true);
+  });
+
+  // In WebKit the script adds cached files that are there before the first frame without
+  // asking about the roman (the accepted exception in styles/fonts.ts), so there this load ends
+  // with none of the four or with all of them from its first frame, by whether the files were
+  // there in time. Nothing changes or moves after the first paint either way.
+  test("once cached, a roman that misses the first paint keeps them out (WebKit: out, or in from the first frame)", async ({
+    page,
+    browserName,
+  }) => {
+    // The first visit leaves the note that the two files are cached, so on the next load the
+    // script asks for them at once and has them before the first frame.
+    await page.goto(post);
+    await hydrated(page);
+    await lateFontsLoaded(page);
+    await page.evaluate(() => document.fonts.ready);
+
+    // That next load, with only the romans late: the page is in the fallback roman for the
+    // visit, and the web italic and semibold must not be set beside it. (Seen in CI before the
+    // script asked, run 37240200047, Chromium: all four in the first frame, roman fallback.
+    // WebKit does not always get that far here: with a route installed its late files are not
+    // always there at once, and then it gives up on them and the note is dropped; `noted` in
+    // the measure says so.)
+    const held = await slowFonts(page, ROMAN);
+    await watching(page, browserName);
+    await page.reload({ waitUntil: "commit" });
+    await hydrated(page);
+    // What the script's own question ("is the web roman the face in use") reads while the
+    // romans are on their way, and what the page has by then.
+    const during = { web: await drawnInWebFont(page), added: await lateFaces(page) };
+    await expect.poll(() => held.arrived, { timeout: 15_000 }).toBeGreaterThanOrEqual(2);
+    await page.evaluate(() => document.fonts.ready);
+    await frames(page, 6);
+    const web = await drawnInWebFont(page);
+    const added = await lateFaces(page);
+    const noted = await page.evaluate(() => localStorage.getItem("fonts") !== null);
+    await readThrough(page);
+    const end = await seen(page);
+    test.info().annotations.push({
+      type: "measure",
+      description: JSON.stringify({
+        fcp: end.fcp,
+        fonts: held,
+        during,
+        web,
+        added,
+        facesAtFirstFrame: end.faces[0],
+        faces: end.faces[1],
+        noted,
+        vendor: await page.evaluate(() => navigator.vendor),
+        shift: end.shift,
+        changes: end.changes.slice(0, 2),
+      }),
+    });
+
+    expect(web, "web fonts in use, the romans having missed the first paint").toEqual({
+      sans: false,
+      serif: false,
+    });
+    if (browserName === "webkit") {
+      expect([0, 4], "late faces: none, or all four").toContain(added);
+      expect(end.faces[0], "faces at the first frame, and at the end").toBe(end.faces[1]);
+    } else expect(added, "late faces beside the fallback roman").toBe(0);
+    expect(end.changes, "text that changed face or moved after it was on screen").toEqual([]);
+    expect(end.shift, "layout shift").toBe(0);
   });
 });

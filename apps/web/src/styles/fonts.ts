@@ -46,17 +46,41 @@ export const LATE_FONTS_KEY = "fonts";
  * or semibold text is at or above the bottom of the window. Otherwise the page keeps what it
  * drew (the roman, slanted or thickened by the browser) until the next full load.
  *
+ * And they join only a page drawn in the web roman. The roman is `optional`: if it missed the
+ * first paint the page is in the fallback face for the visit and these stay out of it.
+ * `roman()` asks the layout which face it uses, and the answer is not settled while the roman
+ * is on its way, so the script waits for the roman, as it does for its own two files, before
+ * it asks.
+ *
  * On a first visit the files are fetched after the load event, clear of the first paint. Once
  * they are cached (noted in localStorage, by file name, so a new build starts over) they are
- * asked for at once: they come from the cache before the first frame, and Chromium holds that
- * frame for an `optional` face loaded this way as it does for a preloaded one. (Only then
- * are they `optional`: WebKit gives up on such a face unless it is there at once, and if it
- * does the note is dropped and the next load starts over.) If the roman
- * itself missed the first paint the page is in the fallback face and these stay out of it.
+ * asked for at once, and so is the roman's Latin face (`rf`; its file is preloaded). No browser
+ * holds the first frame for any of this. Measured in CI (PR #32):
+ * - Chromium has all three from the cache before the first frame on an ordinary load, and the
+ *   italic and semibold are in that frame.
+ * - WebKit runs its first frame while the roman is still on its way (it leaves that text blank
+ *   until it has the face), so there the question is asked after it: a page with such text on
+ *   its first screen keeps the browser's slant and weight, one without gets the faces.
+ * - With the roman held back and the script not asking, Chromium drew all four beside the
+ *   fallback roman: e2e/first-load.spec.ts holds that case.
+ * - `document.fonts.ready` and `document.fonts.load()` are no use for the wait: the first
+ *   comes after the first frame even when every file was there before it, the second long
+ *   after it in WebKit. Nor is a later "first frame" for WebKit (the first that finds the
+ *   roman's face settled): the semibold was seen to change on screen.
+ * (The two files are `optional` only when cached: WebKit gives up on such a face unless it is
+ * there at once, and if it does the note is dropped and the next load starts over.)
+ *
+ * A known, accepted exception, for WebKit alone (`wk`): cached files that are there before the
+ * first frame are added to it without waiting for the roman or asking about it, because waiting
+ * would cost every cached Safari visit the real italic and semibold on a first screen. The price
+ * is that a cached roman which misses its own block period leaves them beside the fallback
+ * roman for that visit: rare, nothing changes on screen, and not seen in WebKit. After the first
+ * frame WebKit follows the rule above like every other engine. `navigator.vendor` is "Apple
+ * Computer, Inc." in every WebKit port, "Google Inc." in Chromium and empty in Firefox.
  */
 export const lateFontsScript = `(function(F){
 if(!window.FontFace||!document.fonts)return;
-var family="Source Serif 4",key=F[0][0]+F[1][0],warm=false,framed=false;
+var family="Source Serif 4",key=F[0][0]+F[1][0],warm=false,framed=false,rf,wk=/Apple/.test(navigator.vendor);
 try{warm=localStorage.getItem("${LATE_FONTS_KEY}")===key}catch(e){}
 var faces=F.map(function(f,i){return new FontFace(family,'url("'+f[0]+'") format("woff2")',{style:f[1],weight:f[2],unicodeRange:f[3],display:warm||i>1?"optional":"swap"})});
 requestAnimationFrame(function(){framed=true});
@@ -78,10 +102,14 @@ var r=el.getBoundingClientRect();
 if(r.width&&r.top<innerHeight)return true}
 return false}
 function go(){
+var R=document.fonts.ready;
+if(warm){
+document.fonts.forEach(function(f){if(f.family.replace(/["']/g,"")===family&&/^U\\+0+-/i.test(f.unicodeRange))rf=f});
+if(rf)R=rf.load().then(0,function(){})}
+function add(){faces.forEach(function(f){document.fonts.add(f)})}
 Promise.all([faces[0].load(),faces[1].load()]).then(function(){
 try{localStorage.setItem("${LATE_FONTS_KEY}",key)}catch(e){}
-return framed?document.fonts.ready:0}).then(function(){
-if(framed&&(!roman()||seen()))return;
-faces.forEach(function(f){document.fonts.add(f)})},function(){try{localStorage.removeItem("${LATE_FONTS_KEY}")}catch(e){}})}
+if(wk&&warm&&!framed)add();
+else R.then(function(){if(roman()&&!(framed&&seen()))add()})},function(){try{localStorage.removeItem("${LATE_FONTS_KEY}")}catch(e){}})}
 if(warm)go();else if(document.readyState==="complete")setTimeout(go);else addEventListener("load",function(){setTimeout(go)})
 }(${JSON.stringify(lateFaces)}))`;
