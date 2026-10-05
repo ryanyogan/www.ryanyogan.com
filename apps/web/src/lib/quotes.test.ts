@@ -10,6 +10,12 @@ const r = "\u2019"; // closing single, and the apostrophe
 describe("typographicQuotes", () => {
   it("sets an apostrophe in a contraction and a possessive", () => {
     expect(typographicQuotes("What Held, What Didn't, and")).toBe(`What Held, What Didn${r}t, and`);
+    // A no-break space before the word changes nothing: the apostrophe is inside it.
+    expect(typographicQuotes("What Held, What\u00a0Didn't, and")).toBe(
+      `What Held, What\u00a0Didn${r}t, and`,
+    );
+    // Straight after one, a quote opens, as after any space.
+    expect(typographicQuotes("the\u00a0'loop'")).toBe(`the\u00a0${l}loop${r}`);
     expect(typographicQuotes("Lincoln's loop, the teams' work")).toBe(
       `Lincoln${r}s loop, the teams${r} work`,
     );
@@ -109,5 +115,9 @@ describe("typographicQuotes", () => {
 describe("straightQuotes", () => {
   it("gives back the quotes a keyboard types", () => {
     expect(straightQuotes(`What Didn${r}t, ${L}a${R} ${l}b${r}`)).toBe(`What Didn't, "a" 'b'`);
+  });
+
+  it("gives back the space a keyboard types for a no-break one", () => {
+    expect(straightQuotes(`What\u00a0Didn${r}t`)).toBe("What Didn't");
   });
 });
