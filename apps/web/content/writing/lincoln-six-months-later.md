@@ -10,7 +10,7 @@ excerpt: "In April I said agents were missing continuity of process and that Eli
 
 - Beliefs with confidence, provenance, and a revision trail turned out to be the right core. Everything else got humbler.
 - I retired the "impossible in Python" claim, narrowed AGM to "AGM-inspired," and found Lincoln was manufacturing conviction by agreeing with itself. A paper in May found the same failure in bigger systems.
-- TypeSafe's new Jev model is the first commercial thing I have seen that treats System 1 as different machinery. That was Lincoln's whole bet. They have the model. I had the plumbing.
+- TypeSafe's new Jev model is the first commercial thing I have seen that treats System 1 as different machinery. That was Lincoln's whole bet. They have the model. I had the plumbing. I believe in System 1, System 2, and a System 3 nobody sells yet more than ever. Jev confirms I am only about 90 percent crazy.
 - Elixir did its job. I am now looking at Rust for the next chapter, and I am looking for people to think with.
 - Code: [github.com/ryanyogan/lincoln-project](https://github.com/ryanyogan/lincoln-project). Original post: [Building a Brain](/writing/building-agent-memory-from-research-to-reality).
 
@@ -72,6 +72,52 @@ Where we differ is the thing I still care most about. Jev is a function. State i
 
 Caveats, because they matter. TypeSafe's benchmarks are self-tested and they say so. There is no paper. Maximum cardinality is 255 choices. The architecture is undisclosed beyond "transformer-based, synthetic data." And they named it after the Jevons paradox, which is either a promise or a threat depending on your electricity bill.
 
+### Why I like it
+
+I like it for a boring reason and a less boring one.
+
+The boring reason: it will not talk. Every judgment call in Lincoln that goes through a language model comes back as prose that I then parse, regex, or beg for JSON. Half my bugs in April were a 7B model returning "Sure! Here's the JSON:" in front of the JSON. A typed answer with a probability attached is what the substrate wanted from the start. Code can branch on it without an interpretation step.
+
+The less boring reason: calibration is the training target, not a side effect. TypeSafe calls it Reinforcement Learning for Calibrated Decisions. The reward is whether the probability matches how often the answer turns out to be right. Lincoln's whole belief system runs on confidence numbers, and I admitted above that mine were heuristics tuned by hand. A judge whose 0.8 means something close to 80 percent is the missing input for "evidence before conviction." Anthony Maio's read is the one I keep coming back to: Jev is a learned semantic branch instruction inside deterministic control. Generative models draft, the judge decides, code owns policy. That is Lincoln's tier structure described by someone who has never seen Lincoln.
+
+I also like that they published their own weak spots. Accuracy on their four-workflow benchmark averaged 67.8 percent, roughly tied with one GPT-5.6 variant and behind the strongest at 74.1 and Opus 5 at 73.1. No paper. No rationale attached to any answer, which will bother auditors. Pricing they cannot prove is not subsidized. That is more honesty than most launches manage, and it makes the rest easier to believe.
+
+### Side by side
+
+| | Lincoln's System 1 (April) | Jev |
+|---|---|---|
+| What it is | Hand-written scoring over a belief graph | A transformer trained to output typed decisions |
+| Confidence | Heuristic, tuned by me | Learned, calibration is the training objective |
+| Latency | Microseconds, in process | 70 to 500 ms over an API |
+| Cost | Electricity | $0.042 per million input tokens, output free |
+| Output | Elixir terms | Choice, Score, or Noul with a probability |
+| State | Owns it | None between calls |
+| Explanation | Traceable in code | None |
+| Answer space | Open | Bounded and known up front, 255 choices max |
+| Evidence | I could read the code | Self-tested benchmarks, no independent reproduction yet |
+
+The rows that matter most to me are State and Explanation. Lincoln keeps state and can show its work. Jev keeps nothing and cannot explain itself. A cognitive substrate needs both halves. Neither of us has the whole thing.
+
+### Only 90 percent crazy
+
+Here is what a $40 million seed round validates and what it does not.
+
+Validated: System 1 should be different machinery from the thing that writes paragraphs. It should be cheap enough to run constantly. It should hand off to the slow, expensive system lazily, on a threshold, and that threshold should be a calibrated number rather than a vibe. I wrote all of that in April and built a crude version of it in Elixir. A former OpenAI researcher read the same Kahneman chapter and built the real version. That is not evidence I was right. It is evidence that the reading was not insane. I will take the ten percent.
+
+Not validated, at all: that continuity of process matters, that a governed belief store produces durable dispositions, that a System 3 exists or helps, or that any of Lincoln's history changes what it does next. That is the other ninety percent and it is still on me.
+
+### System 1, System 2, and the System 3 nobody sells
+
+I believe in the three-system stack more now than in April, and the belief got more specific.
+
+System 1 is now a product category. Fast, calibrated, typed, stateless. Jev today, competitors soon.
+
+System 2 is what everyone already sells. Slow, deliberate, generative, expensive, and getting cheaper. Frontier or local, it does not matter to the architecture.
+
+System 3 is the part I still cannot buy. Kahneman never wrote one. The name is mine and it is doing some work. In Lincoln it was the Skeptic, the Resonator, and the narrative process, running alongside the other two rather than above them. Six months later I would define it more carefully: the long-running process that owns the state, decides what counts as evidence, gates consolidation, forgets on purpose, and can roll back. The June "Always-On Agents" survey found that the literature concentrates on accumulating and retrieving state rather than governing, recovering, or relinquishing it. Letta's sleep-time compute is System 3 flavored. Jev's guardrailing use case, scoring another model's output for safety, is a stateless slice of it. Nobody has shipped the whole thing.
+
+That is where I want to work. A calibrated judge, a deliberate generator, and a process that stays awake and keeps the books honest. Two of the three exist as services now. The third is the experiment.
+
 ## Was I studying the right things?
 
 Mostly. Kahneman, AGM, the Generative Agents paper, the Hu et al. memory survey, Sophia. Those were good picks and they still hold up.
@@ -132,3 +178,6 @@ I learned a lot. I would like to learn the next part with other people.
 15. van Zee and Doder, "AGM-Style Revision of Beliefs and Intentions from a Database Perspective," 2016. A modern formal treatment, cited for the postulates Lincoln does not demonstrate. [arXiv:1604.07183](https://arxiv.org/abs/1604.07183)
 16. Zylos Research, "Rust-Native AI Agent Frameworks: Architecture, Performance, and the Emerging Ecosystem in 2026," April 2026. [zylos.ai](https://zylos.ai/research/2026-04-01-rust-native-ai-agent-frameworks-ecosystem-2026/)
 17. Python `asyncio` task cancellation and introspection. [docs.python.org](https://docs.python.org/3/library/asyncio-task.html)
+18. Anthony Maio, "Jev: The Language Model That Won't Talk," September 2026. [anthonymaio.substack.com](https://anthonymaio.substack.com/p/jev-the-language-model-that-wont)
+19. DataCamp, "Jev: TypeSafe's System One Model That Never Hallucinates," September 2026. [datacamp.com](https://www.datacamp.com/blog/system-one-models-jev)
+20. Wikipedia, "Jev (AI model)." [en.wikipedia.org](https://en.wikipedia.org/wiki/Jev_(AI_model))
