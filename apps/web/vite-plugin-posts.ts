@@ -29,7 +29,7 @@ export function typesetMeta(data: Record<string, unknown>): Record<string, unkno
  * Writing posts are rendered while the site is built, so no page ships a markdown parser,
  * a highlighter or markdown source. A post file can be imported two ways (src/lib/content.ts):
  *
- *   post.md?meta   its frontmatter, as an object (lists, search, feeds), plus `minutes`
+ *   post.md?meta   its frontmatter, as an object (lists, feeds), plus `minutes`
  *   post.md?html   its body as HTML, highlighted (the post page, one chunk per post)
  *
  * `images` is what the build knows about public/images (vite-plugin-images.ts).

@@ -103,9 +103,8 @@ export function typographicQuotes(text: string): string {
 }
 
 /**
- * The other way, for matching and for plain text: a reader types ' and " into the search box,
- * and a title that says Didn’t has to answer to "didn't". A no-break space (a title keeps two
- * words on one line with it) is the space bar's too.
+ * The other way, for plain text read by a program (llms.txt): the quotes are the keyboard's.
+ * A no-break space (a title keeps two words on one line with it) is the space bar's too.
  */
 export function straightQuotes(text: string): string {
   return text

@@ -23,7 +23,7 @@ self-hosted: `apps/web/src/styles/fonts.css` says how they load.
 
 - `/work`, `/writing`, posts and `/rss.xml` are prerendered at build time from `packages/shared` and
   `apps/web/content/writing/*.md`.
-- Projects (`/`, `/projects`, `/projects/$slug`, the search palette) are read from Cloudflare D1
+- Projects (`/`, `/projects`, `/projects/$slug`) are read from Cloudflare D1
   (binding `DB`, table `projects`, schema in `apps/web/migrations`) on each request, so an edit to a row
   shows without a redeploy. Only rows with `published = 1` are ever read by a public route.
 - `apps/web/content/projects/*.md` stays in the repo as the seed source. `db:seed:generate` turns it into

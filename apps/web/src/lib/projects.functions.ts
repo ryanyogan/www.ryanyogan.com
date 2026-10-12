@@ -48,7 +48,7 @@ async function guarded<T>(read: () => Promise<T>): Promise<T> {
   }
 }
 
-/** Published projects for Home, /projects and the palette. Drafts never leave the Worker. */
+/** Published projects for Home and /projects. Drafts never leave the Worker. */
 export const fetchProjects = createServerFn({ method: "GET" }).handler(() =>
   guarded(() => listPublishedProjects(env.DB)),
 );

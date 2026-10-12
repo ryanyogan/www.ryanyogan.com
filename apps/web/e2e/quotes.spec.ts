@@ -84,24 +84,3 @@ test("a post's title is the same text on its page, in its tags, lists and the fe
   expect(llms).toContain(`[${TYPED}]`);
   expect(llms).not.toMatch(/[‘’“”]/);
 });
-
-test("the palette finds a title by the quotes a keyboard types, and by its own", async ({
-  page,
-}) => {
-  await page.goto("/");
-  const palette = page.getByRole("dialog", { name: "Search the site" });
-  // The key handler is attached on hydration.
-  await expect(async () => {
-    if (!(await palette.isVisible())) await page.keyboard.press("/");
-    await expect(palette).toBeVisible({ timeout: 1000 });
-  }).toPass({ timeout: 15_000 });
-  const input = palette.getByRole("combobox");
-  for (const query of ["what didn't", "what didn’t", "Kid's"]) {
-    await input.fill(query);
-    await expect(palette.getByRole("option").first(), query).toContainText("’");
-  }
-  await input.fill("what didn't");
-  await expect(palette.getByRole("option").first()).toHaveText(
-    new RegExp(TITLE.replace("\u00a0", "\\s")),
-  );
-});

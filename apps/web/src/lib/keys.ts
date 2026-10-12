@@ -1,6 +1,6 @@
-export type KeyboardDialog = "palette" | "help";
+export type KeyboardDialog = "help";
 
-/** Fired on `window` by the header and footer buttons; KeyboardLayer listens. */
+/** Fired on `window` by the footer button; KeyboardLayer listens. */
 export const DIALOG_EVENT = "site:dialog";
 
 export function openDialog(name: KeyboardDialog) {

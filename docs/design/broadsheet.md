@@ -28,8 +28,8 @@ and `var(--paper)`, so they recolour themselves. Only their captions change (bel
 3. **Two weights of serif, one of agate.** 400 and 700, and 600. Never ask the browser for anything
    else (`apps/web/src/styles/fonts.css`). `<strong>` is 700. Italic is 400 only.
 4. **Red is a kicker, not a button.** `--accent` appears only in: section kickers ("The lead ·
-   Twenty years in"), writing dates, the "No. n" classified numbers, the Search nav item, and the
-   one dot in each drawing. Links are ink, underlined by a 1px ink border, never red.
+   Twenty years in"), writing dates, the "No. n" classified numbers, and the one dot in each
+   drawing. Links are ink, underlined by a 1px ink border, never red.
 5. **Nothing above the name.** The masthead is the first thing on the page. No ears, no dateline.
    The coordinates live in the colophon.
 
@@ -41,7 +41,7 @@ Families and weights are in the tokens file. Measurements are desktop → [phone
 |---|---|---|---|---|---|---|
 | Masthead "Ryan Yogan" | Serif 700 | 92 → [44, nowrap] | 1 | .06em → [.04em] | UPPER | ink |
 | Tagline under masthead | Serif 400 italic | 18 → [15] | 1.4 | — | — | ink2 |
-| Nav items | Agate | 13 | 44px rows | .16em → [.14em] | UPPER | ink; Search = accent |
+| Nav items | Agate | 13 | 44px rows | .16em → [.14em] | UPPER | ink |
 | Kicker "The lead · …" | Agate | 12 | — | .16em | UPPER | accent |
 | H1 | Serif 700 | 58 → [38] | 1.04 → [1.06] | −.012em → [−.01em] | — | ink |
 | Deck | Serif 400 italic | 22 → [19] | 1.35 | — | — | ink2 |
@@ -122,7 +122,7 @@ masthead. Every section is a band separated by a hairline (`border-bottom: 1px s
 
 Padding `0 18px 32px`, top 28px. Same bands, stacked, padding `24px 0 26px`.
 
-- Masthead 44px (nowrap); tagline 15px. Nav: `justify-content: space-between`, four items plus a search icon
+- Masthead 44px (nowrap); tagline 15px. Nav: `justify-content: space-between`, four items
   (accent) at the right; no menu to open — the four links fit at 13px/.14em in 354px, and are set
   tighter (12px/.08em) at 360px and under.
 - Lead: kicker, H1 38px, deck 19px, map (max-width 250, centered, caption centered), then the four
@@ -174,7 +174,7 @@ the masthead + nav + colophon shell.
 | `--ink` | 17.31:1 | 15.57:1 | text, rules |
 | `--ink2` | 13.16:1 | 12.53:1 | decks, quotes, descriptions |
 | `--muted` | 6.31:1 | 7.18:1 | 12–13px agate labels — above AA's 4.5:1 for small text |
-| `--accent` | 5.39:1 | 6.14:1 | kickers, dates, "No. n", Search |
+| `--accent` | 5.39:1 | 6.14:1 | kickers, dates, "No. n" |
 | `--hair` | 1.37:1 | 1.48:1 | decorative rules only — never text, never a control border |
 
 Every link row and button is ≥44px tall. Figures keep `role="img"` + `aria-label`. The drop cap
@@ -187,6 +187,8 @@ reads with colour removed.
 This spec and the prototype are the design as drawn. The site (`apps/web/src/styles/app.css`) is
 what ships, and where they differ the site is right:
 
+- There is no search: the nav is the four sections only, with no `|` and no Search item, and
+  `/` and ⌘K do nothing. `?` still opens the key help.
 - There is no double rule. Under the nav, under every section head and under a page head the
   rule is the heavy one (3px solid), so the page has two rule weights, heavy and hairline.
 - Type is the static cuts, not the variable font, so display sizes are a touch heavier.
