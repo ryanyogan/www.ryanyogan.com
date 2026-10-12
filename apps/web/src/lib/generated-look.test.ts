@@ -177,6 +177,8 @@ const ALLOWED = [
     ["components/home/Hero.tsx", 1, "the kicker over the lead story"],
     ["components/home/OpenTo.tsx", 1, "the classifieds' section head"],
     ["components/Footer.tsx", 3, "the colophon: name, city, coordinates and the key hint"],
+    ["routes/work.tsx", 1, "the kicker over the page's headline"],
+    ["routes/projects.index.tsx", 1, "the kicker over the page's headline"],
     ["routes/now.tsx", 1, "the updated line"],
     ["routes/writing.index.tsx", 1, "post count and RSS"],
     ["routes/writing.$slug.tsx", 2, "date, reading time and author under a post title"],
@@ -195,7 +197,7 @@ const ALLOWED = [
 ];
 
 /** Arbitrary Tailwind values ("text-[0.97rem]") on public pages. This only goes down. */
-const ARBITRARY_VALUES = 9;
+const ARBITRARY_VALUES = 7;
 
 const lineOf = (file: Source, at: number) => file.code.slice(0, at).split("\n").length;
 

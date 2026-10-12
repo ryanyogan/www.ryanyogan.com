@@ -49,10 +49,10 @@ function ProjectDetailPage() {
 
   return (
     <main id="main" className="wrap">
-      <article>
-        <header className="row pd-head">
-          <div className="col push">
-            <p className="crumbs">
+      <article className="story">
+        <header className="phead">
+          <div>
+            <div className="kicker crumbs">
               <Link to="/projects">Projects</Link>
               {group && (
                 <>
@@ -62,7 +62,7 @@ function ProjectDetailPage() {
                   </Link>
                 </>
               )}
-            </p>
+            </div>
             <div className="pd-title">
               <h1>{project.title}</h1>
               <StatusPill status={project.status} label={project.statusLabel} />
@@ -83,13 +83,13 @@ function ProjectDetailPage() {
           </div>
         </header>
 
-        <div className="row pd-body">
-          <Prose className="col push read" html={project.html} />
+        <div className="pd-body">
+          <Prose className="col read" html={project.html} />
         </div>
       </article>
 
-      <nav aria-label="More projects" className="row">
-        <div className="col push pd-nav">
+      <nav aria-label="More projects" className="story">
+        <div className="pd-nav">
           {previous ? (
             <Link to="/projects/$slug" params={{ slug: previous.slug }}>
               <span>&larr; Previous in {group?.title}</span>
