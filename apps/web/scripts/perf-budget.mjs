@@ -52,9 +52,8 @@ const FONT_BUDGET = 150 * KB;
  * API call), two above what October 2026 measured: 7 or 6, 8 for a project page, 10 for a
  * post. Before the shared modules were one chunk a page made 25 to 28. Production adds three
  * this run does not see (the favicon and Cloudflare's analytics script and its beacon).
- * Every page now fetches the serif italic and semibold after its load event, whether or not
- * it sets text in them (src/styles/fonts.ts: so that they are cached for the pages that do):
- * two requests and 40.7 KB more on /now, /projects and /writing, which measure 9, 9 and 10.
+ * Every page fetches the agate after its load event (src/styles/fonts.ts): one request and
+ * 19.4 KB beside the three preloaded serif files (69.0 KB).
  *
  * `html` is a ceiling on the longest post's document, gzip, just above the 25.9 KB (91.6 KB
  * raw) it measured once the body was no longer in it a second time as loader data

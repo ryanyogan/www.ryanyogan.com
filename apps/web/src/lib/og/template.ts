@@ -2,19 +2,26 @@
 // so the build (vite-plugin-og.ts: satori + resvg in Node) and the Worker
 // (render-project.ts: @cf-wasm/og) draw the same picture from the same code.
 //
-// Paper, ink, one typeface at one weight, the lakefront contours from the home page in the
-// corner, and the accent once (the point on the shore).
+// The masthead's look: the name in capitals over a heavy rule, the title as a headline, the
+// lakefront contours from the home page at the right, and the red twice (the kicker and the
+// point on the shore). One typeface, Newsreader, bold and roman.
 
 export const OG_WIDTH = 1200;
 export const OG_HEIGHT = 630;
-export const OG_FONT_FAMILY = "Hanken Grotesk";
-export const OG_FONT_WEIGHT = 500;
+export const OG_FONT_FAMILY = "Newsreader";
+/** The headline's weight; the address under it is the roman. */
+export const OG_FONT_WEIGHT = 700;
+/** The two files beside this one (woff: satori does not read woff2), by weight. */
+export const OG_FONT_FILES = [
+  { weight: 400, file: "newsreader-latin-400.woff.bin" },
+  { weight: 700, file: "newsreader-latin-700.woff.bin" },
+] as const;
 
 // styles/app.css, light theme. A card is always light: it sits on someone else's page.
 const PAPER = "#f6f5f1";
-const INK = "#25272a";
-const MUTED = "#666a6a";
-const ACCENT = "#3d6a55";
+const INK = "#111111";
+const MUTED = "#5c5a55";
+const ACCENT = "#c8102e";
 
 const SITE_NAME = "Ryan Yogan";
 const SITE_ADDRESS = "ryanyogan.com";
@@ -41,7 +48,7 @@ export function titleSize(title: string): number {
   if (length <= 24) return 84;
   if (length <= 48) return 72;
   if (length <= 72) return 62;
-  return 54;
+  return 50;
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -82,7 +89,7 @@ function art(): OgNode {
       viewBox: "0 0 250 192",
       width: 280,
       height: 215,
-      style: { position: "absolute", top: 64, right: 72 },
+      style: { position: "absolute", top: 168, right: 72 },
     },
     ...CONTOURS.map(([d, opacity]) =>
       h("path", {
@@ -109,7 +116,7 @@ export function ogCard({ title, kicker }: OgCard): OgNode {
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        padding: 80,
+        padding: "56px 72px 64px",
         backgroundColor: PAPER,
         color: INK,
         fontFamily: OG_FONT_FAMILY,
@@ -117,20 +124,34 @@ export function ogCard({ title, kicker }: OgCard): OgNode {
       },
     },
     art(),
-    h("div", { style: { display: "flex", fontSize: 30, letterSpacing: "-0.01em" } }, SITE_NAME),
     h(
       "div",
-      { style: { display: "flex", flexDirection: "column", width: 1040 } },
+      {
+        style: {
+          display: "flex",
+          borderBottom: `4px solid ${INK}`,
+          paddingBottom: 14,
+          fontSize: 46,
+          lineHeight: 1,
+          letterSpacing: "0.06em",
+          textTransform: "uppercase",
+        },
+      },
+      SITE_NAME,
+    ),
+    h(
+      "div",
+      { style: { display: "flex", flexDirection: "column", width: 1056 } },
       h(
         "div",
         {
           style: {
             display: "block",
             // The art keeps the top right; a title only reaches under it on its last lines.
-            maxWidth: size >= 72 ? 760 : 900,
+            maxWidth: 760,
             fontSize: size,
-            lineHeight: 1.1,
-            letterSpacing: "-0.025em",
+            lineHeight: 1.06,
+            letterSpacing: "-0.012em",
             lineClamp: 3,
           },
         },
@@ -142,13 +163,28 @@ export function ogCard({ title, kicker }: OgCard): OgNode {
           style: {
             display: "flex",
             justifyContent: "space-between",
+            alignItems: "baseline",
             marginTop: 34,
-            fontSize: 30,
-            color: MUTED,
+            fontSize: 26,
           },
         },
-        h("div", { style: { display: "flex" } }, kicker ?? ""),
-        h("div", { style: { display: "flex" } }, SITE_ADDRESS),
+        h(
+          "div",
+          {
+            style: {
+              display: "flex",
+              color: ACCENT,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+            },
+          },
+          kicker ?? "",
+        ),
+        h(
+          "div",
+          { style: { display: "flex", fontSize: 28, fontWeight: 400, color: MUTED } },
+          SITE_ADDRESS,
+        ),
       ),
     ),
   );

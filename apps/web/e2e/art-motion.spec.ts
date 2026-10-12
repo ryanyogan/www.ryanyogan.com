@@ -107,12 +107,19 @@ test("reduced motion: no drawing moves", async ({ page }) => {
   }
 });
 
-test("a drawing that is hidden at a phone's width does not run", async ({ page }) => {
+test("at a phone's width Home keeps its drawings, and one that is hidden does not run", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  for (const path of ["/", "/work", "/writing"]) {
+  // The front page's figures are part of its columns at every width.
+  await page.goto("/");
+  await expect(page.locator("h1")).toBeVisible();
+  for (const art of await page.locator(".lake, .rink").all()) await expect(art).toBeVisible();
+  // The header drawings on Work and Writing are for a wide window.
+  for (const path of ["/work", "/writing"]) {
     await page.goto(path);
     await expect(page.locator("h1")).toBeVisible();
-    for (const art of await page.locator(".lake, .rink, .org, .sheet").all()) {
+    for (const art of await page.locator(".org, .sheet").all()) {
       await expect(art).toBeHidden();
     }
     expect(await running(page), path).toEqual([]);

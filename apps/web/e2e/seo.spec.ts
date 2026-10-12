@@ -456,7 +456,7 @@ test("theme-color follows a theme picked with the toggle, not the OS", async ({ 
     };
   };
   const light = "rgb(246, 245, 241)";
-  const dark = "rgb(28, 30, 31)";
+  const dark = "rgb(18, 18, 18)";
 
   // A stored choice against the OS scheme, on first paint and once the page has hydrated.
   for (const [os, stored, want] of [
@@ -531,10 +531,11 @@ test("Home says the name before its h1, as the first words of the page's content
   const body = await html(request, "/");
   expect(attr(body, /<title>([^<]*)<\/title>/g)[0]).toMatch(/^Ryan Yogan\b/);
   expect(body.match(/<h1[\s>]/g)).toHaveLength(1);
-  // The h1 is a sentence without the name; the line above it in the same section is the name.
-  const main = body.indexOf("<main");
-  const above = body.slice(main, body.indexOf("<h1", main));
-  expect(above).toContain("<b>Ryan Yogan</b>");
+  // The h1 is a sentence without the name; the masthead above it is the name, and the first
+  // words of the page (after the link that skips to the content).
+  const header = body.indexOf("<header");
+  const above = body.slice(header, body.indexOf("<h1", header));
+  expect(above).toMatch(/<a [^>]*class="mast-name[^"]*"[^>]*>Ryan Yogan<\/a>/);
   expect(textOf(above.slice(above.indexOf(">") + 1)).startsWith("Ryan Yogan")).toBe(true);
 });
 

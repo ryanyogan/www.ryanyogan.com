@@ -74,10 +74,8 @@ async function audit(page: Page, options: { post: boolean }): Promise<string[]> 
       }
     }
 
-    // 2. The header: one row when the menu is closed, nothing clipped, nothing overlapping.
-    const controls = [...document.querySelectorAll("body > header a, body > header button")].filter(
-      shown,
-    );
+    // 2. The section row under the masthead: one row, nothing clipped, nothing overlapping.
+    const controls = [...document.querySelectorAll("#site-nav a, #site-nav button")].filter(shown);
     const boxes = controls.map((element) => element.getBoundingClientRect());
     controls.forEach((element, i) => {
       if (element.scrollWidth > element.clientWidth + 1)
@@ -99,12 +97,20 @@ async function audit(page: Page, options: { post: boolean }): Promise<string[]> 
       }
     });
 
-    // 3. Type size. Reading text is whatever is set in the body serif: at least 17px in a
-    //    post, 16px elsewhere. No text at all under 14px on a phone (12px on wider screens,
-    //    where the desktop design keeps 13px meta lines and 12px key caps).
+    // 3. Type size, as the Broadsheet spec sets it (docs/design/broadsheet.md, section 2).
+    //    Reading text is whatever is set in the body serif: at least 17px in a post, 16px
+    //    elsewhere. The serif's small roles are named and held to their own sizes: the italic
+    //    standfirst under a section head and the line under a classified (14px), a project's
+    //    description and the tagline under the masthead on a phone (15px). The agate (labels,
+    //    dates, captions, status, the colophon) is 12 or 13px, and on a phone a status and a
+    //    caption are 11px: nothing at all is smaller than that.
     //    Allowance: labels inside a drawing (svg text) scale with the art and are not counted.
     const serif = getComputedStyle(document.body).fontFamily;
-    const floor = vw <= 640 ? 14 : 12;
+    const floor = vw <= 600 ? 11 : 12;
+    const SMALL_SERIF: [string, number][] = [
+      [".stand, .cls small", 14],
+      [".sum, .mast-tag, .small", 15],
+    ];
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     const seen = new Set<Element>();
     while (walker.nextNode()) {
@@ -117,7 +123,8 @@ async function audit(page: Page, options: { post: boolean }): Promise<string[]> 
       const size = Number.parseFloat(style.fontSize);
       if (size < floor - 0.01) problems.push(`${size}px text (floor ${floor}): ${name(parent)}`);
       if (style.fontFamily === serif && !parent.closest("sup, sub, code")) {
-        const least = post && parent.closest(".prose") ? 17 : 16;
+        const small = SMALL_SERIF.find(([selector]) => parent.closest(selector));
+        const least = small ? small[1] : post && parent.closest(".prose") ? 17 : 16;
         if (size < least - 0.01)
           problems.push(`${size}px reading text (least ${least}): ${name(parent)}`);
       }
@@ -243,103 +250,45 @@ test.describe("device matrix", () => {
   }
 });
 
-test("at 320px the header is one row: the wordmark and three named 44px icon buttons", async ({
+test("at 320px the masthead is the name on one line and one row of sections, each 44px", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await ready(page, "/");
   const header = page.locator("body > header");
+  // No menu: the four sections are links, and the only button is Search, as an icon.
   const buttons = header.locator("button:visible");
-  await expect(buttons).toHaveCount(3);
-  await expect(buttons.nth(0)).toHaveAccessibleName("Search");
-  await expect(buttons.nth(1)).toHaveAccessibleName(/^Colour theme: /);
-  await expect(buttons.nth(2)).toHaveAccessibleName("Menu");
+  await expect(buttons).toHaveCount(1);
+  await expect(buttons).toHaveAccessibleName("Search");
   // The shortcut is still announced and shown on hover.
-  await expect(buttons.nth(0)).toHaveAttribute("aria-keyshortcuts", /\//);
-  await expect(buttons.nth(0)).toHaveAttribute("title", /\//);
+  await expect(buttons).toHaveAttribute("aria-keyshortcuts", /\//);
+  await expect(buttons).toHaveAttribute("title", /\//);
+  await expect(buttons.locator("svg:visible")).toHaveCount(1);
 
-  const wordmark = (await header.getByRole("link", { name: "Ryan Yogan, home" }).boundingBox())!;
-  let left = wordmark.x + wordmark.width;
-  for (const button of await buttons.all()) {
-    // An icon and nothing else: exactly one drawing showing, no text.
-    await expect(button.locator("svg:visible")).toHaveCount(1);
-    expect((await button.textContent())?.trim()).toBe("");
-    const box = (await button.boundingBox())!;
+  const name = header.getByRole("link", { name: "Ryan Yogan, home" });
+  const wordmark = (await name.boundingBox())!;
+  expect(wordmark.x).toBeGreaterThanOrEqual(0);
+  expect(wordmark.x + wordmark.width).toBeLessThanOrEqual(320);
+  expect(
+    await name.evaluate((element) => element.getClientRects().length),
+    "the name is one line",
+  ).toBe(1);
+
+  const nav = header.getByRole("navigation", { name: "Sections" });
+  const items = nav.locator("a:visible, button:visible");
+  await expect(items).toHaveCount(5);
+  let left = 0;
+  let top: number | undefined;
+  for (const item of await items.all()) {
+    const box = (await item.boundingBox())!;
     expect(box.width).toBeGreaterThanOrEqual(44);
     expect(box.height).toBeGreaterThanOrEqual(44);
-    expect(Math.abs(box.y - wordmark.y)).toBeLessThan(1);
-    expect(box.x).toBeGreaterThanOrEqual(left);
+    top ??= box.y;
+    expect(Math.abs(box.y - top)).toBeLessThan(1);
+    expect(box.y).toBeGreaterThan(wordmark.y + wordmark.height);
+    expect(box.x).toBeGreaterThanOrEqual(left - 0.5);
     expect(box.x + box.width).toBeLessThanOrEqual(320);
     left = box.x + box.width;
-  }
-  expect((await header.boundingBox())!.height).toBeLessThan(72);
-});
-
-test.describe("mobile menu", () => {
-  for (const width of [320, 390]) {
-    test(`at ${width}px it opens, keeps focus in the header, and closes on Escape and on navigation`, async ({
-      page,
-    }) => {
-      await page.setViewportSize({ width, height: 700 });
-      await ready(page, "/");
-      const button = page.getByRole("button", { name: "Menu" });
-      const nav = page.getByRole("navigation", { name: "Primary" });
-      const open = async () => {
-        // The click handler is attached on hydration.
-        await expect(async () => {
-          if ((await button.getAttribute("aria-expanded")) !== "true") await button.click();
-          await expect(nav).toBeVisible({ timeout: 1000 });
-        }).toPass({ timeout: 15_000 });
-      };
-      await open();
-      await expect(nav.getByRole("link").first()).toBeFocused();
-
-      // The open menu: still nothing off the edge, and every item a full target.
-      expect(
-        (await audit(page, { post: false })).filter(
-          (problem) => !problem.startsWith("header wraps"),
-        ),
-      ).toEqual([]);
-
-      // Tab goes round the header (3 links, Search, theme, Menu, wordmark) and never leaves it.
-      const inHeader = () =>
-        page.evaluate(() => Boolean(document.activeElement?.closest("body > header")));
-      const stops = await page
-        .locator("body > header")
-        .locator("a:visible, button:visible")
-        .count();
-      const visited = new Set<string>();
-      for (let i = 0; i < stops + 2; i++) {
-        await page.keyboard.press("Tab");
-        expect(await inHeader()).toBe(true);
-        // The icon buttons have no text, so each stop is told apart by its accessible name.
-        visited.add(
-          await page.evaluate(
-            () =>
-              document.activeElement?.getAttribute("aria-label") ??
-              document.activeElement?.textContent ??
-              "",
-          ),
-        );
-      }
-      expect(visited.size).toBe(stops);
-      for (let i = 0; i < stops + 2; i++) {
-        await page.keyboard.press("Shift+Tab");
-        expect(await inHeader()).toBe(true);
-      }
-
-      await page.keyboard.press("Escape");
-      await expect(nav).toBeHidden();
-      await expect(button).toBeFocused();
-      // Closed, focus is free again.
-      await page.keyboard.press("Tab");
-      expect(await inHeader()).toBe(false);
-
-      await open();
-      await nav.getByRole("link", { name: "Writing", exact: true }).click();
-      await expect(page).toHaveURL(/\/writing$/);
-      await expect(nav).toBeHidden();
-    });
   }
 });
 

@@ -13,109 +13,94 @@
 }
 
 /*
- * The quiet palette: warm paper, near-black ink, one green accent. Six colours per theme.
- * Hierarchy comes from space and alignment, then weight, then size; there are no cards,
- * pills, tints, shadows, gradients or rounded corners.
+ * Broadsheet: a newspaper front page. Newsprint, near-black ink and one red, six colours per
+ * edition (docs/design/broadsheet.md; the values are docs/design/broadsheet-tokens.css).
+ * Three rule weights do the structuring: heavy, double and hairline. There are no
+ * backgrounds, tints, cards, shadows or rounded corners. Red is a kicker, never a button:
+ * links are ink.
  * The theme toggle sets .dark or .light on <html>; with neither, the OS preference decides.
- * --paper is repeated in the two theme-color metas in routes/__root.tsx.
+ * --paper is repeated in the two theme-color metas in routes/__root.tsx and in lib/icon.ts.
+ * Contrast against --paper, day and night: ink 17.3 and 15.6, ink2 13.2 and 12.5, muted 6.3
+ * and 7.2, accent 5.4 and 6.1. --hair (1.4) is for rules only: never text, never the edge of
+ * a control.
  */
 :root {
   --paper: #f6f5f1;
-  --ink: #25272a;
-  --ink-soft: #4a4d4f;
-  --muted: #666a6a;
-  --accent: #3d6a55;
-  --rule: #dcdbd5;
+  --ink: #111111;
+  /* Decks, pull quotes, descriptions. */
+  --ink2: #2b2a27;
+  /* Labels, captions, dates, status, the colophon. */
+  --muted: #5c5a55;
+  /* Hairlines and dotted leaders. */
+  --hair: #d5d3ce;
+  /* Kickers, dates, the classified numbers, Search, and one dot in each drawing. */
+  --accent: #c8102e;
   /* The edge of a form control: 3:1 against paper (WCAG 1.4.11), which a hairline is not.
-     3.16:1 here, 3.39:1 in the dark theme. Rules between content stay --rule. */
-  --control-border: #888b88;
+     3.1:1 here, 3.2:1 in the dark theme. Rules between content stay --hair. */
+  --control-border: #8a8882;
   /* Validation and destructive actions. 6.4:1 on paper; the dark value is 7.4:1. */
   --error: #a1321f;
   color-scheme: light;
 
-  /* Layout: the label gutter, the gap beside it, and the space under a section. */
-  --gutter-label: 232px;
-  --gutter-gap: 40px;
-  --space-section: 128px;
-  /* Fluid page gutter: 20px on a phone up to 64px on a desktop. */
-  --page-gutter: clamp(20px, 5vw, 64px);
+  /* The page's side margin: 24px, 18px on a phone. */
+  --page-gutter: 24px;
 }
 
 .dark {
-  --paper: #1c1e1f;
-  --ink: #dddcd6;
-  --ink-soft: #b5b6b1;
-  --muted: #8f918d;
-  --accent: #93b8a4;
-  --rule: #323536;
-  --control-border: #6e716f;
+  --paper: #121212;
+  --ink: #eceae4;
+  --ink2: #d6d3cc;
+  --muted: #a3a09a;
+  --hair: #34332f;
+  --accent: #ff5a5f;
+  --control-border: #6f6d68;
   --error: #e8998a;
   color-scheme: dark;
 }
 
 @media (prefers-color-scheme: dark) {
   html:not(.light) {
-    --paper: #1c1e1f;
-    --ink: #dddcd6;
-    --ink-soft: #b5b6b1;
-    --muted: #8f918d;
-    --accent: #93b8a4;
-    --rule: #323536;
-    --control-border: #6e716f;
+    --paper: #121212;
+    --ink: #eceae4;
+    --ink2: #d6d3cc;
+    --muted: #a3a09a;
+    --hair: #34332f;
+    --accent: #ff5a5f;
+    --control-border: #6f6d68;
     --error: #e8998a;
     color-scheme: dark;
   }
 }
 
-@media (max-width: 1080px) {
+@media (max-width: 600px) {
   :root {
-    --gutter-label: 180px;
-  }
-}
-
-@media (max-width: 860px) {
-  :root {
-    --space-section: 88px;
-  }
-}
-
-/* Phones. Sections sit closer, and the muted ink is a step darker: it carries 14px text
-   there and is read outdoors (5.9:1 on paper, 6.4:1 in the dark theme; 5.0 and 5.3 above). */
-@media (max-width: 640px) {
-  :root {
-    --space-section: 56px;
-    --muted: #5c6060;
-  }
-
-  .dark {
-    --muted: #a0a29e;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    html:not(.light) {
-      --muted: #a0a29e;
-    }
+    --page-gutter: 18px;
   }
 }
 
 @theme inline {
   --color-paper: var(--paper);
   --color-ink: var(--ink);
-  --color-ink-soft: var(--ink-soft);
+  --color-ink2: var(--ink2);
+  /* ink-soft and rule: the names the admin and the dialogs still use for ink2 and hair. */
+  --color-ink-soft: var(--ink2);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
-  --color-rule: var(--rule);
+  --color-hair: var(--hair);
+  --color-rule: var(--hair);
   --color-error: var(--error);
 
-  /* Sans: headings and interface. Serif: body. Mono: code only, no web font. */
+  /* Serif: everything a reader reads (masthead, headlines, body, numbers). Sans is the
+     "agate", a condensed face in one weight: nav, labels, kickers, captions, dates. Mono:
+     code only, no web font. The files are four: serif 400, 700 and 400 italic, agate 600
+     (styles/fonts.css). */
+  --font-serif: "Newsreader", "Newsreader Fallback", ui-serif, Georgia, "Times New Roman", serif;
   --font-sans:
-    "Hanken Grotesk", "Hanken Grotesk Fallback", ui-sans-serif, system-ui, -apple-system,
-    "Segoe UI", sans-serif;
-  --font-serif:
-    "Source Serif 4", "Source Serif 4 Fallback", ui-serif, Georgia, "Times New Roman", serif;
+    "IBM Plex Sans Condensed", "IBM Plex Sans Condensed Fallback", "Arial Narrow", ui-sans-serif,
+    system-ui, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
-  --container-wrap: 1296px;
+  --container-wrap: 1200px;
   --container-measure: 32em;
 }
 
@@ -136,53 +121,70 @@
     background-color: var(--paper);
     color: var(--ink);
     font-family: var(--font-serif);
-    font-size: 1.1875rem;
-    line-height: 1.6;
+    font-size: 1.0625rem;
+    line-height: 1.5;
     overflow-wrap: break-word;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     margin: 0;
   }
 
-  @media (max-width: 640px) {
-    body {
-      font-size: 1.0625rem;
-    }
+  /* A letter in the roman on every page from its first frame, unseen. The masthead is the
+     bold and its tagline the italic, but a page such as /writing sets nothing in the roman,
+     and an `optional` face that no text has asked for is never timed out: on a slow first
+     visit it would turn up later, on the next page, beside the fallback bold
+     (e2e/first-load.spec.ts). */
+  body::before {
+    content: "a";
+    position: absolute;
+    visibility: hidden;
   }
 
   h1,
   h2,
   h3,
   h4 {
-    font-family: var(--font-sans);
-    font-weight: 500;
+    font-family: var(--font-serif);
+    font-weight: 700;
     text-wrap: balance;
   }
 
   h1 {
-    font-size: clamp(1.75rem, 3vw, 2.375rem);
-    line-height: 1.18;
-    letter-spacing: -0.02em;
+    font-size: 2.75rem;
+    line-height: 1.08;
+    letter-spacing: -0.012em;
   }
 
   h2 {
-    font-size: clamp(1.3125rem, 2vw, 1.625rem);
-    line-height: 1.25;
-    letter-spacing: -0.015em;
+    font-size: 1.75rem;
+    line-height: 1.2;
   }
 
   h3 {
-    font-size: 1.1875rem;
-    line-height: 1.3;
-    letter-spacing: -0.01em;
+    font-size: 1.375rem;
+    line-height: 1.25;
   }
 
   h4 {
-    font-size: 1rem;
+    font-size: 1.0625rem;
     line-height: 1.4;
-    font-weight: 600;
   }
 
+  @media (max-width: 600px) {
+    h1 {
+      font-size: 2.125rem;
+      letter-spacing: -0.01em;
+    }
+  }
+
+  b,
+  strong {
+    font-weight: 700;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
   p {
     text-wrap: pretty;
   }
@@ -194,7 +196,7 @@
 
   hr {
     border: 0;
-    border-top: 1px solid var(--rule);
+    border-top: 1px solid var(--hair);
   }
 
   /* Numbers that line up in columns. */
@@ -214,7 +216,7 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--ink);
     outline-offset: 3px;
   }
 
@@ -229,99 +231,330 @@
 }
 
 @layer components {
-  /* Page column: 1296px with the fluid gutter, clear of a notch in landscape. */
+  /* Page column: 1200px between the side margins, clear of a notch in landscape. */
   .wrap {
-    max-width: var(--container-wrap);
+    max-width: calc(var(--container-wrap) + 2 * var(--page-gutter));
     margin-inline: auto;
     padding-left: max(var(--page-gutter), env(safe-area-inset-left));
     padding-right: max(var(--page-gutter), env(safe-area-inset-right));
   }
 
-  /* A section: its label in the left gutter, its content in the column beside it. */
-  .row {
-    display: grid;
-    grid-template-columns: var(--gutter-label) minmax(0, 1fr);
-    column-gap: var(--gutter-gap);
-    padding-bottom: var(--space-section);
-  }
-
-  .gut {
-    align-self: start;
-    padding-right: 24px;
-    padding-top: 0.2em;
-  }
-
-  .col {
-    min-width: 0;
-  }
-
-  @media (max-width: 860px) {
-    .row {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    .gut {
-      padding-right: 0;
-      margin-bottom: 20px;
-    }
-  }
-
-  /* Gutter label, and small interface text. */
-  .lab {
+  /* The agate: everything a reader scans. One condensed face in one weight, always upper
+     case and letter-spaced (docs/design/broadsheet.md, principle 2). */
+  .lab,
+  .kicker,
+  .sec-h,
+  .cap,
+  .cta,
+  .st,
+  .nums-h,
+  .pick,
+  .pd-meta dt,
+  .tl h3,
+  .arc .when,
+  .tl .d,
+  .offers .k,
+  .pd-nav span,
+  .post-nav span,
+  .now-art figcaption,
+  .prose figcaption,
+  .mast-nav,
+  .colophon,
+  .kbd {
     font-family: var(--font-sans);
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: 600;
+    font-size: 0.75rem;
     line-height: 1.5;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* Masthead: the name, the tagline, then the section index between two rules. Nothing
+     above the name. */
+  .mast-head {
+    padding: 36px 0 18px;
+    text-align: center;
+  }
+
+  /* Top-aligned: on the baseline, the line's height would follow the body face's metrics,
+     and the rows below would move by a pixel when the roman arrives. */
+  .mast-name {
+    display: inline-block;
+    vertical-align: top;
+    font-size: 5.75rem;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .mast-tag {
+    margin-top: 10px;
+    font-size: 1.125rem;
+    font-style: italic;
+    color: var(--ink2);
+  }
+
+  .mast-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0 34px;
+    border-top: 1px solid var(--ink);
+    border-bottom: 3px double var(--ink);
+    padding: 2px 0;
+    font-size: 0.8125rem;
+    letter-spacing: 0.16em;
+  }
+
+  /* A short word (Work, Now) is still 44px to press: the box is wider than the word by
+     what its margins take back, so the words keep their spacing. */
+  .mast-nav :is(a, button) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 68px;
+    padding: 0 8px;
+    margin: 0 -8px;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    cursor: pointer;
+  }
+
+  .mast-nav [aria-current="page"] span,
+  .colophon [aria-current="page"] {
+    text-decoration: underline;
+    text-underline-offset: 0.45em;
+  }
+
+  .mast-sep {
+    color: var(--hair);
+  }
+
+  .mast-nav .mast-search {
+    color: var(--accent);
+  }
+
+  .mast-search svg {
+    display: none;
+  }
+
+  @media (max-width: 900px) {
+    .mast-name {
+      font-size: min(5.75rem, 11.5vw);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .mast-head {
+      padding-top: 28px;
+    }
+
+    /* Narrower than 390px the name is smaller than 44px, and still 44px to press. */
+    .mast-name {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      font-size: min(2.75rem, 11.29vw);
+      letter-spacing: 0.04em;
+    }
+
+    .mast-tag {
+      font-size: 0.9375rem;
+    }
+
+    .mast-nav {
+      justify-content: space-between;
+      gap: 0;
+      padding: 0;
+      letter-spacing: 0.14em;
+    }
+
+    .mast-nav :is(a, button) {
+      min-width: 44px;
+      padding: 0;
+      margin: 0;
+    }
+
+    .mast-nav a:first-child {
+      justify-content: flex-start;
+    }
+
+    .mast-nav .mast-search {
+      justify-content: flex-end;
+    }
+
+    .mast-sep,
+    .mast-search span {
+      display: none;
+    }
+
+    .mast-search svg {
+      display: block;
+    }
+  }
+
+  /* The narrowest phones: the row is set tighter, so that it is still one row in a wider
+     fallback face than the one measured here (the agate is not there on a first visit). */
+  @media (max-width: 360px) {
+    .mast-nav {
+      flex-wrap: nowrap;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+    }
+  }
+
+  /* Colophon: a heavy rule, then one agate line. Every link is a 44px row. */
+  .colophon {
+    color: var(--muted);
+  }
+
+  .colophon > div {
+    padding-bottom: max(35px, env(safe-area-inset-bottom));
+  }
+
+  .colo {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0 24px;
+    margin-top: 28px;
+    border-top: 3px solid var(--ink);
+    padding-top: 5px;
+  }
+
+  .colo > p,
+  .colo nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .colo nav {
+    gap: 0 20px;
+  }
+
+  .colo :is(a, button) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 10px;
+    margin: 0 -10px;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    cursor: pointer;
+  }
+
+  .colo [data-testid="keys-hint"] {
+    display: none;
+    padding: 0;
+    margin: 0;
+    white-space: pre;
+  }
+
+  .colo .theme-icon {
+    width: 44px;
+    padding: 0;
+    margin: 0 -13px 0 -4px;
+  }
+
+  @media (min-width: 1024px) {
+    .colo [data-testid="keys-hint"]:not([hidden]) {
+      display: inline-flex;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .colophon > div {
+      padding-bottom: max(27px, env(safe-area-inset-bottom));
+    }
+
+    .colo nav {
+      flex: 1 0 100%;
+    }
+
+    .colo nav .theme-icon {
+      order: 1;
+      margin-left: auto;
+    }
+
+    .colo nav a[href^="mailto"] {
+      order: 2;
+      flex: 1 0 100%;
+      justify-content: flex-start;
+      padding: 0;
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  /* A text link: ink, under a 1px ink rule, the weight of the page's hairlines. */
+  .link {
+    border-bottom: 1px solid var(--ink);
+  }
+
+  /* A link that ends a list ("All writing"): agate, underlined, 44px to press. The box is
+     taller than the line; its margins take the difference back. */
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin: -12.25px 0;
+    font-size: 0.8125rem;
+  }
+
+  .cta span {
+    border-bottom: 1px solid var(--ink);
+  }
+
+  /* Small red label over a headline. */
+  .kicker {
+    letter-spacing: 0.16em;
+    color: var(--accent);
+  }
+
+  /* Section head: agate over a double rule. */
+  .sec-h {
+    border-bottom: 3px double var(--ink);
+    padding-bottom: 6px;
+    font-size: 0.8125rem;
+    letter-spacing: 0.16em;
+    text-wrap: wrap;
+  }
+
+  /* The italic line under a section head. */
+  .stand {
+    font-size: 0.875rem;
+    font-style: italic;
+    color: var(--muted);
+  }
+
+  /* Figure caption. */
+  .cap {
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+
+  /* A label: the agate in the muted ink. */
+  .lab,
+  .pd-meta dt,
+  .tl h3,
+  .arc .when,
+  .tl .d {
     color: var(--muted);
   }
 
   .small {
-    font-family: var(--font-sans);
-    font-size: 0.875rem;
-    line-height: 1.55;
+    font-size: 0.9375rem;
+    line-height: 1.5;
     color: var(--muted);
-  }
-
-  /* Inline text link: ink text, accent underline. */
-  .link {
-    text-decoration-line: underline;
-    text-decoration-color: var(--accent);
-  }
-
-  /* Header, footer and other quiet controls: plain text, 44px to press. */
-  .quiet {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    font-family: var(--font-sans);
-    color: var(--muted);
-    cursor: pointer;
-  }
-
-  .quiet[aria-current="page"] {
-    color: var(--ink);
-    text-decoration: underline;
-    text-decoration-color: var(--accent);
-    text-underline-offset: 0.5em;
-  }
-
-  /* An icon alone in a 44px square. The header's group is pulled right by the space beside
-     an 18px icon, so the last icon and not its empty edge sits on the page margin. */
-  .icon-btn {
-    width: 44px;
-    justify-content: center;
-  }
-
-  .header-tools {
-    display: flex;
-    margin-right: -13px;
-  }
-
-  /* If enlarged text sends the buttons to a second row, they stay on the right. */
-  @media (max-width: 767.98px) {
-    .header-tools {
-      margin-left: auto;
-    }
   }
 
   /* The theme button holds three icons; the theme on <html> shows one. */
@@ -335,64 +568,14 @@
     display: block;
   }
 
-  /* Project status: small plain text. */
+  /* Project status: a muted agate word. */
   .st {
-    font-family: var(--font-sans);
-    font-size: 0.8125rem;
-    line-height: 1.4;
+    letter-spacing: 0.08em;
     color: var(--muted);
     white-space: nowrap;
   }
 
-  /* ---------- Page pieces (Home; reused by the later page tickets) ---------- */
-  .row.first {
-    padding-top: 52px;
-    padding-bottom: 72px;
-  }
-
-  .gnote {
-    font: 400 0.875rem/1.55 var(--font-sans);
-    color: var(--muted);
-    margin-top: 6px;
-    max-width: 16rem;
-  }
-
-  .gnote a {
-    padding: 13px 0;
-    color: var(--accent);
-    text-decoration: underline;
-  }
-
-  .h-xl {
-    font: 500 clamp(1.3125rem, 2vw, 1.625rem) / 1.25 var(--font-sans);
-    letter-spacing: -0.015em;
-    max-width: 22em;
-  }
-
-  .h-m {
-    font: 600 1rem/1.4 var(--font-sans);
-    letter-spacing: 0;
-  }
-
-  .more {
-    font: 500 0.9375rem var(--font-sans);
-  }
-
-  .more a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    text-decoration: underline;
-    text-decoration-color: var(--accent);
-    text-underline-offset: 0.35em;
-  }
-
-  .home b {
-    font-weight: 500;
-    color: var(--ink);
-  }
-
-  /* Drawings: thin lines in the text colour, the accent used once each. */
+  /* Drawings: thin lines in the ink, the accent used once each. */
   .art {
     display: block;
     width: 100%;
@@ -400,413 +583,516 @@
   }
 
   .art text {
-    font: 400 17px var(--font-sans);
+    font: 600 17px var(--font-sans);
     fill: var(--muted);
   }
 
-  .lake figcaption,
-  .graph figcaption {
-    font: 400 0.75rem/1.5 var(--font-sans);
-    color: var(--muted);
-    margin-top: 6px;
-  }
-
-  /* Hero */
-  .who,
-  .else {
-    font: 400 0.875rem/1.55 var(--font-sans);
-    color: var(--muted);
-  }
-
-  .who b {
-    display: block;
-  }
-
-  .else {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0 18px;
-  }
-
-  .else a {
-    display: flex;
-    align-items: center;
-    min-height: 44px;
-    min-width: 44px;
-    color: var(--ink-soft);
-    text-decoration: underline;
-  }
-
-  .hero {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 230px;
-    column-gap: 56px;
-    align-items: start;
-  }
-
-  .hero h1 {
-    max-width: 17em;
-  }
-
-  .lede {
-    font-size: 1.1875rem;
-    color: var(--ink-soft);
-    max-width: 33em;
-    margin-top: 22px;
-  }
-
-  .lake {
-    color: var(--muted);
-    margin-top: 4px;
-  }
-
-  .nums {
-    grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: repeat(4, max-content);
-    justify-content: start;
-    gap: 8px 56px;
-    margin-top: 44px;
-  }
-
-  .nums dt {
-    font: 500 1.125rem/1.3 var(--font-sans);
-    font-variant-numeric: tabular-nums lining-nums;
-    white-space: nowrap;
-  }
-
-  .nums dt i {
-    font-style: normal;
-    font-weight: 400;
-    color: var(--muted);
-    padding: 0 0.2em;
-  }
-
-  .nums dd {
-    font: 400 0.8125rem/1.45 var(--font-sans);
-    color: var(--muted);
-    margin-top: 2px;
-    max-width: 10.5rem;
-  }
-
-  /* Project index */
-  .idx {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 48px 64px;
-  }
-
-  /* On /projects the column is wide: keep a status within reach of its title. */
-  .plist {
-    max-width: 40rem;
-  }
-
-  .plist li {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    column-gap: 16px;
-    align-items: baseline;
-    padding-bottom: 8px;
-  }
-
-  .plist a {
-    font: 500 1rem/1.3 var(--font-sans);
-    display: flex;
-    align-items: center;
-    min-height: 44px;
-  }
-
-  .plist .sum {
-    grid-column: 1 / -1;
-    font: 400 0.875rem/1.5 var(--font-sans);
-    color: var(--muted);
-    margin-top: -8px;
-  }
-
-  .graph {
-    color: var(--muted);
-    width: 220px;
-    max-width: 100%;
-  }
-
-  /* Lead and build */
-  .twin {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 48px 56px;
-  }
-
-  .twin > div > * + * {
-    margin-top: 18px;
-  }
-
-  .twin p,
-  .facts li,
-  .off li {
-    font-size: 1.0625rem;
-    color: var(--ink-soft);
-  }
-
-  .facts li {
-    padding: 7px 0;
-  }
-
-  .twin .said p {
-    color: var(--ink);
-    max-width: 24em;
+  /* The deck under a headline. */
+  .lede,
+  .now-lede {
+    max-width: 38em;
+    margin-top: 14px;
+    font-size: 1.25rem;
+    line-height: 1.35;
     font-style: italic;
+    color: var(--ink2);
   }
 
-  /* Writing */
-  .wlist li {
-    display: grid;
-    grid-template-columns: 6.5rem minmax(0, 1fr);
-    column-gap: 24px;
-    align-items: baseline;
-  }
-
-  .wlist time,
-  .wlist .views {
-    font: 400 0.8125rem var(--font-sans);
-    color: var(--muted);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .wlist h3 {
-    font: inherit;
-    letter-spacing: 0;
-  }
-
-  .wlist a {
-    display: block;
-    padding: 11px 0;
-    font-size: 1.125rem;
-    line-height: 1.4;
-    max-width: 34em;
-  }
-
-  /* Off the clock */
-  .off {
-    display: grid;
-    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-    gap: 40px 56px;
-    align-items: center;
-    margin-top: 32px;
-  }
-
-  .off li {
-    padding: 8px 0;
-  }
-
-  .rink {
-    color: var(--ink-soft);
-  }
-
-  /* Open to */
-  .open {
-    counter-reset: o;
-    max-width: 32em;
-  }
-
-  .open li {
-    counter-increment: o;
-    display: grid;
-    grid-template-columns: 2rem minmax(0, 1fr);
-    padding: 9px 0;
-    font-size: 1.125rem;
-    line-height: 1.45;
-  }
-
-  .open li::before {
-    content: counter(o);
-    font: 400 0.8125rem/2 var(--font-sans);
-    color: var(--muted);
-  }
-
-  .open small {
-    display: block;
-    font: 400 0.875rem/1.5 var(--font-sans);
-    color: var(--muted);
-    margin-top: 2px;
-  }
-
-  .open-way {
-    color: var(--ink-soft);
-    max-width: 32em;
-    margin-top: 28px;
-  }
-
+  /* The email address, set to be copied: agate in its own case. */
   .mail {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
-    margin: 4px 0 12px;
-    font: 500 1.25rem var(--font-sans);
-    letter-spacing: -0.01em;
-    text-decoration: underline;
-    text-decoration-color: var(--accent);
-    text-underline-offset: 0.3em;
+    margin: -11.5px 0;
+    font: 600 0.875rem/1.5 var(--font-sans);
+    letter-spacing: 0.08em;
+    max-width: 100%;
+    overflow-wrap: anywhere;
   }
 
-  /* Home beside its gutter (D1): the parts of one section sit as close as the rows of a
-     group on /projects, so the space between two sections is the largest on the page. */
-  @media (min-width: 860.02px) {
-    .home .nums {
-      margin-top: 28px;
-    }
-
-    .home .twin > div > * + * {
-      margin-top: 12px;
-    }
-
-    .home .twin .h-m + * {
-      margin-top: 8px;
-    }
-
-    .home .facts li {
-      padding: 6px 0;
-    }
-
-    .home .off,
-    .home .open-way {
-      margin-top: 16px;
-    }
+  .mail span {
+    border-bottom: 1px solid var(--ink);
   }
 
-  /* Home above phones (D2): each section after the hero opens with a hairline across the
-     page and its label in ink. More space above the rule than below, so the rule belongs
-     to the section under it. Phones do the same on the gutter, further down. */
-  @media (min-width: 640.02px) {
-    .home .row {
-      padding-bottom: 88px;
-    }
+  /* ---------- Home: the front page (docs/design/broadsheet.md, sections 3 and 4) ---------- */
 
-    .home .row + .row {
-      border-top: 1px solid var(--rule);
-      padding-top: 32px;
-    }
-
-    .home .lab {
-      color: var(--ink);
-    }
+  /* The front page breaks its lines as a column of type does: as they fall. */
+  .home :is(h1, h3, p) {
+    text-wrap: wrap;
   }
 
-  @media (max-width: 1080px) {
-    .hero {
-      grid-template-columns: minmax(0, 1fr) 180px;
-      column-gap: 32px;
-    }
-
-    .nums {
-      grid-template-columns: repeat(2, max-content);
-      gap: 20px 40px;
-    }
+  /* A band of the page, closed by a hairline. */
+  .band {
+    border-bottom: 1px solid var(--hair);
+    padding: 28px 0 30px;
   }
 
-  @media (max-width: 860px) {
-    .row.first {
-      padding-top: 36px;
-      padding-bottom: 64px;
-    }
+  /* The lead story: headline and two ruled columns on the left, the map and the numbers in
+     a ruled aside. */
+  .lead {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
+    grid-template-areas: "head fig" "body nums";
+    gap: 0 40px;
+    padding-top: 34px;
+  }
 
-    .row.first .gut {
-      display: none;
-    }
+  .lead-head {
+    grid-area: head;
+  }
 
-    .gnote {
-      max-width: 31em;
-    }
+  .lead .kicker {
+    margin-bottom: 10px;
+  }
 
-    .off {
+  .lead h1 {
+    font-size: 3.625rem;
+    line-height: 1.04;
+  }
+
+  .lead .lede {
+    max-width: none;
+    margin-bottom: 22px;
+    font-size: 1.375rem;
+  }
+
+  .lead-body {
+    grid-area: body;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 32px;
+  }
+
+  .lead-body > :first-child,
+  .cols3 > :not(:last-child) {
+    border-right: 1px solid var(--hair);
+    padding-right: 32px;
+  }
+
+  .lead-body p {
+    margin-bottom: 14px;
+  }
+
+  .lead-body > :last-child .said p {
+    margin-bottom: 0;
+  }
+
+  .said {
+    font-style: italic;
+    color: var(--ink2);
+  }
+
+  .lead .cta span {
+    padding-bottom: 2px;
+  }
+
+  .dropcap::first-letter {
+    float: left;
+    padding: 6px 8px 0 0;
+    font-size: 4.2em;
+    line-height: 0.82;
+    font-weight: 700;
+  }
+
+  .lake,
+  .nums-box {
+    border-left: 1px solid var(--hair);
+    padding-left: 32px;
+  }
+
+  .lake {
+    grid-area: fig;
+  }
+
+  .lake .art {
+    max-width: 300px;
+    margin: 0 auto;
+  }
+
+  .lake .cap {
+    margin-top: 10px;
+    text-align: center;
+  }
+
+  .nums-box {
+    grid-area: nums;
+    align-self: start;
+    padding-top: 26px;
+  }
+
+  .nums-box > div {
+    border-top: 3px solid var(--ink);
+    padding-top: 10px;
+  }
+
+  .nums-h {
+    margin-bottom: 10px;
+    letter-spacing: 0.16em;
+  }
+
+  /* The second column is the wider: it holds the longest figure, on one line. The figures
+     are 26px from 1280 up and a little smaller in a narrower aside. */
+  .nums {
+    display: grid;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 5fr);
+    gap: 14px 16px;
+  }
+
+  .nums dt {
+    font-size: clamp(1.125rem, 2.04vw, 1.625rem);
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .figs dt {
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .nums dt i,
+  .figs dt i {
+    font-style: normal;
+  }
+
+  .nums dd,
+  .figs dd {
+    margin-top: 4px;
+    font: 600 0.8125rem/1.5 var(--font-sans);
+    color: var(--muted);
+  }
+
+  /* Writing, projects and off the clock: three ruled columns, each under a section head. */
+  .cols3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0 32px;
+  }
+
+  .stand {
+    margin: 8px 0 16px;
+  }
+
+  /* A list of posts: the date in red agate over the title. The title's link is the row. */
+  .wlist li {
+    margin-bottom: 13px;
+    border-bottom: 1px solid var(--hair);
+  }
+
+  .wlist li:last-child {
+    margin-bottom: 9px;
+    border: 0;
+  }
+
+  .wlist time,
+  .wlist .views {
+    font: 600 0.75rem/1.5 var(--font-sans);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .wlist time {
+    display: block;
+    color: var(--accent);
+  }
+
+  .wlist h3 {
+    font-size: 1.25rem;
+    line-height: 1.25;
+  }
+
+  .home .wlist li:first-child h3 {
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+
+  /* 44px to press even when the title is one line. */
+  .wlist a {
+    display: block;
+    padding: 4px 0 15px;
+  }
+
+  /* A list of projects: name and status on one baseline, the description under them, a
+     dotted rule between rows. The whole row is the link. */
+  .graph {
+    margin-bottom: 16px;
+  }
+
+  .graph .cap {
+    margin-top: 6px;
+  }
+
+  .home .plist {
+    border-top: 1px solid var(--hair);
+  }
+
+  .plist + .cta {
+    margin-top: 1.75px;
+  }
+
+  .plist a {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    column-gap: 12px;
+    border-bottom: 1px dotted var(--hair);
+    padding: 10px 0;
+  }
+
+  .home .plist li:last-child a {
+    border-bottom-style: solid;
+  }
+
+  .plist b {
+    font-size: 1.1875rem;
+  }
+
+  .plist .sum {
+    flex: 0 0 100%;
+    font-size: 0.9375rem;
+    color: var(--ink2);
+  }
+
+  .off-h {
+    margin: 12px 0 10px;
+    font-size: 1.625rem;
+    line-height: 1.15;
+  }
+
+  .rink-fig {
+    margin-bottom: 14px;
+  }
+
+  .rink-fig .cap {
+    margin-top: 4px;
+  }
+
+  .off li {
+    font-size: 1rem;
+  }
+
+  .off li + li {
+    margin-top: 10px;
+  }
+
+  /* Classifieds: the section head beside a ruled box of three numbered items. */
+  .cls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    gap: 0 40px;
+    padding: 28px 0 10px;
+  }
+
+  .cls .stand {
+    margin-bottom: 0;
+  }
+
+  .cls-box {
+    border: 1px solid var(--ink);
+    padding: 20px 24px;
+  }
+
+  .cls ol {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px 24px;
+    counter-reset: no;
+  }
+
+  .cls li {
+    counter-increment: no;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .cls li:not(:last-child) {
+    padding-right: 20px;
+  }
+
+  .cls li::before {
+    content: "No. " counter(no);
+    display: block;
+    margin-bottom: 2px;
+    font: 600 0.75rem/1.5 var(--font-sans);
+    letter-spacing: 0.1em;
+    color: var(--accent);
+  }
+
+  .cls small {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  .hello {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px 24px;
+    margin-top: 18px;
+    border-top: 1px dotted var(--hair);
+    padding-top: 14px;
+  }
+
+  .hello p {
+    font-size: 1.25rem;
+    font-style: italic;
+  }
+
+  /* Narrower than 1000px the lead is one column, with the map between the deck and the two
+     columns and the numbers under them. */
+  @media (max-width: 1000px) {
+    .lead {
       grid-template-columns: minmax(0, 1fr);
-    }
-  }
-
-  /* Home on a tablet (V3): one column under a stacked label, so it takes the phone's closer
-     sections (the hero's 64px above each rule). The project list has the row less the
-     graph's own 220px, not half of it, and the rink is drawn at the size it has on a desktop
-     instead of the width of the page. */
-  @media (min-width: 640.02px) and (max-width: 860px) {
-    .home .row {
-      padding-bottom: 64px;
-    }
-
-    .home .idx {
-      grid-template-columns: minmax(0, 1fr) 220px;
-      column-gap: 40px;
-    }
-
-    .home .plist .sum {
-      text-wrap: pretty;
-    }
-
-    .home .rink {
-      max-width: 28rem;
-    }
-
-    /* A heading sits as near its own text as it does on a phone and beside the gutter. */
-    .home .twin .h-m + * {
-      margin-top: 8px;
-    }
-  }
-
-  @media (max-width: 640px) {
-    .hero,
-    .idx,
-    .twin,
-    .wlist li {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    /* No gutter on a phone: a section opens with a hairline and its label in ink. */
-    section > .gut {
-      border-top: 1px solid var(--rule);
-      padding-top: 16px;
-      margin-bottom: 16px;
-    }
-
-    .gut .lab {
-      color: var(--ink);
+      grid-template-areas: "head" "fig" "body" "nums";
     }
 
     .lake,
-    .graph,
-    .rink,
-    .dim {
-      display: none;
+    .nums-box {
+      border-left: 0;
+      padding-left: 0;
     }
 
-    /* A heading sits nearer its own text than the text above it. */
-    .twin .h-m + * {
-      margin-top: 8px;
+    .lake {
+      margin-bottom: 20px;
     }
 
-    .off {
-      margin-top: 12px;
-    }
-
-    .lede {
-      font-size: 1.125rem;
+    .nums-box {
+      padding-top: 24px;
     }
 
     .nums {
-      margin-top: 32px;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      column-gap: 24px;
     }
 
-    .idx {
-      gap: 40px;
+    .nums dt {
+      font-size: 1.625rem;
+    }
+  }
+
+  /* A tablet: the third column goes under the first two, across the page. */
+  @media (max-width: 900px) {
+    .cols3 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .wlist li {
-      padding-top: 10px;
+    .cols3 > :nth-child(2) {
+      border-right: 0;
+      padding-right: 0;
     }
 
-    .wlist a {
-      padding: 2px 0 12px;
-      font-size: 1.0625rem;
-      min-height: 44px;
+    .cols3 > :last-child {
+      grid-column: 1 / -1;
+      margin-top: 26px;
+      border-top: 1px solid var(--hair);
+      padding-top: 24px;
+    }
+
+    .cols3 .rink-fig {
+      max-width: 28rem;
+    }
+
+    .cls {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 14px;
+    }
+  }
+
+  /* A phone: every band is one column. */
+  @media (max-width: 600px) {
+    .band {
+      padding: 24px 0 26px;
+    }
+
+    .lead h1 {
+      font-size: 2.375rem;
+      line-height: 1.06;
+    }
+
+    .lead .lede {
+      font-size: 1.1875rem;
+    }
+
+    .lake .art,
+    .graph .art {
+      max-width: 250px;
+      margin: 0 auto;
+    }
+
+    .lead-body,
+    .cols3,
+    .cls ol {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .lead-body {
+      row-gap: 14px;
+    }
+
+    .lead-body > :first-child,
+    .cols3 > :not(:last-child) {
+      border-right: 0;
+      padding-right: 0;
+    }
+
+    .cols3 > * + * {
+      margin-top: 26px;
+      border-top: 1px solid var(--hair);
+      padding-top: 24px;
+    }
+
+    /* A figure such as "150 to 2,300" is one line where it fits, which at 26px is a phone of
+       375px or more (the spec's 28px is the variable font's; the static cut is wider), and
+       may break at its arrow on a narrower one or when the text is enlarged. */
+    .nums dt {
+      white-space: normal;
+    }
+
+    .st,
+    .cap {
+      font-size: 0.6875rem;
+    }
+
+    .wlist h3 {
+      font-size: 1.3125rem;
+      line-height: 1.22;
+    }
+
+    .home .wlist li:first-child h3 {
+      font-size: 1.5625rem;
+      line-height: 1.18;
+    }
+
+    .plist b {
+      font-size: 1.25rem;
+    }
+
+    .off-h {
+      font-size: 1.6875rem;
+    }
+
+    .cls-box {
+      padding: 16px 18px;
+    }
+
+    .cls li:not(:last-child) {
+      padding-right: 0;
+    }
+
+    .hello {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .hello p {
+      font-size: 1.1875rem;
     }
   }
 
@@ -833,12 +1119,21 @@
     margin: min(12dvh, 110px) auto auto;
     padding: 0;
     overflow: hidden;
-    border: 1px solid var(--rule);
+    border: 1px solid var(--hair);
+    border-top: 3px solid var(--ink);
     background: var(--paper);
     color: var(--ink);
-    font-family: var(--font-sans);
-    font-size: 1rem;
-    line-height: 1.5;
+  }
+
+  /* The search field: the serif, over a hairline. */
+  .kb-input {
+    font-family: var(--font-serif);
+    font-size: 1.0625rem;
+  }
+
+  /* A result: its title in the serif, what it is in the muted ink beside it. */
+  .kb-row {
+    min-height: 44px;
   }
 
   .kb-dialog[open] {
@@ -847,7 +1142,7 @@
   }
 
   .kb-dialog::backdrop {
-    background: rgb(20 22 23 / 0.45);
+    background: rgb(17 17 17 / 0.45);
   }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -866,12 +1161,9 @@
   .kbd {
     display: inline-block;
     min-width: 1.6em;
-    padding: 0 5px;
-    border: 1px solid var(--rule);
-    color: var(--ink-soft);
-    font-family: var(--font-sans);
-    font-size: 0.75rem;
-    line-height: 1.6;
+    padding: 0 4px;
+    border: 1px solid var(--hair);
+    letter-spacing: 0;
     text-align: center;
   }
 }
@@ -884,13 +1176,25 @@
     line-height: 1.5;
   }
 
+  /* The admin bar's links: plain text, 44px to press. */
+  .quiet {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--muted);
+  }
+
+  .quiet[aria-current="page"] {
+    color: var(--ink);
+  }
+
   .adm-bar {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     column-gap: 24px;
-    border-bottom: 1px solid var(--rule);
+    border-bottom: 1px solid var(--hair);
   }
 
   .adm-head {
@@ -906,7 +1210,7 @@
     list-style: none;
     margin: 0;
     padding: 0;
-    border-top: 1px solid var(--rule);
+    border-top: 1px solid var(--hair);
   }
 
   .adm-rows > li {
@@ -916,7 +1220,7 @@
     justify-content: space-between;
     gap: 4px 24px;
     padding: 12px 0;
-    border-bottom: 1px solid var(--rule);
+    border-bottom: 1px solid var(--hair);
   }
 
   .adm-title {
@@ -1065,79 +1369,136 @@
 
   /* A plain bordered section (preview, delete). */
   .adm-box {
-    border: 1px solid var(--rule);
+    border: 1px solid var(--hair);
     padding: clamp(16px, 2.4vw, 24px);
   }
 }
 
-/* Work, Projects and the project page: plain classes taken from the approved mockup. */
 @layer components {
-  .tlink {
-    color: var(--accent);
-    text-decoration: underline;
-    text-underline-offset: 0.3em;
+  /* ---------- The inner pages (docs/design/broadsheet.md, section 5) ---------- */
+
+  /* Page head: the section's name in red agate, the headline, the italic deck, then a
+     double rule. On Work and Writing a small drawing sits at its right in a wide window. */
+  .phead {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0 40px;
+    align-items: end;
+    border-bottom: 3px double var(--ink);
+    padding: 34px 0 22px;
+  }
+
+  .phead .kicker {
+    margin-bottom: 10px;
+  }
+
+  .phead h1 {
+    max-width: 22em;
+  }
+
+  /* The kicker of a project or a post is its way back: links, each 44px to press. */
+  .crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 8px;
+    margin: -13px 0 -3px;
+  }
+
+  .crumbs a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* A section of a page: its head (agate over a double rule, an italic line under it) in
+     the first column, its content in the wide one, a hairline to close. */
+  .sect {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+    gap: 16px 40px;
+    border-bottom: 1px solid var(--hair);
+    padding: 28px 0 30px;
+  }
+
+  .sect:last-child {
+    border-bottom: 0;
+    padding-bottom: 10px;
+  }
+
+  .side .stand {
+    margin-bottom: 0;
+  }
+
+  .col {
+    min-width: 0;
+  }
+
+  /* A project or a post: one reading column in the middle of the page, head and all. */
+  .story {
+    max-width: 44rem;
+    margin-inline: auto;
+  }
+
+  .h-xl {
+    font-size: 1.625rem;
+    line-height: 1.15;
+  }
+
+  .h-m {
+    font-size: 1.25rem;
+    line-height: 1.25;
   }
 
   .after {
-    font-size: 1.125rem;
-    color: var(--ink-soft);
-    max-width: 32em;
-    margin-top: 28px;
+    max-width: 38em;
+    margin-top: 20px;
+    color: var(--ink2);
   }
 
-  .marks text,
-  .loop text {
-    font-size: 11px;
+  .after + p {
+    margin-top: 14px;
   }
 
   /* Work */
   .prin > li {
     display: grid;
     grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
-    gap: 8px 40px;
-    padding-bottom: 36px;
+    gap: 6px 32px;
+    border-bottom: 1px dotted var(--hair);
+    padding: 14px 0;
   }
 
-  .prin > li:last-child {
+  .prin > li:first-child,
+  .arc li:first-child,
+  .offers li:first-child {
+    padding-top: 0;
+  }
+
+  .prin > li:last-child,
+  .arc li:last-child {
+    border-bottom: 0;
     padding-bottom: 0;
   }
 
-  .prin .h-m {
-    font-weight: 500;
-    padding-top: 0.15em;
-  }
-
   .prin blockquote {
-    font-size: 1.125rem;
-    line-height: 1.6;
-    color: var(--ink-soft);
-    max-width: 29em;
+    max-width: 34em;
+    font-style: italic;
+    color: var(--ink2);
   }
 
   .figs {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 32px 40px;
+    gap: 20px 32px;
   }
 
   .figs dt {
-    font: 500 1.375rem/1.3 var(--font-sans);
-    font-variant-numeric: tabular-nums lining-nums;
-    letter-spacing: -0.01em;
-    white-space: nowrap;
-  }
-
-  .figs dt i {
-    font-style: normal;
-    font-weight: 400;
-    color: var(--muted);
-    padding: 0 0.25em;
+    font-size: 1.625rem;
   }
 
   .figs dd {
-    font: 400 0.875rem/1.5 var(--font-sans);
-    color: var(--muted);
-    margin-top: 4px;
     max-width: 15rem;
   }
 
@@ -1148,104 +1509,85 @@
     align-items: start;
   }
 
-  .arc li {
+  .arc li,
+  .offers li,
+  .tl li {
     display: grid;
+    column-gap: 24px;
+    align-items: baseline;
+    border-bottom: 1px dotted var(--hair);
+    padding: 10px 0;
+  }
+
+  .arc li {
     grid-template-columns: 8.5rem minmax(0, 1fr);
-    column-gap: 20px;
-    padding-bottom: 22px;
   }
 
-  .arc .when,
-  .tl .d {
-    font: 400 0.8125rem/2.2 var(--font-sans);
-    color: var(--muted);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .arc p {
-    font-size: 1.0625rem;
-    line-height: 1.6;
-    color: var(--ink-soft);
-  }
-
-  .arc b {
-    font-weight: 600;
-    color: var(--ink);
+  .arc p,
+  .tl .s,
+  .tl .c span,
+  .offers .b {
+    font-size: 1rem;
   }
 
   .loop {
-    color: var(--ink-soft);
     width: 280px;
   }
 
+  .marks text,
+  .loop text {
+    font-size: 11px;
+  }
+
   .offers li {
-    display: grid;
     grid-template-columns: 6.5rem minmax(0, 1fr) minmax(0, 1fr);
-    gap: 4px 24px;
-    padding-bottom: 22px;
-    align-items: baseline;
+    row-gap: 4px;
   }
 
   .offers .k {
-    font: 500 0.875rem var(--font-sans);
-    color: var(--muted);
+    color: var(--accent);
   }
 
   .offers .t {
-    font-size: 1.125rem;
-    line-height: 1.45;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.2;
   }
 
-  .offers .b {
-    font: 400 0.875rem/1.5 var(--font-sans);
+  .offers .b,
+  .tl .c span {
     color: var(--muted);
   }
 
   .tl + .tl {
-    margin-top: 56px;
+    margin-top: 32px;
   }
 
   .tl h3 {
-    font: 500 0.875rem var(--font-sans);
-    color: var(--muted);
-    border-bottom: 1px solid var(--rule);
-    padding-bottom: 10px;
-    margin-bottom: 8px;
+    border-bottom: 1px solid var(--hair);
+    padding-bottom: 6px;
   }
 
   .tl li {
-    display: grid;
     grid-template-columns: 9.5rem minmax(0, 15rem) minmax(0, 1fr);
-    column-gap: 24px;
-    padding: 12px 0;
-    align-items: baseline;
-  }
-
-  .tl .d {
-    line-height: 1.5;
   }
 
   .tl .c {
-    font: 500 1rem/1.4 var(--font-sans);
+    font-weight: 700;
   }
 
   .tl .c span {
     display: block;
-    font: 400 0.875rem/1.45 var(--font-sans);
-    color: var(--muted);
+    font-weight: 400;
   }
 
   .tl .s {
-    font-size: 1.0625rem;
-    line-height: 1.55;
-    color: var(--ink-soft);
+    color: var(--ink2);
   }
 
-  /* Projects */
+  /* Projects: the filter is a row of agate words, the one in force in red. */
   .marks {
-    color: var(--ink-soft);
     width: 230px;
-    margin-top: 6px;
   }
 
   .pick {
@@ -1253,143 +1595,287 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 0 20px;
-    margin-top: 20px;
-    font: 400 0.875rem var(--font-sans);
+    margin: 6px 0 -12px;
     color: var(--muted);
   }
 
   .pick button {
     min-height: 44px;
+    min-width: 44px;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    color: var(--ink);
     cursor: pointer;
-    color: var(--ink-soft);
-    text-underline-offset: 0.5em;
   }
 
   .pick button[aria-pressed="true"] {
-    color: var(--ink);
-    font-weight: 500;
+    color: var(--accent);
     text-decoration: underline;
-    text-decoration-color: var(--accent);
+    text-underline-offset: 0.45em;
   }
 
+  .sect .plist {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 32px;
+    align-content: start;
+  }
+
+  /* A project's page */
   .pd-title {
     display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
-    justify-content: space-between;
-    gap: 16px;
+    gap: 0 16px;
+  }
+
+  .pd-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 40px;
+    margin-top: 20px;
+    border-top: 1px solid var(--hair);
+    padding-top: 12px;
   }
 
   .tech {
-    font: 400 0.8125rem/1.5 var(--font-sans);
-    color: var(--muted);
+    font-size: 1rem;
+    color: var(--ink2);
   }
 
   .ext {
     display: flex;
     flex-wrap: wrap;
     gap: 0 20px;
-    font: 400 0.875rem var(--font-sans);
-    color: var(--muted);
+    font-size: 1rem;
   }
 
   .ext.none {
     min-height: 44px;
     align-items: center;
+    color: var(--muted);
   }
 
   .ext a {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
-    color: var(--ink-soft);
     text-decoration: underline;
-    text-decoration-color: var(--rule);
-    text-underline-offset: 0.3em;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
     /* A long address (github.com/owner/repo) has no space to break at: at 200% text on a
        320px screen it must wrap inside the column, not widen the page. */
     overflow-wrap: anywhere;
   }
 
-  /* Project page */
-  .push {
-    grid-column: 2;
+  .pd-body,
+  .post-body {
+    padding: 28px 0 40px;
   }
 
-  .pd-head {
-    padding-top: 52px;
-    padding-bottom: 40px;
-  }
-
-  .crumbs {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0 8px;
-    font: 400 0.875rem var(--font-sans);
-    color: var(--muted);
-  }
-
-  .crumbs a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-  }
-
-  .pd-title {
-    justify-content: flex-start;
-    flex-wrap: wrap;
-  }
-
-  .pd-meta {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 12px 40px;
-    max-width: 44rem;
-    margin-top: 28px;
-    padding-top: 16px;
-    border-top: 1px solid var(--rule);
-  }
-
-  .pd-meta dt {
-    font: 500 0.875rem/1.5 var(--font-sans);
-    color: var(--muted);
-  }
-
-  .pd-meta .tech {
-    padding-top: 12px;
-  }
-
-  .pd-body {
-    padding-bottom: 72px;
-  }
-
-  .read {
+  /* The reading column: the measure is set here, on the element with the body size. */
+  .read,
+  .post {
     max-width: 34em;
-    font-size: 1.125rem;
-    line-height: 1.7;
+    font-size: 1.0625rem;
+    line-height: 1.55;
   }
 
-  .pd-nav {
+  .pd-nav,
+  .post-nav {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-    gap: 16px 40px;
-    max-width: 44rem;
-    font: 500 1rem/1.4 var(--font-sans);
+    gap: 12px 40px;
+    border-top: 1px solid var(--hair);
+    padding-top: 20px;
   }
 
-  .pd-nav a {
+  .pd-nav a,
+  .post-nav a {
+    display: block;
+    flex: 1 1 14rem;
     min-height: 44px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.25;
   }
 
-  .pd-nav a + a {
+  .pd-nav a + a,
+  .post-nav .older {
     text-align: right;
   }
 
-  .pd-nav span {
+  .pd-nav span,
+  .post-nav span {
     display: block;
-    font: 400 0.8125rem/1.6 var(--font-sans);
     color: var(--muted);
+  }
+
+  .post-all {
+    margin-top: 24px;
+  }
+
+  /* Writing: the count under the deck, then a year to a section. Each row is the date, the
+     title and the post's view count on one baseline, over a hairline. */
+  .wr-count {
+    margin: 4px 0 -12px;
+  }
+
+  .wr-count a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: 44px;
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 0.45em;
+  }
+
+  .wr-year .wlist li {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr) auto;
+    column-gap: 24px;
+    align-items: baseline;
+    margin: 0;
+  }
+
+  .wr-year .wlist a {
+    padding: 10px 0 11px;
+  }
+
+  /* Date, reading time, author and the view count, each a whole item: the line breaks
+     between items only. A middle dot sits in the gap before its item, outside the item's
+     box, so at the start of a line it is beyond the edge and clipped: no dot ends or
+     starts a line. */
+  .post-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1em;
+    margin-top: 14px;
+    overflow: hidden;
+  }
+
+  .post-meta > * {
+    position: relative;
+    white-space: nowrap;
+  }
+
+  .post-meta .dot {
+    position: absolute;
+    right: 100%;
+    width: 1em;
+    text-align: center;
+  }
+
+  /* A view count (components/ViewCount.tsx). The number arrives after the page has loaded,
+     so the box is there from the start, one line tall and wide enough for six digits:
+     nothing moves when it fills, and nothing shows when it stays empty. */
+  .views {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 5.5em;
+    min-height: 1.5em;
+    min-height: 1lh;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .views svg {
+    flex: none;
+  }
+
+  /* The number is the one thing on a public page that is not in the server's HTML. It fades
+     into its box over 180ms, opacity only, so that it arrives rather than pops. */
+  @media (prefers-reduced-motion: no-preference) {
+    .views > * {
+      animation: views-in 180ms ease-out;
+    }
+  }
+
+  @keyframes views-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  /* The writing index: each row ends in its post's count, on the row's baseline. */
+  .wr-year .views {
+    justify-content: flex-end;
+    gap: 0;
+    min-height: 0;
+    color: var(--muted);
+  }
+
+  /* A zero-width space: an empty box has no baseline of its own, and would sit lower in
+     the row than a filled one. It also makes the box one line tall. */
+  .wr-year .views::before {
+    content: "\200b";
+  }
+
+  .wr-year .views svg {
+    margin-right: 5px;
+  }
+
+  /* Now: the page is content/now.md cut at its headings (lib/now.ts), a section each, some
+     with a drawing. Lists are rows over hairlines, not bullets. */
+  .now-sec {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px 40px;
+    align-items: start;
+  }
+
+  /* A drawing opens its section where the page is one column, and sits beside it on a desktop. */
+  .now-art {
+    order: -1;
+  }
+
+  .now-art .art {
+    max-width: 13rem;
+  }
+
+  .now-art figcaption {
+    margin-top: 8px;
+    color: var(--muted);
+  }
+
+  /* Work and Writing: a small drawing beside the page head, in a wide window only. */
+  .org,
+  .sheet {
+    display: none;
+  }
+
+  @media (min-width: 1100px) {
+    .now-sec.has-art {
+      grid-template-columns: minmax(0, 34em) minmax(0, 13rem);
+      justify-content: space-between;
+    }
+
+    .now-art {
+      order: 0;
+    }
+
+    .now-art .art {
+      max-width: none;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .org,
+    .sheet {
+      display: block;
+    }
+
+    .org {
+      width: 190px;
+    }
+
+    .sheet {
+      width: 121px;
+    }
   }
 
   @media (max-width: 1080px) {
@@ -1415,23 +1901,28 @@
     }
   }
 
-  @media (max-width: 860px) {
-    .prin > li {
+  @media (max-width: 900px) {
+    .sect {
       grid-template-columns: minmax(0, 1fr);
     }
 
-    .push {
-      grid-column: 1;
-    }
-
-    .pd-head {
-      padding-top: 28px;
+    .prin > li {
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 
-  @media (max-width: 640px) {
+  @media (max-width: 600px) {
+    .phead {
+      padding: 24px 0 18px;
+    }
+
+    .sect {
+      padding: 24px 0 26px;
+    }
+
     .marks,
-    .loop {
+    .loop,
+    .dim {
       display: none;
     }
 
@@ -1440,10 +1931,12 @@
       column-gap: 20px;
     }
 
+    /* A figure may break at its arrow when the reader's text is enlarged. */
     .figs dt {
-      font-size: 1.25rem;
+      white-space: normal;
     }
 
+    .sect .plist,
     .arc li,
     .tl li,
     .offers li,
@@ -1456,196 +1949,6 @@
       grid-column: 1;
     }
 
-    .tl .c {
-      margin: 2px 0 4px;
-    }
-  }
-}
-
-/* Writing index and the post page. */
-@layer components {
-  .wr-head {
-    padding-top: 52px;
-    padding-bottom: 64px;
-  }
-
-  .wr-head h1 {
-    max-width: 24ch;
-  }
-
-  .wr-count {
-    margin-top: 14px;
-  }
-
-  .wr-count a,
-  .post-all a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    color: var(--ink);
-    text-decoration: underline;
-    text-decoration-color: var(--accent);
-  }
-
-  .wr-year {
-    padding-bottom: 56px;
-  }
-
-  .wr-year:last-child {
-    padding-bottom: var(--space-section);
-  }
-
-  .post-head {
-    padding-top: 52px;
-    padding-bottom: 44px;
-  }
-
-  /* A headline, not a column: a long title runs past the lede and sets in two lines where
-     the page has the room, balanced (h1 in the base layer). */
-  .post-head h1 {
-    max-width: 21em;
-  }
-
-  /* Date, reading time, author and the view count, each a whole item: the line breaks
-     between items only. A middle dot sits in the gap before its item, outside the item's
-     box, so at the start of a line it is beyond the edge and clipped: no dot ends or
-     starts a line. */
-  .post-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0 1em;
-    margin-top: 18px;
-    overflow: hidden;
-  }
-
-  .post-meta > * {
-    position: relative;
-    white-space: nowrap;
-  }
-
-  .post-meta .dot {
-    position: absolute;
-    right: 100%;
-    width: 1em;
-    text-align: center;
-  }
-
-  /* A view count (components/ViewCount.tsx). The number arrives after the page has loaded,
-     so the box is there from the start, one line tall and wide enough for six digits:
-     nothing moves when it fills, and nothing shows when it stays empty. */
-  .views {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    min-width: 5.5em;
-    min-height: 1.55em;
-    min-height: 1lh;
-    white-space: nowrap;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .views svg {
-    flex: none;
-  }
-
-  /* The number is the one thing on a public page that is not in the server's HTML. It fades
-     into its box over 180ms, opacity only, so that it arrives rather than pops. */
-  @media (prefers-reduced-motion: no-preference) {
-    .views > * {
-      animation: views-in 180ms ease-out;
-    }
-  }
-
-  @keyframes views-in {
-    from {
-      opacity: 0;
-    }
-  }
-
-  /* The writing index: each row ends in its post's count, in the date's type and on the
-     row's baseline. Home's rows have no count and keep their two columns. */
-  .wr-year .wlist li {
-    grid-template-columns: 6.5rem minmax(0, 1fr) auto;
-  }
-
-  .wr-year .views {
-    justify-content: flex-end;
-    gap: 0;
-    min-height: 0;
-  }
-
-  /* A zero-width space: an empty box has no baseline of its own, and would sit lower in
-     the row than a filled one. It also makes the box one line tall. */
-  .wr-year .views::before {
-    content: "\200b";
-  }
-
-  .wr-year .views svg {
-    margin-right: 5px;
-  }
-
-  .post-body {
-    padding-bottom: 72px;
-  }
-
-  /* The reading column: the measure is set here, on the element with the body size. */
-  .post {
-    max-width: 32em;
-    font-size: 1.1875rem;
-    line-height: 1.62;
-  }
-
-  .post-nav {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 8px 40px;
-    max-width: 39rem;
-    padding-top: 28px;
-    border-top: 1px solid var(--rule);
-    font: 500 1rem/1.4 var(--font-sans);
-  }
-
-  .post-nav a {
-    display: block;
-    flex: 1 1 14rem;
-    min-height: 44px;
-    padding: 4px 0;
-    text-wrap: balance;
-  }
-
-  .post-nav .older {
-    text-align: right;
-  }
-
-  .post-nav span {
-    display: block;
-    font: 400 0.8125rem/1.6 var(--font-sans);
-    color: var(--muted);
-  }
-
-  .post-all {
-    margin-top: 12px;
-    font: 400 0.9375rem var(--font-sans);
-  }
-
-  @media (max-width: 860px) {
-    .wr-head,
-    .post-head {
-      padding-top: 28px;
-    }
-
-    .wr-head {
-      padding-bottom: 44px;
-    }
-  }
-
-  @media (max-width: 640px) {
-    .post {
-      font-size: 1.125rem;
-      line-height: 1.56;
-    }
-
     .post-nav .older {
       text-align: left;
     }
@@ -1653,10 +1956,16 @@
     /* The count shares the date's line, at its right end; the title keeps the full width. */
     .wr-year .wlist li {
       grid-template-columns: minmax(0, 1fr) auto;
+      padding-top: 10px;
     }
 
     .wr-year .wlist h3 {
       grid-area: 2 / 1 / auto / -1;
+    }
+
+    .wr-year .wlist a {
+      min-height: 44px;
+      padding-top: 2px;
     }
 
     .wr-year .views {
@@ -1666,27 +1975,36 @@
 
   /* Hover only where a pointer can hover: after a tap on a touch screen the colour would stay. */
   @media (hover: hover) {
-    .link:hover,
-    .more a:hover,
-    .mail:hover,
-    .ext a:hover,
     .adm-btn:hover:not(:disabled) {
       color: var(--accent);
     }
 
-    .quiet:hover,
-    .else a:hover,
+    .colo :is(a, button):hover,
     .pick button:hover {
       color: var(--ink);
     }
 
-    .plist a:hover,
+    .mast-nav :is(a, button):hover span,
+    .plist a:hover b,
     .wlist a:hover,
     .pd-nav a:hover,
     .crumbs a:hover,
     .post-nav a:hover {
       text-decoration: underline;
-      text-decoration-color: var(--accent);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.2em;
+    }
+
+    .cta:hover span,
+    .mail:hover span,
+    .link:hover {
+      border-bottom-width: 2px;
+      margin-bottom: -1px;
+    }
+
+    .ext a:hover,
+    .prose a:hover {
+      text-decoration-thickness: 2px;
     }
 
     /* :where keeps this below the focus and invalid borders. */
@@ -1695,7 +2013,7 @@
     }
 
     .adm-btn-primary:hover:not(:disabled) {
-      background: var(--ink-soft);
+      background: var(--ink2);
       color: var(--paper);
     }
 
@@ -1712,8 +2030,8 @@
  * sets the body size and the measure (.post, .read).
  */
 .prose {
-  --code-bg: light-dark(#eeede8, #25282a);
-  --code-comment: light-dark(#5a5f5e, #9a9d98);
+  --code-bg: light-dark(#eceae4, #1c1c1c);
+  --code-comment: light-dark(#5c5a55, #a3a09a);
   --code-string: light-dark(#7a4a2b, #d1a583);
   --code-number: light-dark(#74506f, #c5a3c0);
   --code-title: light-dark(#2f5d7c, #9bbbd4);
@@ -1742,8 +2060,6 @@
 .prose h2,
 .prose h3,
 .prose h4 {
-  font-family: var(--font-sans);
-  font-weight: 500;
   color: var(--ink);
   text-wrap: balance;
   hyphens: none;
@@ -1752,53 +2068,60 @@
 
 .prose h1 {
   margin: 1.5em 0 0.5em;
-  font-size: 1.6em;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+  font-size: 2rem;
+  line-height: 1.15;
 }
 
+/* A section of a post opens under a hairline. */
 .prose h2 {
-  margin: 1.75em 0 0.5em;
-  font-size: 1.375em;
-  line-height: 1.25;
-  letter-spacing: -0.015em;
+  margin: 28px 0 0.5em;
+  border-top: 1px solid var(--hair);
+  padding-top: 20px;
+  font-size: 1.75rem;
+  line-height: 1.2;
+}
+
+.prose h2:first-child {
+  border-top: 0;
+  padding-top: 0;
 }
 
 .prose h3 {
-  margin: 1.6em 0 0.4em;
-  font-size: 1.125em;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
+  margin: 1.5em 0 0.4em;
+  font-size: 1.375rem;
+  line-height: 1.25;
 }
 
 .prose h4 {
   margin: 1.5em 0 0.35em;
-  font-size: 1em;
+  font-size: 1.0625rem;
   line-height: 1.4;
-  font-weight: 600;
 }
 
 .prose a {
   color: var(--ink);
   text-decoration-line: underline;
-  text-decoration-color: var(--accent);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.18em;
   overflow-wrap: anywhere;
 }
 
 .prose a:visited {
-  color: var(--ink-soft);
+  color: var(--ink2);
 }
 
-@media (hover: hover) {
-  .prose a:hover {
-    color: var(--accent);
-  }
+/* A post that opens with running text opens with a drop cap (not one that opens with a
+   label over a list). */
+.post-body > .prose > p:first-child:has(+ p)::first-letter {
+  float: left;
+  padding: 6px 8px 0 0;
+  font-size: 4.2em;
+  line-height: 0.82;
+  font-weight: 700;
 }
 
 .prose strong {
-  font-weight: 600;
+  font-weight: 700;
   color: inherit;
 }
 
@@ -1841,14 +2164,14 @@
   margin-bottom: 0.5em;
 }
 
-/* A quotation: an indented italic passage beside a hairline. */
+/* A quotation: an italic passage beside a heavy rule, at the column's edge. */
 .prose blockquote {
   margin: 1.5em 0;
-  padding: 0 0 0 1.1em;
+  padding: 0 0 0 16px;
   border: 0;
-  border-left: 1px solid var(--muted);
+  border-left: 3px solid var(--ink);
   font-style: italic;
-  color: var(--ink-soft);
+  color: var(--ink2);
 }
 
 .prose blockquote > p {
@@ -1864,15 +2187,15 @@
 .prose hr {
   margin: 2.5em 0;
   border: 0;
-  border-top: 1px solid var(--rule);
+  border-top: 1px solid var(--hair);
 }
 
 /* Footnotes (lib/markdown.ts): the notes close the body, small, under a hairline. */
 .prose section {
   margin-top: 2.5em;
   padding-top: 0.5em;
-  border-top: 1px solid var(--rule);
-  font-size: 0.875em;
+  border-top: 1px solid var(--hair);
+  font-size: 0.9412em;
 }
 
 .prose section li,
@@ -1967,7 +2290,6 @@
 .prose table {
   width: 100%;
   border-collapse: collapse;
-  font-family: var(--font-sans);
   font-size: 0.9375rem;
   line-height: 1.5;
   font-variant-numeric: tabular-nums;
@@ -1975,7 +2297,7 @@
 
 .prose thead,
 .prose tr {
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--hair);
 }
 
 .prose th,
@@ -1987,8 +2309,7 @@
 }
 
 .prose th {
-  font-size: inherit;
-  font-weight: 600;
+  font: 600 0.9375rem/1.5 var(--font-sans);
 }
 
 /* The renderer marks a column of figures, and one the source aligns, with data-align. */
@@ -2019,8 +2340,46 @@
 
 .prose figcaption {
   margin-top: 0.7em;
-  font: 400 0.875rem/1.5 var(--font-sans);
+  letter-spacing: 0.06em;
   color: var(--muted);
+}
+
+@media (max-width: 600px) {
+  .prose figcaption {
+    font-size: 0.6875rem;
+  }
+}
+
+/* /now: the deck is the file's first paragraph, and lists are rows over dotted rules, not
+   bullets; a list of short names sets in two columns where there is room. */
+.now-lede.prose,
+.now-lede p {
+  margin: 0;
+  color: var(--ink2);
+}
+
+.now-lede.prose {
+  margin-top: 14px;
+}
+
+.now-page .prose ul {
+  margin-top: -0.5em;
+  padding: 0;
+  list-style: none;
+}
+
+.now-page .prose li {
+  margin: 0;
+  padding: 0.5em 0;
+  border-bottom: 1px dotted var(--hair);
+  break-inside: avoid;
+}
+
+@media (min-width: 600.02px) {
+  .now-page .cols ul {
+    columns: 2;
+    column-gap: 40px;
+  }
 }
 
 /* On a phone a code block runs to both edges of the screen and its text keeps the column's
@@ -2046,6 +2405,12 @@
     hyphenate-limit-chars: 8 4 4;
     -webkit-hyphenate-limit-before: 4;
     -webkit-hyphenate-limit-after: 4;
+  }
+
+  /* Safari breaks a long name in code at the letter that fills the line and then adds the
+     padding, which is over the edge. */
+  .prose :not(pre) > code {
+    padding-inline: 0;
   }
 }
 
@@ -2077,18 +2442,8 @@ summary {
 
 /* Anything pressed with a finger is 44px both ways: short words get the width. Desktop keeps
    its tighter text controls. */
+/* 16px or iOS zooms the page when the field takes focus. */
 @media (max-width: 1024px) {
-  .pick button,
-  footer .quiet {
-    min-width: 44px;
-    justify-content: center;
-  }
-
-  .wr-count a {
-    min-width: 44px;
-  }
-
-  /* 16px or iOS zooms the page when the field takes focus. */
   .adm-input.adm-code {
     font-size: 1rem;
   }
@@ -2096,192 +2451,8 @@ summary {
 
 /* The key hint is for a keyboard: not on a touch screen, however wide. */
 @media (hover: none) and (pointer: coarse) {
-  [data-testid="keys-hint"] {
+  .colo [data-testid="keys-hint"] {
     display: none;
-  }
-}
-
-/* Nothing a phone shows is under 14px. */
-@media (max-width: 640px) {
-  /* The footer's links span the column: the first word and the last sit on its two edges. */
-  footer a.quiet:first-of-type {
-    justify-content: flex-start;
-  }
-
-  footer a[href$=".xml"] {
-    justify-content: flex-end;
-  }
-
-  .st,
-  .nums dd,
-  .wlist time,
-  .wlist .views,
-  .open li::before,
-  .tl .d,
-  .arc .when,
-  .tech,
-  .pd-nav span,
-  .post-nav span {
-    font-size: 0.875rem;
-  }
-
-  .plist .sum {
-    font-size: 0.9375rem;
-  }
-
-  /* With the reader's text enlarged (WCAG 1.4.4) a long word must not push the page wide:
-     on a project page the status may drop under the title, and the email address may break. At the default size neither rule changes anything. */
-  .pd-title {
-    flex-wrap: wrap;
-    row-gap: 0;
-  }
-
-  .mail {
-    max-width: 100%;
-    overflow-wrap: anywhere;
-  }
-
-  /* Likewise: a figure such as "150 → 2,300" may break at its arrow, and on a project row the
-     status drops under the title once the title's longest word no longer fits beside it. */
-  .nums dt,
-  .figs dt {
-    white-space: normal;
-  }
-
-  .plist li {
-    display: flex;
-    flex-wrap: wrap;
-    column-gap: 16px;
-  }
-
-  .plist a {
-    flex: 1 1 0;
-  }
-
-  .plist .sum {
-    flex: 0 0 100%;
-  }
-}
-
-/*
- * /now (N1). The page is content/now.md cut at its headings (lib/now.ts): each section is a
- * row, opened as Home's are by a hairline and its label in ink, with its prose in the reading
- * column and, for some, a drawing. Everything here is under .now-page (/work has a .now of
- * its own); nothing else changes.
- */
-.now-page .post-head {
-  padding-bottom: 56px;
-}
-
-.now-lede {
-  max-width: 33em;
-  margin-top: 22px;
-  font-size: 1.1875rem;
-  color: var(--ink-soft);
-}
-
-.now-page section.row {
-  padding-bottom: 56px;
-}
-
-.now-sec {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 20px 56px;
-  align-items: start;
-}
-
-/* A drawing opens its section where the page is one column, and sits beside it on a desktop. */
-.now-art {
-  order: -1;
-  color: var(--ink-soft);
-}
-
-.now-art .art {
-  max-width: 13rem;
-}
-
-.now-art figcaption {
-  margin-top: 8px;
-  font: 400 0.875rem/1.5 var(--font-sans);
-  color: var(--muted);
-}
-
-/* Lists are rows over hairlines, not bullets; the first row starts where a paragraph would. */
-.now-page .prose ul {
-  margin-top: -0.5em;
-  padding: 0;
-  list-style: none;
-}
-
-.now-page .prose li {
-  margin: 0;
-  padding: 0.5em 0;
-  border-bottom: 1px solid var(--rule);
-  break-inside: avoid;
-}
-
-@media (min-width: 640.02px) {
-  .now-page section.row {
-    border-top: 1px solid var(--rule);
-    padding-top: 32px;
-    padding-bottom: 72px;
-  }
-
-  .now-page h2.lab {
-    color: var(--ink);
-  }
-
-  .now-page .cols ul {
-    columns: 2;
-    column-gap: 40px;
-  }
-}
-
-@media (min-width: 1240px) {
-  .now-sec.has-art {
-    grid-template-columns: minmax(0, 38rem) minmax(0, 13rem);
-    justify-content: space-between;
-  }
-
-  .now-art {
-    order: 0;
-  }
-
-  .now-art .art {
-    max-width: none;
-  }
-
-  .now-art figcaption {
-    font-size: 0.75rem;
-  }
-}
-
-/* Work and Writing: a small drawing beside the page header, from the width at which the lede
-   beside it keeps its full measure. Narrower, the header is as it was, without the drawing. */
-.org,
-.sheet {
-  display: none;
-  color: var(--ink-soft);
-}
-
-@media (min-width: 1280px) {
-  .head {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 190px;
-    column-gap: 40px;
-    align-items: start;
-  }
-
-  .org,
-  .sheet {
-    display: block;
-    margin-top: 6px;
-  }
-
-  .sheet {
-    width: 121px;
-    justify-self: end;
   }
 }
 

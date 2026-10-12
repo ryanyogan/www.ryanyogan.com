@@ -70,7 +70,7 @@ test("hashed build files are cached for a year, and nothing else is", async ({ r
 
   const pick = (pattern: RegExp) => files.filter((file) => pattern.test(file));
   const some = [...pick(/\.woff2$/), ...pick(/\.css$/), ...pick(/^main-.*\.js$/)];
-  expect(some.length).toBeGreaterThanOrEqual(10);
+  expect(some.length).toBeGreaterThanOrEqual(9);
   for (const file of some) {
     const response = await request.get(`/assets/${file}`);
     expect(response.status(), file).toBe(200);

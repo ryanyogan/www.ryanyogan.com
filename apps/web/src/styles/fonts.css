@@ -1,28 +1,33 @@
 /*
  * Fonts, all of it in this directory: the files (./fonts, Latin and Latin Extended subsets
- * from Fontsource, SIL Open Font License), the faces below, and fonts.ts, which names the
- * files to preload. The family stacks are the --font-* lines in app.css.
- * To change a typeface: replace the files, this file and fonts.ts, then those lines.
+ * from Fontsource 5.3.0, SIL Open Font License, the two licences beside them), the faces
+ * below, and fonts.ts, which names the files to preload. The family stacks are the --font-*
+ * lines in app.css. To change a typeface: replace the files, this file and fonts.ts, then
+ * those lines.
  *
- * Hanken Grotesk (headings and interface) is one variable file covering 400 to 600.
- * Source Serif 4 (body) is three static files: 400, 600 and 400 italic. There is no mono
- * web font; code uses the system monospace.
+ * Newsreader (everything a reader reads: masthead, headlines, body, numbers) is three static
+ * files: 400, 700 and 400 italic. IBM Plex Sans Condensed (the "agate": nav, labels, kickers,
+ * captions, dates) is one, 600. The stylesheet may ask for those four and nothing else: no
+ * serif 500, 600 or 800, no bold italic, no other agate weight. There is no mono web font;
+ * code uses the system monospace.
  *
  * No text changes face while it is on screen. The faces here are `optional` and preloaded: a
  * browser holds the first paint a moment for them, and one that has not arrived by then is
  * not used for that page load at all (the fallback at the foot of this file stays; in-app
  * navigation keeps the document, so it stays until the next full load, which has the file in
- * its cache). The serif 600 and italic are not preloaded and so have no rule here: a rule
- * would be used or not by a race on every load. fonts.ts adds them from a script, at a moment
- * the reader cannot see; until then the browser slants or thickens the roman above.
+ * its cache). The agate is not preloaded (three files is the budget, and the italic is on the
+ * first screen of Home) and so has no rule here: a rule would be used or not by a race on
+ * every load. fonts.ts adds it from a script, at a moment the reader cannot see; until then
+ * its text is in the fallback below. There is no Latin Extended italic: such a letter in
+ * italic text is the roman's, slanted by the browser.
  */
 
 @font-face {
-  font-family: "Hanken Grotesk";
+  font-family: "Newsreader";
   font-style: normal;
-  font-weight: 400 600;
+  font-weight: 400;
   font-display: optional;
-  src: url("./fonts/hanken-grotesk-latin-ext-wght-normal.woff2") format("woff2");
+  src: url("./fonts/newsreader-latin-ext-400-normal.woff2") format("woff2");
   unicode-range:
     U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
     U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
@@ -30,22 +35,22 @@
 }
 
 @font-face {
-  font-family: "Hanken Grotesk";
+  font-family: "Newsreader";
   font-style: normal;
-  font-weight: 400 600;
+  font-weight: 400;
   font-display: optional;
-  src: url("./fonts/hanken-grotesk-latin-wght-normal.woff2") format("woff2");
+  src: url("./fonts/newsreader-latin-400-normal.woff2") format("woff2");
   unicode-range:
     U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
     U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 @font-face {
-  font-family: "Source Serif 4";
+  font-family: "Newsreader";
   font-style: normal;
-  font-weight: 400;
+  font-weight: 700;
   font-display: optional;
-  src: url("./fonts/source-serif-4-latin-ext-400-normal.woff2") format("woff2");
+  src: url("./fonts/newsreader-latin-ext-700-normal.woff2") format("woff2");
   unicode-range:
     U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
     U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
@@ -53,53 +58,137 @@
 }
 
 @font-face {
-  font-family: "Source Serif 4";
+  font-family: "Newsreader";
   font-style: normal;
+  font-weight: 700;
+  font-display: optional;
+  src: url("./fonts/newsreader-latin-700-normal.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Newsreader";
+  font-style: italic;
   font-weight: 400;
   font-display: optional;
-  src: url("./fonts/source-serif-4-latin-400-normal.woff2") format("woff2");
+  src: url("./fonts/newsreader-latin-400-italic.woff2") format("woff2");
   unicode-range:
     U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
     U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 /*
- * Shown for the whole page load when a web font misses the first paint (a slow first visit).
- * A system face scaled to the web font's metrics, so that the page is set the same way either
- * way. The values are worked out from the font files the Capsize way (frequency-weighted
- * average glyph width against the fallback's).
+ * Shown for the whole page load when a web font misses the first paint (a slow first visit),
+ * and for the agate until its file is cached. A system face scaled to the web font's
+ * metrics, so that the page is set the same way either way. The values are worked out the
+ * Capsize way (frequency-weighted average glyph width of each cut against the fallback's
+ * same cut; @capsizecss/metrics 4.3.0).
  *
- * local() takes a face's real name only, and Linux and Android have neither Arial nor
- * Georgia, so each source list also names the faces found there. Liberation Sans and Arimo
- * have Arial's metrics exactly and Roboto's are within a hundredth. No common Linux face has
- * Georgia's, so the serif has a second rule for the faces with Times New Roman's metrics
- * (Liberation Serif, Tinos); of two rules for one family the later one wins where its face
- * exists, so Georgia is used wherever it is installed. Where none is found the rules are
- * ignored and the next family in the stack is used (e2e/reload.spec.ts measures the match).
+ * local() takes a face's real name only, and Linux and Android have neither Georgia nor
+ * Arial Narrow, so each source list also names the faces found there. Liberation Serif and
+ * Tinos have Times New Roman's metrics exactly; Liberation Sans and Arimo have Arial's, and
+ * Liberation Sans Narrow and Nimbus Sans Narrow have Arial Narrow's. Of two rules for one
+ * face the later one wins where its font exists, so Georgia is used wherever it is installed
+ * and the narrow faces wherever they are. Where none is found the rules are ignored and the
+ * next family in the stack is used (e2e/reload.spec.ts measures the match).
+ *
+ * The bold and the italic have rules of their own: a headline is set in the bold, and a
+ * bold made by thickening the regular is not as wide.
  */
 @font-face {
-  font-family: "Hanken Grotesk Fallback";
-  src: local("Arial"), local("Liberation Sans"), local("Arimo"), local("Roboto");
-  size-adjust: 101.46%;
-  ascent-override: 98.56%;
-  descent-override: 29.86%;
-  line-gap-override: 0%;
-}
-
-@font-face {
-  font-family: "Source Serif 4 Fallback";
+  font-family: "Newsreader Fallback";
   src: local("Times New Roman"), local("Liberation Serif"), local("Tinos");
-  size-adjust: 117.07%;
-  ascent-override: 88.49%;
-  descent-override: 28.62%;
+  size-adjust: 105.48%;
+  ascent-override: 69.68%;
+  descent-override: 25.12%;
   line-gap-override: 0%;
 }
 
 @font-face {
-  font-family: "Source Serif 4 Fallback";
+  font-family: "Newsreader Fallback";
   src: local("Georgia");
+  size-adjust: 96.12%;
+  ascent-override: 76.47%;
+  descent-override: 27.57%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Newsreader Fallback";
+  font-weight: 700;
+  src:
+    local("Times New Roman Bold"), local("TimesNewRomanPS-BoldMT"), local("Liberation Serif Bold"),
+    local("Tinos Bold");
   size-adjust: 106.68%;
-  ascent-override: 97.12%;
-  descent-override: 31.4%;
+  ascent-override: 68.9%;
+  descent-override: 24.84%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Newsreader Fallback";
+  font-weight: 700;
+  src: local("Georgia Bold"), local("Georgia-Bold");
+  size-adjust: 89%;
+  ascent-override: 82.58%;
+  descent-override: 29.78%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Newsreader Fallback";
+  font-style: italic;
+  src:
+    local("Times New Roman Italic"), local("TimesNewRomanPS-ItalicMT"),
+    local("Liberation Serif Italic"), local("Tinos Italic");
+  size-adjust: 98.48%;
+  ascent-override: 74.63%;
+  descent-override: 26.91%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Newsreader Fallback";
+  font-style: italic;
+  src: local("Georgia Italic"), local("Georgia-Italic");
+  size-adjust: 88.43%;
+  ascent-override: 83.12%;
+  descent-override: 29.97%;
+  line-gap-override: 0%;
+}
+
+/* The agate is one weight, 600, so its fallback is a bold. */
+@font-face {
+  font-family: "IBM Plex Sans Condensed Fallback";
+  font-weight: 600;
+  src: local("Roboto Bold"), local("Roboto-Bold");
+  size-adjust: 93.33%;
+  ascent-override: 109.82%;
+  descent-override: 29.47%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "IBM Plex Sans Condensed Fallback";
+  font-weight: 600;
+  src:
+    local("Arial Bold"), local("Arial-BoldMT"), local("Liberation Sans Bold"), local("Arimo Bold");
+  size-adjust: 87.92%;
+  ascent-override: 116.58%;
+  descent-override: 31.28%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "IBM Plex Sans Condensed Fallback";
+  font-weight: 600;
+  src:
+    local("Arial Narrow Bold"), local("ArialNarrow-Bold"), local("Liberation Sans Narrow Bold"),
+    local("Nimbus Sans Narrow Bold");
+  size-adjust: 107.22%;
+  ascent-override: 95.6%;
+  descent-override: 25.65%;
   line-gap-override: 0%;
 }

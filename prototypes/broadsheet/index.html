@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ryan Yogan — Broadsheet prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..800;1,6..72,400..700&amp;family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&amp;display=swap">
+<link rel="stylesheet" href="../../docs/design/broadsheet-tokens.css">
+<style>
+/* Prototype-only: the Google Fonts link above stands in for the self-hosted files (see HANDOFF.md).
+   Everything visual below is the artboard's own CSS, holes replaced by the tokens. */
+body{margin:0;background:var(--paper);color:var(--ink)}
+.proto-theme{position:fixed;right:12px;bottom:12px;z-index:9;display:flex;gap:4px;font:600 12px 'IBM Plex Sans Condensed',sans-serif;letter-spacing:.12em;text-transform:uppercase}
+.proto-theme button{min-height:44px;padding:0 12px;border:1px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer}
+.proto-theme button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+a{color:inherit}a:hover{opacity:.7}
+.bs-lead{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,3fr);grid-template-areas:"head fig" "body nums";gap:0 40px}
+.bs-head{grid-area:head}.bs-body{grid-area:body}
+.bs-fig{grid-area:fig;margin:0;border-left:1px solid var(--hair);padding-left:32px}
+.bs-nums{grid-area:nums;align-self:start;border-left:1px solid var(--hair);padding-left:32px;padding-top:26px}
+.bs-cols3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 32px}
+.bs-cols2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 32px}
+.bs-rule-r{border-right:1px solid var(--hair);padding-right:32px}
+.bs-dropcap::first-letter{float:left;font-size:4.2em;line-height:.82;padding:6px 8px 0 0;font-weight:700}
+.bs-search-icon{display:none}
+@media (max-width:900px){.bs-lead{grid-template-columns:1fr;grid-template-areas:"head" "fig" "body" "nums"}.bs-fig,.bs-nums{border-left:0;padding-left:0}.bs-fig{margin:0 0 20px}.bs-nums{padding-top:24px}.bs-cols3{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.bs-cols3,.bs-cols2{grid-template-columns:1fr !important;row-gap:14px}.bs-sec.bs-cols3{row-gap:0}.bs-sec.bs-cols3>div+div{border-top:1px solid var(--hair);padding-top:24px;margin-top:26px}.bs-rule-r{border-right:0;padding-right:0}.bs-masthead{font-size:44px !important;letter-spacing:.04em !important;white-space:nowrap}.bs-h1{font-size:38px !important;line-height:1.06 !important}.bs-nav{justify-content:space-between !important;gap:0 !important;padding:0 2px !important}.bs-nav-sep,.bs-search-txt{display:none}.bs-search-icon{display:inline-flex}.bs-wrap{padding:0 18px 32px !important}.bs-header{padding-top:28px !important}.bs-tagline{font-size:15px !important}.bs-sec{padding:24px 0 26px !important}.bs-box{padding:16px 18px !important}.bs-hello{flex-direction:column;align-items:flex-start !important}}
+</style>
+</head>
+<body>
+<div style="min-height: 100vh; background: var(--paper); color: var(--ink); font-family: 'Newsreader', Georgia, serif; font-size: 17px; line-height: 1.5">
+<div class="bs-wrap" style="max-width: 1200px; margin: 0 auto; padding: 0 24px 40px">
+
+<!-- Ears + masthead -->
+<header class="bs-header" style="padding-top: 36px">
+<div style="text-align: center; padding: 0 0 18px">
+<a href="/" style="text-decoration: none; display: inline-block; font-size: 92px; line-height: 1; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; font-variation-settings: 'opsz' 72" class="bs-masthead">Ryan Yogan</a>
+<div class="bs-tagline" style="margin-top: 10px; font-style: italic; font-size: 18px; color: var(--ink2)">Engineering leader. Agent builder. Hockey dad.</div>
+</div>
+<nav aria-label="Sections" class="bs-nav" style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0 34px; border-top: 1px solid var(--ink); border-bottom: 3px double var(--ink); padding: 2px 0; font-family: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase">
+<a href="/work" style="text-decoration: none; padding: 12px 0; min-height: 44px; display: inline-flex; align-items: center">Work</a>
+<a href="/projects" style="text-decoration: none; padding: 12px 0; min-height: 44px; display: inline-flex; align-items: center">Projects</a>
+<a href="/writing" style="text-decoration: none; padding: 12px 0; min-height: 44px; display: inline-flex; align-items: center">Writing</a>
+<a href="/now" style="text-decoration: none; padding: 12px 0; min-height: 44px; display: inline-flex; align-items: center">Now</a>
+<span aria-hidden="true" class="bs-nav-sep" style="color: var(--hair)">|</span>
+<a href="/search" aria-label="Search" style="text-decoration: none; padding: 12px 0; min-height: 44px; display: inline-flex; align-items: center; color: var(--accent)"><span class="bs-search-txt">Search ⌘K</span><svg class="bs-search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="7" cy="7" r="5"/><path d="M11 11l4 4"/></svg></a>
+</nav>
+</header>
+
+<!-- Lead story -->
+<section aria-labelledby="lead-h" class="bs-lead bs-sec" style="padding: 34px 0 30px; border-bottom: 1px solid var(--hair)">
+<div class="bs-head">
+<div style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px">The lead · Twenty years in</div>
+<h1 id="lead-h" class="bs-h1" style="margin: 0 0 14px; font-size: 58px; line-height: 1.04; font-weight: 700; letter-spacing: -.012em; font-variation-settings: 'opsz' 72">I lead engineering teams and build agent systems myself.</h1>
+<p style="margin: 0 0 22px; font-size: 22px; line-height: 1.35; font-style: italic; color: var(--ink2)">Twenty years of scaling engineering orgs. The last two spent deep in agent memory, MCP, and durable AI workflows.</p>
+</div>
+<div class="bs-cols2 bs-body">
+<div class="bs-rule-r">
+<p class="bs-dropcap" style="margin: 0 0 14px"><strong>Co-founder and CTO</strong> of an AI startup in construction procurement. Built and led a team of 8. <strong>VP of R&amp;D at Sonian.</strong> Moved 900+ instances to serverless and cut costs 40%+. Coined “Empathy Driven Development.”</p>
+<p style="margin: 0 0 14px; font-style: italic; color: var(--ink2)">“The team you build is more important than the product you build.”</p>
+<a href="/work" style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; text-decoration: none; border-bottom: 1px solid var(--ink); padding-bottom: 2px">Work with me: here’s how I work →</a>
+</div>
+<div>
+<p style="margin: 0 0 14px">By day I lead AI engineering at Chromatic, and I build too: AI, MCP and core services. I see things through. Systems I designed, wrote and keep running, with the status stated plainly.</p>
+<p style="margin: 0; font-style: italic; color: var(--ink2)">“I would rather publish a negative result than another feature.”</p>
+</div>
+</div>
+<figure class="bs-fig" style="color: var(--ink)">
+<svg viewBox="0 0 300 220" width="100%" role="img" aria-label="Line map of Chicago with the lake shore and river, a point marking home" style="display: block; max-width: 300px; margin: 0 auto">
+<g stroke="currentColor" stroke-width=".7" opacity=".45" fill="none">
+<path d="M20 20H180M20 50H180M20 80H180M20 110H180M20 140H180M20 170H180M20 200H180"/>
+<path d="M20 20V200M50 20V200M80 20V200M110 20V200M140 20V200M180 20V200"/>
+</g>
+<g stroke="currentColor" fill="none" stroke-width="1.2">
+<path d="M200 0c-6 40 18 70 2 110s-14 70-2 110"/>
+<path d="M226 0c-6 40 22 70 6 110s-14 70-2 110" opacity=".6"/>
+<path d="M252 0c-6 40 22 70 6 110s-14 70-2 110" opacity=".35"/>
+<path d="M278 0c-6 40 22 70 6 110s-14 70-2 110" opacity=".2"/>
+<path d="M60 115c30-6 50 10 90 2s30-12 60-8" stroke-width="1.6"/>
+</g>
+<circle cx="150" cy="117" r="5" fill="var(--accent)"/>
+</svg>
+<figcaption style="margin-top: 10px; font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); text-align: center">Fig. 1 — Chicago, 41.88 N, 87.63 W</figcaption>
+</figure>
+<div class="bs-nums"><div style="border-top: 3px solid var(--ink); padding-top: 10px">
+<div style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; margin-bottom: 10px">By the numbers</div>
+<dl style="margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px">
+<div><dt style="font-size: 26px; font-weight: 700; line-height: 1; white-space: nowrap; font-variation-settings: 'opsz' 72">8 → 65+</dt><dd style="margin: 4px 0 0; font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 13px; color: var(--muted)">engineers, 11 squads, Procore</dd></div>
+<div><dt style="font-size: 26px; font-weight: 700; line-height: 1; white-space: nowrap; font-variation-settings: 'opsz' 72">150 → 2,300</dt><dd style="margin: 4px 0 0; font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 13px; color: var(--muted)">employees, then an IPO</dd></div>
+<div><dt style="font-size: 26px; font-weight: 700; line-height: 1; white-space: nowrap; font-variation-settings: 'opsz' 72">700+</dt><dd style="margin: 4px 0 0; font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 13px; color: var(--muted)">interviews conducted</dd></div>
+<div><dt style="font-size: 26px; font-weight: 700; line-height: 1; white-space: nowrap; font-variation-settings: 'opsz' 72">50+</dt><dd style="margin: 4px 0 0; font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 13px; color: var(--muted)">hires made</dd></div>
+</dl>
+</div></div>
+</section>
+
+<!-- Three columns: writing / built / off the clock -->
+<section aria-label="Sections" class="bs-cols3 bs-sec" style="padding: 28px 0 30px; border-bottom: 1px solid var(--hair)">
+<div class="bs-rule-r">
+<h2 style="margin: 0 0 4px; font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; border-bottom: 3px double var(--ink); padding-bottom: 6px">Latest writing</h2>
+<p style="margin: 8px 0 16px; font-size: 14px; font-style: italic; color: var(--muted)">Build logs and what I learned running teams.</p>
+<article style="padding: 0 0 14px; border-bottom: 1px solid var(--hair); margin-bottom: 14px">
+<div style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); font-weight: 600">Sep 2026</div>
+<h3 style="margin: 4px 0 0; font-size: 24px; line-height: 1.2; font-weight: 700"><a href="/writing/lincoln-six-months-later" style="text-decoration: none">Lincoln, Six Months Later: What Held, What Didn’t, and a Model Named After a Paradox</a></h3>
+</article>
+<article style="padding: 0 0 14px; border-bottom: 1px solid var(--hair); margin-bottom: 14px">
+<div style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); font-weight: 600">Apr 2026</div>
+<h3 style="margin: 4px 0 0; font-size: 20px; line-height: 1.25; font-weight: 700"><a href="/writing/building-agent-memory-from-research-to-reality" style="text-decoration: none">The Lincoln Project: Building a Brain</a></h3>
+</article>
+<article style="padding: 0 0 14px; margin-bottom: 10px">
+<div style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); font-weight: 600">Feb 2026</div>
+<h3 style="margin: 4px 0 0; font-size: 20px; line-height: 1.25; font-weight: 700"><a href="/writing/over-engineered-portfolio" style="text-decoration: none">My Most Over-Engineered Site to Date</a></h3>
+</article>
+<a href="/writing" style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; text-decoration: none; border-bottom: 1px solid var(--ink)">All writing →</a>
+</div>
+
+<div class="bs-rule-r">
+<h2 style="margin: 0 0 4px; font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; border-bottom: 3px double var(--ink); padding-bottom: 6px">What I’ve built</h2>
+<p style="margin: 8px 0 16px; font-size: 14px; font-style: italic; color: var(--muted)">Sixteen entries in five groups, each with its real status.</p>
+<figure style="margin: 0 0 16px; color: var(--ink)">
+<svg viewBox="0 0 240 150" width="100%" role="img" aria-label="Node graph: one node per project, clustered by group" style="display: block">
+<g stroke="currentColor" stroke-width="1" fill="none" opacity=".8">
+<path d="M30 30L70 20L60 60L30 30M60 60L120 70L150 110M120 70L170 40L210 20M170 40L190 60M60 60L40 120L70 140L90 110L40 120M150 110L200 120L210 100L180 90L150 110"/>
+</g>
+<g fill="var(--paper)" stroke="currentColor" stroke-width="1.2">
+<circle cx="70" cy="20" r="5"/><circle cx="60" cy="60" r="5"/><circle cx="120" cy="70" r="5"/><circle cx="150" cy="110" r="5"/><circle cx="170" cy="40" r="5"/><circle cx="210" cy="20" r="5"/><circle cx="190" cy="60" r="5"/><circle cx="40" cy="120" r="5"/><circle cx="70" cy="140" r="5"/><circle cx="90" cy="110" r="5"/><circle cx="200" cy="120" r="5"/><circle cx="210" cy="100" r="5"/><circle cx="180" cy="90" r="5"/>
+</g>
+<circle cx="30" cy="30" r="5" fill="var(--accent)"/>
+</svg>
+<figcaption style="margin-top: 6px; font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted)">Fig. 2 — One node per project, clustered by group</figcaption>
+</figure>
+<div style="border-top: 1px solid var(--hair)">
+<a href="/projects/lincoln-project" style="text-decoration: none; display: block; padding: 10px 0; border-bottom: 1px dotted var(--hair)">
+<div style="display: flex; justify-content: space-between; gap: 12px; align-items: baseline"><span style="font-size: 19px; font-weight: 600">Lincoln</span><span style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted)">Running locally</span></div>
+<div style="font-size: 15px; color: var(--ink2)">Continuously running cognitive substrate with a belief store</div>
+</a>
+<a href="/projects/fizzy-do-mcp" style="text-decoration: none; display: block; padding: 10px 0; border-bottom: 1px dotted var(--hair)">
+<div style="display: flex; justify-content: space-between; gap: 12px; align-items: baseline"><span style="font-size: 19px; font-weight: 600">Fizzy Do MCP</span><span style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted)">On npm</span></div>
+<div style="font-size: 15px; color: var(--ink2)">67 MCP tools across 12 categories for the Fizzy kanban</div>
+</a>
+<a href="/projects/omarchy-themes" style="text-decoration: none; display: block; padding: 10px 0; border-bottom: 1px solid var(--hair)">
+<div style="display: flex; justify-content: space-between; gap: 12px; align-items: baseline"><span style="font-size: 19px; font-weight: 600">Omarchy Themes</span><span style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted)">Live</span></div>
+<div style="font-size: 15px; color: var(--ink2)">An independent gallery of Omarchy themes</div>
+</a>
+</div>
+<a href="/projects" style="display: inline-block; margin-top: 14px; font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; text-decoration: none; border-bottom: 1px solid var(--ink)">All projects →</a>
+</div>
+
+<div>
+<h2 style="margin: 0 0 4px; font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; border-bottom: 3px double var(--ink); padding-bottom: 6px">Off the clock</h2>
+<h3 style="margin: 12px 0 10px; font-size: 26px; line-height: 1.15; font-weight: 700">Chicago, a cold rink, and a laptop running Linux.</h3>
+<figure style="margin: 0 0 14px; color: var(--ink)">
+<svg viewBox="0 0 260 130" width="100%" role="img" aria-label="Technical drawing of a hockey rink, 200 by 85 feet, with a play diagrammed" style="display: block">
+<g stroke="currentColor" fill="none" stroke-width="1">
+<rect x="14" y="12" width="232" height="100" rx="26"/>
+<path d="M66 12V112M194 12V112" stroke-width="1.4"/>
+<path d="M130 12V112"/>
+<circle cx="130" cy="62" r="18"/><circle cx="130" cy="62" r="1.5" fill="currentColor"/>
+<circle cx="50" cy="40" r="11"/><circle cx="50" cy="86" r="11"/><circle cx="210" cy="40" r="11"/><circle cx="210" cy="86" r="11"/>
+<circle cx="50" cy="40" r="1.3" fill="currentColor"/><circle cx="50" cy="86" r="1.3" fill="currentColor"/><circle cx="210" cy="40" r="1.3" fill="currentColor"/><circle cx="210" cy="86" r="1.3" fill="currentColor"/>
+<rect x="18" y="55" width="6" height="14"/><rect x="236" y="55" width="6" height="14"/>
+<path d="M80 92c20-20 40-30 60-18s30 2 36-20" stroke-dasharray="3 3"/>
+<path d="M176 54l6-4-2 7" />
+</g>
+<g stroke="currentColor" stroke-width=".8" fill="none" opacity=".7">
+<path d="M14 122H246M14 119V125M246 119V125"/>
+<path d="M6 12V112M3 12H9M3 112H9"/>
+</g>
+<text x="130" y="129" text-anchor="middle" font-family="IBM Plex Sans Condensed, sans-serif" font-size="8" fill="currentColor">200 ft</text>
+<circle cx="80" cy="92" r="3" fill="var(--accent)"/>
+</svg>
+<figcaption style="margin-top: 4px; font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted)">Fig. 3 — 200 ft × 85 ft, the play I keep drawing</figcaption>
+</figure>
+<p style="margin: 0 0 10px; font-size: 16px"><strong>Hockey dad and coach.</strong> Two of the projects on this site exist because of it.</p>
+<p style="margin: 0 0 10px; font-size: 16px"><strong>Linux, specifically Omarchy.</strong> I put vim keys in everything.</p>
+<p style="margin: 0; font-size: 16px"><strong>I have rebuilt this site at least eight times</strong> in two years. This is not the last.</p>
+</div>
+</section>
+
+<!-- Classifieds: Open to -->
+<section aria-labelledby="open-h" class="bs-sec" style="padding: 28px 0 10px">
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 0 40px" class="bs-cols2">
+<div>
+<h2 id="open-h" style="margin: 0 0 6px; font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; border-bottom: 3px double var(--ink); padding-bottom: 6px">Classifieds · Open to</h2>
+<p style="margin: 8px 0 0; font-size: 14px; font-style: italic; color: var(--muted)">Three kinds of work, a few at a time, so each gets real attention.</p>
+</div>
+<div class="bs-box" style="border: 1px solid var(--ink); padding: 20px 24px">
+<ol style="margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 24px" class="bs-cols3">
+<li style="padding-right: 20px"><div style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 12px; color: var(--accent); font-weight: 700; letter-spacing: .1em">No. 1</div><div style="font-size: 20px; font-weight: 600; line-height: 1.2; margin-top: 2px">Advising teams building agent systems</div></li>
+<li style="padding-right: 20px"><div style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 12px; color: var(--accent); font-weight: 700; letter-spacing: .1em">No. 2</div><div style="font-size: 20px; font-weight: 600; line-height: 1.2; margin-top: 2px">Fractional engineering leadership</div></li>
+<li><div style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 12px; color: var(--accent); font-weight: 700; letter-spacing: .1em">No. 3</div><div style="font-size: 20px; font-weight: 600; line-height: 1.2; margin-top: 2px">A small number of builds</div><div style="font-size: 14px; color: var(--muted); margin-top: 4px">MCP servers, agent memory, Cloudflare-native AI products</div></li>
+</ol>
+<div class="bs-hello" style="margin-top: 18px; padding-top: 14px; border-top: 1px dotted var(--hair); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 24px">
+<span style="font-size: 20px; font-style: italic">Say hello. Tell me what you are building and where it is stuck.</span>
+<a href="mailto:ryan.yogan@hey.com" style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 14px; font-weight: 600; letter-spacing: .08em; text-decoration: none; border-bottom: 1px solid var(--ink)">ryan.yogan@hey.com</a>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Colophon -->
+<footer style="margin-top: 28px; border-top: 3px solid var(--ink); padding-top: 10px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; font-family: 'IBM Plex Sans Condensed', sans-serif; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted)">
+<span>Ryan Yogan · Chicago · 41.88 N, 87.63 W · Press <kbd style="border: 1px solid var(--hair); padding: 0 4px; font: inherit">?</kbd> for keys</span>
+<nav aria-label="Footer" style="display: flex; flex-wrap: wrap; gap: 0 20px">
+<a href="/now" style="text-decoration: none; padding: 8px 0">Now</a>
+<a href="https://github.com/ryanyogan" style="text-decoration: none; padding: 8px 0">GitHub</a>
+<a href="https://linkedin.com/in/ryanyogan" style="text-decoration: none; padding: 8px 0">LinkedIn</a>
+<a href="/rss.xml" style="text-decoration: none; padding: 8px 0">RSS</a>
+<a href="mailto:ryan.yogan@hey.com" style="text-decoration: none; padding: 8px 0">ryan.yogan@hey.com</a>
+</nav>
+</footer>
+
+</div>
+</div>
+<div class="proto-theme" role="group" aria-label="Theme (prototype only)">
+<button type="button" data-t="day">Day</button><button type="button" data-t="">System</button><button type="button" data-t="night">Night</button>
+</div>
+<script>
+(function(){var r=document.documentElement,bs=document.querySelectorAll('.proto-theme button');
+function set(t){if(t)r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');bs.forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.t===t))});}
+bs.forEach(function(b){b.addEventListener('click',function(){set(b.dataset.t)})});set('');})();
+</script>
+</body>
+</html>

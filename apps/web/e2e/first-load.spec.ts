@@ -3,8 +3,8 @@ import { expect, routes, test } from "./fixtures";
 
 // What a reader sees on a first visit when the fonts are slow: the page is drawn in the
 // fallback faces and stays in them, here and on the pages reached from it without a new
-// document. Nothing that has been on screen changes its face or its box afterwards. The serif
-// italic and semibold (styles/fonts.ts) join a page only where no reader can see them arrive.
+// document. Nothing that has been on screen changes its face or its box afterwards. The agate
+// (styles/fonts.ts) joins a page only where no reader can see it arrive.
 //
 // reload.spec.ts is the warm cache, Chromium only. This runs in Chromium and in WebKit, so it
 // reads what both can report: a face shows in the widths of the text's line boxes, and the
@@ -13,10 +13,11 @@ import { expect, routes, test } from "./fixtures";
 /** How long each font file is held back, in ms: well past any browser's wait for a font. */
 const DELAY = 1500;
 const FONT = /\.woff2$/;
-/** The files styles/fonts.ts loads from its script. */
-const LATE = /-(400-italic|600-normal)-[^/]*\.woff2$/;
-/** The files the stylesheet names and the document preloads: the two romans. */
-const ROMAN = /-(wght-normal|400-normal)-[^/]*\.woff2$/;
+/** The files styles/fonts.ts loads from its script: the agate. */
+const LATE = /ibm-plex-sans-condensed-[^/]*\.woff2$/;
+/** The files the stylesheet names and the document preloads: the serif. */
+const ROMAN = /newsreader-[^/]*\.woff2$/;
+const AGATE = "IBM Plex Sans Condensed";
 
 type Change = { t: number; what: string; from: string; to: string };
 type Seen = {
@@ -176,8 +177,8 @@ const drawnInWebFont = (page: Page) =>
     };
     const none = width("monospace");
     return {
-      sans: width('"Hanken Grotesk", monospace') !== none,
-      serif: width('"Source Serif 4", monospace') !== none,
+      sans: width('"IBM Plex Sans Condensed", monospace') !== none,
+      serif: width('"Newsreader", monospace') !== none,
     };
   });
 
@@ -189,7 +190,7 @@ const hydrated = (page: Page) =>
     return attached(document.querySelector("h1")) && attached(document.querySelector("footer"));
   });
 
-/** The script in styles/fonts.ts has its two files (it notes that before it decides). */
+/** The script in styles/fonts.ts has its file (it notes that before it decides). */
 const lateFontsLoaded = (page: Page) =>
   page.waitForFunction(() => localStorage.getItem("fonts") !== null, undefined, {
     timeout: 15_000,
@@ -220,26 +221,30 @@ async function slowFonts(page: Page, pattern: RegExp) {
   return held;
 }
 
-/** The first serif italic or semibold text in the page's main column. */
+/**
+ * The first agate text on the page, as the script in styles/fonts.ts finds it: anywhere in the
+ * body, the skip link (parked above the top of the page) apart.
+ */
 const lateText = (page: Page) =>
-  page.evaluateHandle(() => {
-    for (const element of document.querySelectorAll("main *")) {
+  page.evaluateHandle((agate) => {
+    for (const element of document.body.querySelectorAll("*")) {
       if (![...element.childNodes].some((node) => node.nodeType === 3 && node.textContent?.trim()))
         continue;
-      const style = getComputedStyle(element);
-      if (!style.fontFamily.includes("Source Serif 4")) continue;
-      if (style.fontStyle !== "italic" && Number(style.fontWeight) < 600) continue;
-      if (element.getClientRects().length === 0) continue;
+      if (!getComputedStyle(element).fontFamily.includes(agate)) continue;
+      const rect = element.getBoundingClientRect();
+      if (rect.width === 0 || rect.bottom + scrollY <= 0) continue;
       (window as unknown as Watching).__watch(element);
       return element;
     }
     return null;
-  });
+  }, AGATE);
 
 const lateFaces = (page: Page) =>
   page.evaluate(
-    () =>
-      [...document.fonts].filter((face) => face.style === "italic" || face.weight === "600").length,
+    // The family alone: its fallback faces (styles/fonts.css) carry its name too.
+    (agate) =>
+      [...document.fonts].filter((face) => face.family.replace(/["']/g, "") === agate).length,
+    AGATE,
   );
 
 for (const route of routes) {
@@ -291,8 +296,8 @@ for (const route of routes) {
     if (browserName === "chromium") expect(loaded.fcp, "first paint").toBeLessThan(DELAY);
     expect(end.changes, "text that changed face or moved after it was on screen").toEqual([]);
     expect(loaded.shift, "layout shift").toBe(0);
-    // Too late for the first paint is too late for the whole visit, and the italic and
-    // semibold do not join a page that is in the fallback roman.
+    // Too late for the first paint is too late for the whole visit, and the agate does not
+    // join a page that is in the fallback roman.
     expect(before, "web fonts in use after a slow first load").toEqual({
       sans: false,
       serif: false,
@@ -302,34 +307,38 @@ for (const route of routes) {
   });
 }
 
-test.describe("the serif italic and semibold arrive after the first paint", () => {
-  // A post with both: emphasis and strong text in its body.
+test.describe("the agate arrives after the first paint", () => {
   const post = "/writing/building-agent-memory-from-research-to-reality";
+  /** A window so short that it holds only the space above the masthead: no text at all. */
+  const NO_TEXT = 24;
 
-  test("below the window they are added, and are there when the reader scrolls to them", async ({
+  test("with none of its text in the window it is added, and is there when the reader scrolls to it", async ({
     page,
     browserName,
   }) => {
+    const size = page.viewportSize()!;
+    await page.setViewportSize({ width: size.width, height: NO_TEXT });
     await slowFonts(page, LATE);
     await watching(page, browserName);
     await page.goto("/work");
     await hydrated(page);
     const text = await lateText(page);
     expect(await text.evaluate((element) => element !== null), "the page has such text").toBe(true);
-    // Whether the first of it is on the first screen depends on the window.
+    // The first of it is the section row, under the masthead: below this window.
     const below = await text.evaluate(
       (element) => element!.getBoundingClientRect().top >= innerHeight,
     );
-    expect(await lateFaces(page), "before the files arrive").toBe(0);
+    expect(below, "no agate text in the window").toBe(true);
+    expect(await lateFaces(page), "before the file arrives").toBe(0);
 
     await lateFontsLoaded(page);
     await page.evaluate(() => document.fonts.ready);
     await frames(page, 6);
-    // Only the late files are held back here, but the romans are `optional` and the preview
-    // server is shared with every other test: on a busy machine they can miss the first paint
+    // Only the late file is held back here, but the serif is `optional` and the preview
+    // server is shared with every other test: on a busy machine it can miss the first paint
     // too (seen in CI: 270 ms for a local file, WebKit, page drawn in the fallback faces).
-    // Then the page is in the fallback roman for the visit and the script keeps the italic
-    // and semibold out of it, which is what the tests above hold it to.
+    // Then the page is in the fallback roman for the visit and the script keeps the agate
+    // out of it, which is what the tests above hold it to.
     const web = await drawnInWebFont(page);
     const added = await lateFaces(page);
     test.info().annotations.push({
@@ -337,15 +346,16 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
       description: JSON.stringify({ below, web, added }),
     });
     if (web.serif)
-      expect(added, "faces added, the page being in the web roman").toBe(below ? 4 : 0);
+      expect(added, "faces added, the page being in the web roman").toBe(below ? 2 : 0);
     else expect(added, "faces added, the page being in the fallback roman").toBe(0);
+    await page.setViewportSize(size);
     await readThrough(page);
     const end = await seen(page);
     expect(end.changes, "text that changed face or moved after it was on screen").toEqual([]);
     expect(end.shift, "layout shift").toBe(0);
   });
 
-  test("in the window they are not added: the text keeps the face it was drawn in", async ({
+  test("in the window it is not added: the text keeps the face it was drawn in", async ({
     page,
     browserName,
   }) => {
@@ -368,14 +378,14 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
     expect(end.changes, "text that changed face or moved after it was on screen").toEqual([]);
   });
 
-  test("once cached they are on the page from the first frame", async ({ page, browserName }) => {
-    // This post has such text on its first screen, so a first visit leaves the faces out
-    // unless they beat the first frame. They can: the files are asked for after the load event,
-    // and when everything is local and quick that event, and both files, come before the
-    // browser has run a frame (seen in CI, run 37248067670, Chromium: load within 37 ms, both
-    // files by 80 ms, first screencast frame at 122 ms, all four faces on the page). Nothing
-    // had been drawn, so nothing changed. So a first visit is held to what every load is held
-    // to: none of the four, or all of them from the first frame, and no text changing after.
+  test("once cached it is on the page from the first frame", async ({ page, browserName }) => {
+    // Every page has agate text on its first screen (the nav), so a first visit leaves the
+    // faces out unless they beat the first frame. They can: the file is asked for after the
+    // load event, and when everything is local and quick that event, and the file, come before
+    // the browser has run a frame (seen in CI, run 37248067670, Chromium: load within 37 ms,
+    // the files by 80 ms, first screencast frame at 122 ms, every late face on the page).
+    // Nothing had been drawn, so nothing changed. So a first visit is held to what every load
+    // is held to: neither face, or both from the first frame, and no text changing after.
     await watching(page, browserName);
     await page.goto(post);
     await hydrated(page);
@@ -387,7 +397,7 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
     const timing = await page.evaluate(() => ({
       load: Math.round(performance.getEntriesByType("navigation")[0]?.duration ?? -1),
       files: (performance.getEntriesByType("resource") as PerformanceResourceTiming[])
-        .filter((entry) => /-(400-italic|600-normal)-[^/]*\.woff2$/.test(entry.name))
+        .filter((entry) => /ibm-plex-sans-condensed-[^/]*\.woff2$/.test(entry.name))
         .map((entry) => Math.round(entry.responseEnd)),
     }));
 
@@ -395,7 +405,7 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
     // then the faces are in that frame. On a busy machine it is not always (seen in CI,
     // Chromium: the same page got them on some loads and not on others), nor is the roman
     // (see the first test here); then this text has been drawn without them and they stay
-    // out. Every load is held to that: all four in the first frame, or none at all. That a
+    // out. Every load is held to that: both in the first frame, or neither at all. That a
     // cached load does put them in the first frame is held too: the page is loaded again, a
     // few times at most, until one has.
     const visits: object[] = [];
@@ -424,11 +434,11 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
         end.changes,
         `visit ${visit}: text that changed face or moved after it was on screen`,
       ).toEqual([]);
-      expect([0, 4], `visit ${visit}: faces added`).toContain(added);
+      expect([0, 2], `visit ${visit}: faces added`).toContain(added);
       if (browserName === "chromium") {
         expect(end.faces[0], `visit ${visit}: faces at the first frame`).toBe(end.faces[1]);
       }
-      inFirstFrame = added === 4 && atFirstFrame;
+      inFirstFrame = added === 2 && atFirstFrame;
     }
     test.info().annotations.push({
       type: "measure",
@@ -447,7 +457,7 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
         visits,
       }),
     });
-    expect([0, 4], "faces added on the first visit").toContain(firstVisit);
+    expect([0, 2], "faces added on the first visit").toContain(firstVisit);
     expect(first.faces[0], "first visit: faces at the first frame, and at the end").toBe(
       first.faces[1],
     );
@@ -463,22 +473,22 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
 
   // In WebKit the script adds cached files that are there before the first frame without
   // asking about the roman (the accepted exception in styles/fonts.ts), so there this load ends
-  // with none of the four or with all of them from its first frame, by whether the files were
-  // there in time. Nothing changes or moves after the first paint either way.
-  test("once cached, a roman that misses the first paint keeps them out (WebKit: out, or in from the first frame)", async ({
+  // with neither face or with both from its first frame, by whether the file was there in
+  // time. Nothing changes or moves after the first paint either way.
+  test("once cached, a roman that misses the first paint keeps it out (WebKit: out, or in from the first frame)", async ({
     page,
     browserName,
   }) => {
-    // The first visit leaves the note that the two files are cached, so on the next load the
-    // script asks for them at once and has them before the first frame.
+    // The first visit leaves the note that the file is cached, so on the next load the
+    // script asks for it at once and has it before the first frame.
     await page.goto(post);
     await hydrated(page);
     await lateFontsLoaded(page);
     await page.evaluate(() => document.fonts.ready);
 
     // That next load, with only the romans late: the page is in the fallback roman for the
-    // visit, and the web italic and semibold must not be set beside it. (Seen in CI before the
-    // script asked, run 37240200047, Chromium: all four in the first frame, roman fallback.
+    // visit, and the web agate must not be set beside it. (Seen in CI before the
+    // script asked, run 37240200047, Chromium: the late faces in the first frame, roman fallback.
     // WebKit does not always get that far here: with a route installed its late files are not
     // always there at once, and then it gives up on them and the note is dropped; `noted` in
     // the measure says so.)
@@ -519,7 +529,7 @@ test.describe("the serif italic and semibold arrive after the first paint", () =
       serif: false,
     });
     if (browserName === "webkit") {
-      expect([0, 4], "late faces: none, or all four").toContain(added);
+      expect([0, 2], "late faces: neither, or both").toContain(added);
       expect(end.faces[0], "faces at the first frame, and at the end").toBe(end.faces[1]);
     } else expect(added, "late faces beside the fallback roman").toBe(0);
     expect(end.changes, "text that changed face or moved after it was on screen").toEqual([]);

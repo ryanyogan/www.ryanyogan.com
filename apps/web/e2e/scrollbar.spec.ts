@@ -22,7 +22,7 @@ const layout = (page: Page): Promise<Layout> =>
     for (const selector of [
       "body > header",
       "header a",
-      ".header-tools",
+      "#site-nav a",
       "main h1",
       "main p",
       "body > footer",
@@ -122,7 +122,7 @@ test("a page too short to scroll keeps the same space, and stays centred", async
   ).toBe(true);
   const short = await layout(page);
   expect(await scrollbar(page)).toBe(space);
-  for (const selector of ["body > header", "header a", ".header-tools", "main h1"]) {
+  for (const selector of ["body > header", "header a", "#site-nav a", "main h1"]) {
     const [x, , width] = short.boxes[selector];
     expect([x, width], selector).toEqual([long.boxes[selector][0], long.boxes[selector][2]]);
   }
@@ -143,5 +143,5 @@ test("without the kept space the page does jump: this test can fail", async ({ p
   const during = await layout(page);
   expect(await scrollbar(page)).toBe(0);
   expect(during.boxes["body > header"][2]).toBe(before.boxes["body > header"][2] + space);
-  expect(during.boxes[".header-tools"][0]).not.toBe(before.boxes[".header-tools"][0]);
+  expect(during.boxes["#site-nav a"][0]).not.toBe(before.boxes["#site-nav a"][0]);
 });

@@ -69,16 +69,16 @@ const column = (page: Page) =>
     };
   });
 
-// The rule is about the page as designed, in Source Serif 4, and a "character" is that face's
+// The rule is about the page as designed, in Newsreader, and a "character" is that face's
 // "0". The romans are `optional`, so a reader whose fonts miss the first paint reads the post
 // in the fallback face (styles/fonts.css), and on a busy machine so does a test: the page is
 // therefore opened in each face on purpose (e2e/fonts.ts), and each is held to what it owes.
 //
 // In the fallback face the "0" is the wrong ruler. That face is scaled so that running text is
-// as wide as in the web font, which leaves its figures wider: on the CI runner Liberation
-// Serif's "0" is 11px where Source Serif 4's is 10px, and the same 280px column at 320px then
-// counts 25.5 of them, not 28.0. (This test read whichever face the load happened to get, and
-// so failed now and then.) So in the fallback face:
+// as wide as in the web font, which leaves its figures another width: with the last pair of
+// faces Liberation Serif's "0" was 11px on the CI runner where the web face's was 10px, and the
+// same 280px column at 320px then counted 25.5 of them, not 28.0. (This test read whichever
+// face the load happened to get, and so failed now and then.) So in the fallback face:
 // - the column must be the same box at the same type size, at every width, which on a phone
 //   is the rule itself (the whole screen between the gutters, at 17px or more);
 // - its measure is the web face's, corrected by how much wider or narrower the fallback sets
@@ -301,7 +301,7 @@ function measure(page: Page) {
   });
 }
 
-const CODE_BACKGROUND = { light: "rgb(238, 237, 232)", dark: "rgb(37, 40, 42)" };
+const CODE_BACKGROUND = { light: "rgb(236, 234, 228)", dark: "rgb(28, 28, 28)" };
 
 for (const theme of ["light", "dark"] as const) {
   for (const width of [1280, 390]) {
@@ -331,11 +331,10 @@ for (const theme of ["light", "dark"] as const) {
       expect(m.list.indent).toBeLessThanOrEqual(1.4);
       expect(m.list.gap).toBeCloseTo(0.35, 1);
 
-      // A quotation is body text beside a thin rule, not a pull quote.
+      // A quotation is body text beside a heavy rule, not a pull quote.
       expect(m.quote.size).toBeCloseTo(1, 2);
       expect(m.quote.style).toBe("solid");
-      expect(m.quote.rule).toBeGreaterThanOrEqual(1);
-      expect(m.quote.rule).toBeLessThanOrEqual(2);
+      expect(m.quote.rule).toBe(3);
 
       // Inline code: a little smaller, a faint tone, no border, and it may break anywhere.
       expect(m.inline.size).toBeGreaterThanOrEqual(0.8);
@@ -388,8 +387,8 @@ for (const theme of ["light", "dark"] as const) {
       expect(m.figure.parent).toBe("DIV");
       expect(m.figure.caption).toBe("The memory graph after six attempts.");
       expect(m.figure.alt).toBe("A drawing of a brain made of nodes and edges");
-      expect(m.figure.captionSize).toBeGreaterThanOrEqual(14);
-      expect(m.figure.captionSize).toBeLessThanOrEqual(15);
+      // The caption is agate: 12px, 11px on a phone.
+      expect(m.figure.captionSize).toBe(width <= 600 ? 11 : 12);
       expect(m.figure.width).toBeCloseTo(m.column.width, 0);
 
       // Headings: an id each (a repeat and the page's own "main" are stepped aside), a

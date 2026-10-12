@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { test } from "@playwright/test";
 
 // Not a test: one full-page PNG per page, width and colour scheme, written to
 // apps/web/screenshots/<page>-<width>-<scheme>.png (playwright.shots.config.ts).
@@ -85,30 +85,13 @@ test.describe("motion", () => {
   }
 });
 
-// The open phone menu, which no page shot shows.
-test.describe("menu", () => {
-  test.use({ viewport: { width: 390, height: 900 } });
-
-  test("open", async ({ page }) => {
-    await page.goto("/");
-    await page.evaluate(() => document.fonts.ready);
-    const menu = page.getByRole("button", { name: "Menu" });
-    // The click handler is attached on hydration.
-    await expect(async () => {
-      await menu.click();
-      await expect(menu).toHaveAttribute("aria-expanded", "true", { timeout: 500 });
-    }).toPass();
-    await page.screenshot({ path: "screenshots/menu-390-light.png" });
-  });
-});
-
 // The site icon (src/lib/icon.ts) as a browser shows it, since no page shot can: one picture,
 // the light scheme above the dark. In each half: /favicon.svg at 512; then at 16, 32 and 180
 // with /favicon.ico between; the 16 and the 32 again enlarged pixel for pixel (8 and 4 times);
 // /apple-touch-icon.png with corners rounded as iOS does, and the small sizes on the other
 // scheme's paper. This is where a change to the mark is looked at.
 test("icon", async ({ page }) => {
-  const PAPER = { light: "#f6f5f1", dark: "#1c1e1f" };
+  const PAPER = { light: "#f6f5f1", dark: "#121212" };
   await page.setViewportSize({ width: 900, height: 532 });
   const halves: string[] = [];
   for (const scheme of ["light", "dark"] as const) {

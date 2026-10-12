@@ -15,9 +15,9 @@ describe("the preview card", () => {
     expect(card.props.style).toMatchObject({ width: 1200, height: 630 });
   });
 
-  it("steps the title down as it gets longer, never under 54px", () => {
+  it("steps the title down as it gets longer, never under 50px", () => {
     const sizes = [10, 24, 25, 48, 49, 72, 73, 300].map((length) => titleSize("x".repeat(length)));
-    expect(sizes).toEqual([84, 84, 72, 72, 62, 62, 54, 54]);
+    expect(sizes).toEqual([84, 84, 72, 72, 62, 62, 50, 50]);
   });
 
   it("clamps the title to three lines", () => {

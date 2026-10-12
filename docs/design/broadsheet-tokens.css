@@ -1,0 +1,109 @@
+/*
+ * ryanyogan.com — "Broadsheet" design tokens
+ * Source of truth for the redesign. Port these into apps/web/src/styles/app.css, replacing
+ * the :root / .dark / @media(prefers-color-scheme) blocks at L22–68 and the --font-* lines in
+ * @theme inline (L110–115). Keep the names below; HANDOFF.md and broadsheet.md use them.
+ *
+ * Theme selection is unchanged from today: .dark / .light on <html>, else the OS preference
+ * (lib/theme.ts). This file uses data-theme only so the standalone prototype can flip; in the
+ * app, map "day" → :root and .light, "night" → .dark and html:not(.light) under
+ * prefers-color-scheme: dark, exactly where the current tokens live.
+ */
+
+:root,
+:root[data-theme="day"] {
+  color-scheme: light;
+
+  /* Colour — newsprint, day. Contrast against --paper measured (WCAG, sRGB). */
+  --paper:  #F6F5F1;   /* page ground; unchanged from the live site, so theme-color metas stay */
+  --ink:    #111111;   /* body text, heavy rules, masthead             17.31:1 */
+  --ink2:   #2B2A27;   /* decks, pull quotes, project descriptions     13.16:1 */
+  --muted:  #5C5A55;   /* labels, captions, dates, status, colophon     6.31:1 */
+  --hair:   #D5D3CE;   /* hairline rules, dotted leaders (decorative, 1.37:1) */
+  --accent: #C8102E;   /* kickers, dates, classified numbers, map dot   5.39:1 */
+
+  /* The old names, kept so nothing else in app.css breaks while you migrate.
+     --ink-soft → --ink2, --rule → --hair. Delete once no selector reads them. */
+  --ink-soft: var(--ink2);
+  --rule: var(--hair);
+  --control-border: #8A8882;   /* 3.1:1 on paper (WCAG 1.4.11) */
+  --error: #A1321F;            /* unchanged */
+}
+
+:root[data-theme="night"] {
+  color-scheme: dark;
+
+  /* Colour — newsprint, night. Same roles. */
+  --paper:  #121212;
+  --ink:    #ECEAE4;   /* 15.57:1 */
+  --ink2:   #D6D3CC;   /* 12.53:1 */
+  --muted:  #A3A09A;   /*  7.18:1 */
+  --hair:   #34332F;
+  --accent: #FF5A5F;   /*  6.14:1 */
+
+  --ink-soft: var(--ink2);
+  --rule: var(--hair);
+  --control-border: #6F6D68;   /* 3.2:1 on night paper */
+  --error: #E8998A;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="day"]) {
+    color-scheme: dark;
+    --paper:  #121212;
+    --ink:    #ECEAE4;
+    --ink2:   #D6D3CC;
+    --muted:  #A3A09A;
+    --hair:   #34332F;
+    --accent: #FF5A5F;
+    --ink-soft: var(--ink2);
+    --rule: var(--hair);
+    --control-border: #6F6D68;
+    --error: #E8998A;
+  }
+}
+
+:root {
+  /* Type families. Serif carries masthead, headlines, body and numbers; the condensed sans
+     is the "agate": nav, labels, kickers, captions, dates, status, colophon, buttons. */
+  --font-serif: "Newsreader", "Newsreader Fallback", ui-serif, Georgia, "Times New Roman", serif;
+  --font-agate: "IBM Plex Sans Condensed", "IBM Plex Sans Condensed Fallback", "Arial Narrow",
+    ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  /* Weights actually shipped (see HANDOFF.md § Fonts). Nothing else is loaded:
+     the browser must never be asked for a 500, 600 or 800. */
+  --w-serif-regular: 400;
+  --w-serif-bold: 700;        /* masthead, headlines, numbers, <strong>, drop cap */
+  --w-agate: 600;             /* the only agate weight */
+
+  /* Type scale, desktop (px). Phone values in brackets; see broadsheet.md § Type. */
+  --t-masthead: 92px;         /* [44, nowrap] uppercase, letter-spacing .06em [.04em], line-height 1 */
+  --t-h1: 58px;               /* [38] line-height 1.04 [1.06], letter-spacing -.012em [-.01em] */
+  --t-deck: 22px;             /* [19] italic, line-height 1.35, --ink2 */
+  --t-h2-agate: 13px;         /* section heads: agate, uppercase, letter-spacing .16em */
+  --t-h3: 24px;               /* [25] lead article titles; 20px [21] for the rest, line-height 1.2–1.25 */
+  --t-off-h3: 26px;           /* [27] "Chicago, a cold rink…" */
+  --t-body: 17px;             /* line-height 1.5; 16px in Off the clock */
+  --t-small: 15px;            /* project descriptions, --ink2 */
+  --t-agate: 13px;            /* nav, CTAs, letter-spacing .10–.16em */
+  --t-agate-sm: 12px;         /* kickers, dates, captions, status, colophon, letter-spacing .06–.16em */
+  --t-num: 26px;              /* [28] "By the numbers", line-height 1 */
+  --t-tagline: 18px;          /* [15] italic under the masthead */
+  --t-classified: 20px;       /* the three "No. n" items */
+
+  /* Rules. The whole look is three rule weights. */
+  --rule-heavy: 3px solid var(--ink);          /* top of "By the numbers", top of colophon */
+  --rule-double: 3px double var(--ink);        /* under nav; under every section head */
+  --rule-single: 1px solid var(--ink);         /* over nav; around the classifieds box */
+  --rule-hair: 1px solid var(--hair);          /* between stories, between sections, column rules */
+  --rule-dotted: 1px dotted var(--hair);       /* between project rows */
+
+  /* Layout. */
+  --wrap: 1200px;                               /* page measure (was 1296) */
+  --page-gutter: clamp(18px, 5vw, 24px);        /* 18px on the phone artboard, 24px desktop */
+  --col-gap: 32px;                              /* between the three columns; 40px lead/aside */
+  --section-pad: 28px 0 30px;                   /* [24px 0 26px] inside each hairline-ruled band */
+  --story-pad: 14px;                            /* under each writing entry */
+  --touch: 44px;                                /* every link row and button */
+}
