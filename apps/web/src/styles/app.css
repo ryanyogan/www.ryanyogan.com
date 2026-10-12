@@ -15,7 +15,7 @@
 /*
  * Broadsheet: a newspaper front page. Newsprint, near-black ink and one red, six colours per
  * edition (docs/design/broadsheet.md; the values are docs/design/broadsheet-tokens.css).
- * Three rule weights do the structuring: heavy, double and hairline. There are no
+ * Two rule weights do the structuring: heavy and hairline. There are no
  * backgrounds, tints, cards, shadows or rounded corners. Red is a kicker, never a button:
  * links are ink.
  * The theme toggle sets .dark or .light on <html>; with neither, the OS preference decides.
@@ -303,7 +303,7 @@
     align-items: center;
     gap: 0 34px;
     border-top: 1px solid var(--ink);
-    border-bottom: 3px double var(--ink);
+    border-bottom: 3px solid var(--ink);
     padding: 2px 0;
     font-size: 0.8125rem;
     letter-spacing: 0.16em;
@@ -520,9 +520,9 @@
     color: var(--accent);
   }
 
-  /* Section head: agate over a double rule. */
+  /* Section head: agate over a heavy rule. */
   .sec-h {
-    border-bottom: 3px double var(--ink);
+    border-bottom: 3px solid var(--ink);
     padding-bottom: 6px;
     font-size: 0.8125rem;
     letter-spacing: 0.16em;
@@ -1378,13 +1378,13 @@
   /* ---------- The inner pages (docs/design/broadsheet.md, section 5) ---------- */
 
   /* Page head: the section's name in red agate, the headline, the italic deck, then a
-     double rule. On Work and Writing a small drawing sits at its right in a wide window. */
+     heavy rule. On Work and Writing a small drawing sits at its right in a wide window. */
   .phead {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 0 40px;
     align-items: end;
-    border-bottom: 3px double var(--ink);
+    border-bottom: 3px solid var(--ink);
     padding: 34px 0 22px;
   }
 
@@ -1412,7 +1412,7 @@
     min-width: 44px;
   }
 
-  /* A section of a page: its head (agate over a double rule, an italic line under it) in
+  /* A section of a page: its head (agate over a heavy rule, an italic line under it) in
      the first column, its content in the wide one, a hairline to close. */
   .sect {
     display: grid;
