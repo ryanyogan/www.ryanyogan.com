@@ -154,6 +154,17 @@
     margin: 0;
   }
 
+  /* A letter in the roman on every page from its first frame, unseen. The masthead is the
+     bold and its tagline the italic, but a page such as /writing sets nothing in the roman,
+     and an `optional` face that no text has asked for is never timed out: on a slow first
+     visit it would turn up later, on the next page, beside the fallback bold
+     (e2e/first-load.spec.ts). */
+  body::before {
+    content: "a";
+    position: absolute;
+    visibility: hidden;
+  }
+
   h1,
   h2,
   h3,
@@ -280,8 +291,11 @@
     text-align: center;
   }
 
+  /* Top-aligned: on the baseline, the line's height would follow the body face's metrics,
+     and the rows below would move by a pixel when the roman arrives. */
   .mast-name {
     display: inline-block;
+    vertical-align: top;
     font-size: 5.75rem;
     line-height: 1;
     font-weight: 700;
@@ -395,6 +409,16 @@
 
     .mast-search svg {
       display: block;
+    }
+  }
+
+  /* The narrowest phones: the row is set tighter, so that it is still one row in a wider
+     fallback face than the one measured here (the agate is not there on a first visit). */
+  @media (max-width: 360px) {
+    .mast-nav {
+      flex-wrap: nowrap;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
     }
   }
 
@@ -1801,6 +1825,7 @@
     display: inline-flex;
     align-items: center;
     min-height: 44px;
+    min-width: 44px;
   }
 
   .pd-title {
@@ -2519,6 +2544,12 @@
     -webkit-hyphenate-limit-before: 4;
     -webkit-hyphenate-limit-after: 4;
   }
+
+  /* Safari breaks a long name in code at the letter that fills the line and then adds the
+     padding, which is over the edge. */
+  .prose :not(pre) > code {
+    padding-inline: 0;
+  }
 }
 
 /*
@@ -2553,6 +2584,11 @@ summary {
   .pick button {
     min-width: 44px;
     justify-content: center;
+  }
+
+  /* The address is one long word: it breaks rather than leave the page at 200% text. */
+  footer .quiet {
+    overflow-wrap: anywhere;
   }
 
   .wr-count a {
