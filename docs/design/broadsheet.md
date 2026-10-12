@@ -1,6 +1,6 @@
 # Broadsheet — design spec for ryanyogan.com
 
-The site becomes a newspaper front page: a centered serif masthead, a section-index nav between
+The site is a newspaper front page: a centered serif masthead, a section-index nav between
 rules, a lead story with a drop cap across ruled columns, a "By the numbers" box, three ruled
 columns, classifieds, a colophon. Day and Night editions. It is the sister of Yogan Hockey's
 "Agate" look — same type pairing, same newsprint palette logic — so the two sites read as one
@@ -26,7 +26,7 @@ and `var(--paper)`, so they recolour themselves. Only their captions change (bel
    600) carries nav, section heads, kickers, dates, captions, status, buttons and the colophon,
    always uppercase and letter-spaced.
 3. **Two weights of serif, one of agate.** 400 and 700, and 600. Never ask the browser for anything
-   else (see HANDOFF.md § Fonts). `<strong>` is 700. Italic is 400 only.
+   else (`apps/web/src/styles/fonts.css`). `<strong>` is 700. Italic is 400 only.
 4. **Red is a kicker, not a button.** `--accent` appears only in: section kickers ("The lead ·
    Twenty years in"), writing dates, the "No. n" classified numbers, the Search nav item, and the
    one dot in each drawing. Links are ink, underlined by a 1px ink border, never red.
@@ -69,8 +69,7 @@ Families and weights are in the tokens file. Measurements are desktop → [phone
 
 Optical size: the mockups render Newsreader's variable font with `opsz 72` on the masthead, H1 and
 numbers. The shipped static files are cut at the text optical size, so display text will look a
-touch heavier and more open than the canvas. This is the accepted trade for the font budget
-(HANDOFF.md § Fonts, open question 1).
+touch heavier and more open than the canvas. This is the accepted trade for the font budget.
 
 ## 3. Page anatomy (home, desktop 1280)
 
@@ -88,8 +87,7 @@ masthead. Every section is a band separated by a hairline (`border-bottom: 1px s
      (`border-right: 1px solid --hair; padding-right: 32px` on the first column). Column 1: the
      "Lead" facts paragraph with drop cap (Co-founder and CTO… / VP of R&D at Sonian… / Coined…),
      the "team you build" quote, then the CTA "Work with me: here's how I work →". Column 2: the
-     "Build" paragraph and the "negative result" quote. This merges today's **Lead and build**
-     section into the hero; `LeadAndBuild.tsx` goes away as a section.
+     "Build" paragraph and the "negative result" quote.
    - Right aside: `border-left: 1px solid --hair; padding-left: 32px`. The lakefront map
      (`Lakefront`), max-width 300, centered, caption "Fig. 1 — Chicago, 41.88 N, 87.63 W". Then
      26px down, **By the numbers**: `border-top: 3px solid --ink`, agate head, a 2×2 `dl`
@@ -125,8 +123,8 @@ masthead. Every section is a band separated by a hairline (`border-bottom: 1px s
 Padding `0 18px 32px`, top 28px. Same bands, stacked, padding `24px 0 26px`.
 
 - Masthead 44px (nowrap); tagline 15px. Nav: `justify-content: space-between`, four items plus a search icon
-  (accent) at the right; no hamburger — the four links fit at 13px/.14em in 354px. `Header.tsx`'s
-  mobile menu, `MenuIcon`/`CloseIcon` and the focus-trap effect are removed.
+  (accent) at the right; no menu to open — the four links fit at 13px/.14em in 354px, and are set
+  tighter (12px/.08em) at 360px and under.
 - Lead: kicker, H1 38px, deck 19px, map (max-width 250, centered, caption centered), then the four
   paragraphs as one column, drop cap on the first, CTA, then **By the numbers** as a 2×2 grid under
   a heavy rule (numbers 28px).
@@ -184,23 +182,18 @@ is CSS (`::first-letter`), so screen readers read the word intact. Nav `aria-lab
 footer nav `aria-label="Footer"`. The heavy/double rules carry the hierarchy, so the page still
 reads with colour removed.
 
-## 7. What changes vs today, in one list
+## 7. Where the site departs from the canvas
 
-- Fonts: Hanken Grotesk + Source Serif 4 → Newsreader + IBM Plex Sans Condensed.
-- Palette: six greys-and-green → six newsprint tokens with a red accent; `--paper` day unchanged,
-  night paper `#1c1e1f` → `#121212`.
-- Header: left wordmark + right nav → centered masthead + tagline + ruled, centered nav; no
-  hamburger; theme toggle moves to the colophon.
-- Home: Lead and build merges into the hero's two ruled columns; the stats become a boxed
-  "By the numbers" in the hero's aside; Writing / Built / Off the clock become three ruled columns;
-  Open to becomes a boxed classified; the gutter-label grid (`.row/.gut/.col`) is retired on the
-  home page.
-- Captions: "41.88 N, 87.63 W" → "Fig. 1 — Chicago, 41.88 N, 87.63 W"; "One node per project,
-  clustered by group." → "Fig. 2 — …"; rink gets "Fig. 3 — 200 ft × 85 ft, the play I keep
-  drawing".
-- Tagline: "Chicago. Engineering leader, agent builder." → "Engineering leader. Agent builder.
-  Hockey dad." under the masthead; the GitHub/LinkedIn links in the old hero gutter are covered by
-  the colophon.
-- Copy is otherwise verbatim. The "By the numbers" labels are shortened everywhere (the aside
-  and the phone's 2×2 are both narrow): "engineers, 11 squads, Procore", "employees, then an IPO",
-  "interviews conducted", "hires made".
+This spec and the prototype are the design as drawn. The site (`apps/web/src/styles/app.css`) is
+what ships, and where they differ the site is right:
+
+- Type is the static cuts, not the variable font, so display sizes are a touch heavier.
+- The agate (IBM Plex Sans Condensed 600) is not preloaded: a first visit shows nav and labels in
+  a metric-matched fallback, and the face is there from the next page load.
+- "By the numbers": the second column is the wider (4fr / 5fr), so "150 → 2,300" stays on the
+  page; on a phone the figures are 26px, not 28.
+- The lead story goes to one column at 1000px and under, not 900.
+- Short links are padded to 44px to press.
+- The inner pages (§ 5) were not drawn: a page head, then sections with the head in a left column
+  and the content in a wide one; a post and a project are one centred 44rem column.
+- A post's drop cap is used only when the post opens with running text.

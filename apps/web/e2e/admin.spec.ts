@@ -226,7 +226,7 @@ test.describe("signed in (local bypass, test-only database)", () => {
           ratio: (hi + 0.05) / (lo + 0.05),
           border: rgb(getComputedStyle(input).borderTopColor).join(","),
           token: rgb(token).join(","),
-          rule: rgb(styles.getPropertyValue("--rule").trim()).join(","),
+          rule: rgb(styles.getPropertyValue("--hair").trim()).join(","),
         };
       }, theme);
       expect(ratio, theme).toBeGreaterThanOrEqual(3);

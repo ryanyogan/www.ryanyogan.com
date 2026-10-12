@@ -1,6 +1,6 @@
 name: Performance
 
-# Lighthouse against the section 1.9 budgets (apps/web/scripts/perf.mjs). A report, not a
+# Lighthouse against the budgets in apps/web/scripts/perf.mjs. A report, not a
 # gate: it never runs on a push, is not a required check, and a line over budget does not fail
 # the run. No secrets: it reads the public site, or builds and serves this ref locally.
 on:

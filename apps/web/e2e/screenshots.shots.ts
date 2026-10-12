@@ -62,7 +62,7 @@ for (const width of [1920, 2560]) {
   }
 }
 
-// Ticket A1: the drawings that move, twice each, two seconds apart (half the fade's period, a
+// The drawings that move, twice each, two seconds apart (half the fade's period, a
 // quarter of the dash's), enlarged three times so the difference can be seen in a still.
 test.describe("motion", () => {
   test.use({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 3 });

@@ -169,9 +169,9 @@ AI draft (prompt assembly, answer validation, error mapping; the model is stubbe
 ## Smoke tests
 
 A small Playwright suite in `apps/web/e2e` runs against the built site, in three projects: `chromium`
-(everything, desktop size), `mobile` (Chromium at 390px: the page tests, the mobile menu and the view
+(everything, desktop size), `mobile` (Chromium at 390px: the page tests, the masthead and the view
 count) and `webkit` (Safari's engine as an iPhone 14, public pages only: the device matrix in
-`viewports.spec.ts`, the mobile menu, the page tests, the view count and the hydration check). It starts two
+`viewports.spec.ts`, the masthead, the page tests, the view count and the hydration check). It starts two
 `vite preview` servers itself and refuses to reuse ones already running, so stop any `pnpm preview`
 first: port 4173 is the public site with no admin settings (so `/admin` must be closed), port 4174 is the
 same build with the admin bypass on, for the admin tests. `pnpm test:e2e` first rebuilds two throwaway

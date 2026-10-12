@@ -133,7 +133,7 @@ export interface AdminProjectDetail extends AdminProject {
   content: string;
 }
 
-/** Extra columns a non-manual create may set (the GitHub import in ticket 4c). */
+/** Extra columns a non-manual create may set (the GitHub import). */
 export interface ProjectOrigin {
   source?: ProjectSource;
   repoFullName?: string | null;

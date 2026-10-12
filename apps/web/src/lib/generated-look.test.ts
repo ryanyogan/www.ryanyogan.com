@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-// The "generated look" tells from the redesign brief, as greps over the public source. A tell
+// The "generated look" tells, as greps over the public source. A tell
 // that is on the site on purpose goes in ALLOWED with its exact count and a reason; anything
 // else fails with the file, line and rule. Admin pages are not public and are skipped.
 //
