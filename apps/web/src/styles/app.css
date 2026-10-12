@@ -1596,6 +1596,7 @@
     display: inline-flex;
     align-items: center;
     min-height: 44px;
+    min-width: 44px;
   }
 
   .pd-title {
@@ -2307,6 +2308,12 @@
     -webkit-hyphenate-limit-before: 4;
     -webkit-hyphenate-limit-after: 4;
   }
+
+  /* Safari breaks a long name in code at the letter that fills the line and then adds the
+     padding, which is over the edge. */
+  .prose :not(pre) > code {
+    padding-inline: 0;
+  }
 }
 
 /*
@@ -2341,6 +2348,11 @@ summary {
   .pick button {
     min-width: 44px;
     justify-content: center;
+  }
+
+  /* The address is one long word: it breaks rather than leave the page at 200% text. */
+  footer .quiet {
+    overflow-wrap: anywhere;
   }
 
   .wr-count a {
