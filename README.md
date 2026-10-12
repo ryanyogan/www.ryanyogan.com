@@ -10,6 +10,15 @@ pnpm check      # format check, lint, typecheck
 pnpm build
 ```
 
+## The look
+
+The site is a newspaper front page, "Broadsheet": a serif masthead, a section row between rules, a
+lead story, ruled columns, a colophon, in a day and a night edition. The spec is
+`docs/design/broadsheet.md`, its tokens are `docs/design/broadsheet-tokens.css` (ported into
+`apps/web/src/styles/app.css`), and `prototypes/broadsheet/index.html` is the home page as designed,
+to open in a browser. Type is Newsreader (400, 700, 400 italic) and IBM Plex Sans Condensed (600),
+self-hosted: `apps/web/src/styles/fonts.css` says how they load.
+
 ## Where content lives
 
 - `/work`, `/writing`, posts and `/rss.xml` are prerendered at build time from `packages/shared` and
