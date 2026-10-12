@@ -93,7 +93,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
         <meta
           name="theme-color"
           media="(prefers-color-scheme: dark)"
-          content="#1c1e1f"
+          content="#121212"
           data-scheme="dark"
         />
         <HeadContent />

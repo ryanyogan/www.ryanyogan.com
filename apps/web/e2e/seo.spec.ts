@@ -456,7 +456,7 @@ test("theme-color follows a theme picked with the toggle, not the OS", async ({ 
     };
   };
   const light = "rgb(246, 245, 241)";
-  const dark = "rgb(28, 30, 31)";
+  const dark = "rgb(18, 18, 18)";
 
   // A stored choice against the OS scheme, on first paint and once the page has hydrated.
   for (const [os, stored, want] of [
