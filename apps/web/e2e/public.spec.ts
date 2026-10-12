@@ -401,9 +401,9 @@ test("the site icon is three small files that every page links to; other icon na
   const text = svg.toString("utf8");
   expect(text).toMatch(/^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" viewBox="0 0 1000 1000">/);
   expect(text).toContain('fill="#f6f5f1"');
-  expect(text).toContain('fill="#25272a"');
+  expect(text).toContain('fill="#111111"');
   expect(text).toContain(
-    "@media (prefers-color-scheme:dark){rect{fill:#1c1e1f}path{fill:#dddcd6}}",
+    "@media (prefers-color-scheme:dark){rect{fill:#121212}path{fill:#eceae4}}",
   );
   expect(text).not.toMatch(/<text|font-family|<image|url\(/);
   // A .ico holding one 32px PNG; a 180px PNG.

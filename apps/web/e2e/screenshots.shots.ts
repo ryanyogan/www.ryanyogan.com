@@ -108,7 +108,7 @@ test.describe("menu", () => {
 // /apple-touch-icon.png with corners rounded as iOS does, and the small sizes on the other
 // scheme's paper. This is where a change to the mark is looked at.
 test("icon", async ({ page }) => {
-  const PAPER = { light: "#f6f5f1", dark: "#1c1e1f" };
+  const PAPER = { light: "#f6f5f1", dark: "#121212" };
   await page.setViewportSize({ width: 900, height: 532 });
   const halves: string[] = [];
   for (const scheme of ["light", "dark"] as const) {

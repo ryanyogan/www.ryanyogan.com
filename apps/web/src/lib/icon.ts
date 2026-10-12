@@ -18,8 +18,8 @@ export const MARK = {
   /** Space added between the letters, in em: the R's leg sits a little under the Y's arm. */
   tracking: -0.03,
   /** --paper and --ink in styles/app.css. PNGs are always light; the SVG follows the scheme. */
-  light: { paper: "#f6f5f1", ink: "#25272a" },
-  dark: { paper: "#1c1e1f", ink: "#dddcd6" },
+  light: { paper: "#f6f5f1", ink: "#111111" },
+  dark: { paper: "#121212", ink: "#eceae4" },
   /**
    * How much of the square's width the letters take. A tab shows the icon at 16px, and this
    * share makes them 8 of those pixels tall, the top and the foot each on a pixel edge.

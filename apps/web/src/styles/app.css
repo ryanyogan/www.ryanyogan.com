@@ -13,22 +13,34 @@
 }
 
 /*
- * The quiet palette: warm paper, near-black ink, one green accent. Six colours per theme.
- * Hierarchy comes from space and alignment, then weight, then size; there are no cards,
- * pills, tints, shadows, gradients or rounded corners.
+ * Broadsheet: a newspaper front page. Newsprint, near-black ink and one red, six colours per
+ * edition (docs/design/broadsheet.md; the values are docs/design/broadsheet-tokens.css).
+ * Three rule weights do the structuring: heavy, double and hairline. There are no
+ * backgrounds, tints, cards, shadows or rounded corners. Red is a kicker, never a button:
+ * links are ink.
  * The theme toggle sets .dark or .light on <html>; with neither, the OS preference decides.
- * --paper is repeated in the two theme-color metas in routes/__root.tsx.
+ * --paper is repeated in the two theme-color metas in routes/__root.tsx and in lib/icon.ts.
+ * Contrast against --paper, day and night: ink 17.3 and 15.6, ink2 13.2 and 12.5, muted 6.3
+ * and 7.2, accent 5.4 and 6.1. --hair (1.4) is for rules only: never text, never the edge of
+ * a control.
  */
 :root {
   --paper: #f6f5f1;
-  --ink: #25272a;
-  --ink-soft: #4a4d4f;
-  --muted: #666a6a;
-  --accent: #3d6a55;
-  --rule: #dcdbd5;
+  --ink: #111111;
+  /* Decks, pull quotes, descriptions. */
+  --ink2: #2b2a27;
+  /* Labels, captions, dates, status, the colophon. */
+  --muted: #5c5a55;
+  /* Hairlines and dotted leaders. */
+  --hair: #d5d3ce;
+  /* Kickers, dates, the classified numbers, Search, and one dot in each drawing. */
+  --accent: #c8102e;
+  /* The names from before the redesign, for the rules that still read them. */
+  --ink-soft: var(--ink2);
+  --rule: var(--hair);
   /* The edge of a form control: 3:1 against paper (WCAG 1.4.11), which a hairline is not.
-     3.16:1 here, 3.39:1 in the dark theme. Rules between content stay --rule. */
-  --control-border: #888b88;
+     3.1:1 here, 3.2:1 in the dark theme. Rules between content stay --hair. */
+  --control-border: #8a8882;
   /* Validation and destructive actions. 6.4:1 on paper; the dark value is 7.4:1. */
   --error: #a1321f;
   color-scheme: light;
@@ -42,26 +54,26 @@
 }
 
 .dark {
-  --paper: #1c1e1f;
-  --ink: #dddcd6;
-  --ink-soft: #b5b6b1;
-  --muted: #8f918d;
-  --accent: #93b8a4;
-  --rule: #323536;
-  --control-border: #6e716f;
+  --paper: #121212;
+  --ink: #eceae4;
+  --ink2: #d6d3cc;
+  --muted: #a3a09a;
+  --hair: #34332f;
+  --accent: #ff5a5f;
+  --control-border: #6f6d68;
   --error: #e8998a;
   color-scheme: dark;
 }
 
 @media (prefers-color-scheme: dark) {
   html:not(.light) {
-    --paper: #1c1e1f;
-    --ink: #dddcd6;
-    --ink-soft: #b5b6b1;
-    --muted: #8f918d;
-    --accent: #93b8a4;
-    --rule: #323536;
-    --control-border: #6e716f;
+    --paper: #121212;
+    --ink: #eceae4;
+    --ink2: #d6d3cc;
+    --muted: #a3a09a;
+    --hair: #34332f;
+    --accent: #ff5a5f;
+    --control-border: #6f6d68;
     --error: #e8998a;
     color-scheme: dark;
   }
@@ -79,31 +91,21 @@
   }
 }
 
-/* Phones. Sections sit closer, and the muted ink is a step darker: it carries 14px text
-   there and is read outdoors (5.9:1 on paper, 6.4:1 in the dark theme; 5.0 and 5.3 above). */
+/* Phones. Sections sit closer. */
 @media (max-width: 640px) {
   :root {
     --space-section: 56px;
-    --muted: #5c6060;
-  }
-
-  .dark {
-    --muted: #a0a29e;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    html:not(.light) {
-      --muted: #a0a29e;
-    }
   }
 }
 
 @theme inline {
   --color-paper: var(--paper);
   --color-ink: var(--ink);
+  --color-ink2: var(--ink2);
   --color-ink-soft: var(--ink-soft);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
+  --color-hair: var(--hair);
   --color-rule: var(--rule);
   --color-error: var(--error);
 
@@ -848,7 +850,7 @@
   }
 
   .kb-dialog::backdrop {
-    background: rgb(20 22 23 / 0.45);
+    background: rgb(17 17 17 / 0.45);
   }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -1713,8 +1715,8 @@
  * sets the body size and the measure (.post, .read).
  */
 .prose {
-  --code-bg: light-dark(#eeede8, #25282a);
-  --code-comment: light-dark(#5a5f5e, #9a9d98);
+  --code-bg: light-dark(#eceae4, #1c1c1c);
+  --code-comment: light-dark(#5c5a55, #a3a09a);
   --code-string: light-dark(#7a4a2b, #d1a583);
   --code-number: light-dark(#74506f, #c5a3c0);
   --code-title: light-dark(#2f5d7c, #9bbbd4);

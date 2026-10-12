@@ -301,7 +301,7 @@ function measure(page: Page) {
   });
 }
 
-const CODE_BACKGROUND = { light: "rgb(238, 237, 232)", dark: "rgb(37, 40, 42)" };
+const CODE_BACKGROUND = { light: "rgb(236, 234, 228)", dark: "rgb(28, 28, 28)" };
 
 for (const theme of ["light", "dark"] as const) {
   for (const width of [1280, 390]) {
