@@ -42,19 +42,11 @@ const scrollbar = (page: Page) =>
     () => innerWidth - document.querySelector("body > header")!.getBoundingClientRect().width,
   );
 
-const dialogs = {
-  search: { key: "/", find: (page: Page) => page.getByRole("dialog", { name: "Search the site" }) },
-  help: {
-    key: "?",
-    find: (page: Page) => page.getByRole("dialog").filter({ has: page.locator("#kb-help-h") }),
-  },
-};
-
-/** The key handler is attached on hydration, so retry the key until the dialog answers. */
-async function open(page: Page, name: keyof typeof dialogs) {
-  const dialog = dialogs[name].find(page);
+/** The key help. Its key handler is attached on hydration, so retry until it answers. */
+async function open(page: Page) {
+  const dialog = page.getByRole("dialog").filter({ has: page.locator("#kb-help-h") });
   await expect(async () => {
-    if (!(await dialog.isVisible())) await page.keyboard.press(dialogs[name].key);
+    if (!(await dialog.isVisible())) await page.keyboard.press("?");
     await expect(dialog).toBeVisible({ timeout: 1000 });
   }).toPass({ timeout: 15_000 });
   return dialog;
@@ -78,35 +70,31 @@ async function scrollDown(page: Page) {
   }).toPass({ timeout: 15_000 });
 }
 
-for (const name of ["search", "help"] as const) {
-  for (const theme of ["light", "dark"] as const) {
-    test(`the ${name} dialog opens and closes without moving the page, ${theme}`, async ({
-      page,
-    }) => {
-      await page.emulateMedia({ colorScheme: theme });
-      await page.goto("/work");
-      // Focus on a link at the top, then down the page: closing hands focus back to the
-      // link, which must not bring the page back up with it.
-      await page.locator("header a").first().focus();
-      await scrollDown(page);
+for (const theme of ["light", "dark"] as const) {
+  test(`the key help opens and closes without moving the page, ${theme}`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: theme });
+    await page.goto("/work");
+    // Focus on a link at the top, then down the page: closing hands focus back to the
+    // link, which must not bring the page back up with it.
+    await page.locator("header a").first().focus();
+    await scrollDown(page);
 
-      const before = await layout(page);
-      expect(await scrollbar(page), "a scrollbar that takes space").toBeGreaterThan(8);
-      expect(before.scrollY).toBe(400);
+    const before = await layout(page);
+    expect(await scrollbar(page), "a scrollbar that takes space").toBeGreaterThan(8);
+    expect(before.scrollY).toBe(400);
 
-      const dialog = await open(page, name);
-      expect(
-        await page.evaluate(() => getComputedStyle(document.documentElement).overflowY),
-        "the page is held while the dialog is open",
-      ).toBe("hidden");
-      expect(await layout(page), "while open").toEqual(before);
+    const dialog = await open(page);
+    expect(
+      await page.evaluate(() => getComputedStyle(document.documentElement).overflowY),
+      "the page is held while the dialog is open",
+    ).toBe("hidden");
+    expect(await layout(page), "while open").toEqual(before);
 
-      await page.keyboard.press("Escape");
-      await expect(dialog).toBeHidden();
-      await expect(page.locator("header a").first()).toBeFocused();
-      expect(await layout(page), "after closing").toEqual(before);
-    });
-  }
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    await expect(page.locator("header a").first()).toBeFocused();
+    expect(await layout(page), "after closing").toEqual(before);
+  });
 }
 
 test("a page too short to scroll keeps the same space, and stays centred", async ({ page }) => {
@@ -127,7 +115,7 @@ test("a page too short to scroll keeps the same space, and stays centred", async
     expect([x, width], selector).toEqual([long.boxes[selector][0], long.boxes[selector][2]]);
   }
 
-  const dialog = await open(page, "search");
+  const dialog = await open(page);
   expect(await layout(page), "while open").toEqual(short);
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
@@ -139,7 +127,7 @@ test("without the kept space the page does jump: this test can fail", async ({ p
   const before = await layout(page);
   const space = await scrollbar(page);
   expect(space).toBeGreaterThan(8);
-  await open(page, "search");
+  await open(page);
   const during = await layout(page);
   expect(await scrollbar(page)).toBe(0);
   expect(during.boxes["body > header"][2]).toBe(before.boxes["body > header"][2] + space);

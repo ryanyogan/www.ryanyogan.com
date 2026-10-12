@@ -26,15 +26,6 @@ function Icon({ size = 18, className, children }: IconProps & { children: ReactN
   );
 }
 
-export function SearchIcon(props: IconProps) {
-  return (
-    <Icon {...props}>
-      <circle cx="7" cy="7" r="4.75" />
-      <path d="M10.6 10.6L14.5 14.5" />
-    </Icon>
-  );
-}
-
 export function SunIcon(props: IconProps) {
   return (
     <Icon {...props}>

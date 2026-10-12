@@ -11,9 +11,7 @@ async function gotoAdmin(page: Page, path: string) {
   return response;
 }
 
-test("admin pages show neither the search button nor the keys hint; public pages do", async ({
-  page,
-}) => {
+test("admin pages do not show the keys hint; public pages do", async ({ page }) => {
   for (const path of [
     "/admin",
     "/admin/import",
@@ -22,13 +20,11 @@ test("admin pages show neither the search button nor the keys hint; public pages
   ]) {
     await gotoAdmin(page, path);
     await expect(page.locator("h1")).toBeVisible();
-    await expect(page.getByRole("button", { name: /Search/ })).toHaveCount(0);
     await expect(page.getByRole("button", { name: /for keys/ })).toHaveCount(0);
     await expect(page.getByRole("button", { name: /^Colour theme/ })).toBeVisible();
   }
-  // Client navigation back to the site brings both back, and into the admin hides them.
+  // Back on the site it is there again.
   await page.goto(`${ADMIN_ORIGIN}/projects`);
-  await expect(page.getByRole("button", { name: "Search", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: /for keys/ })).toBeVisible();
 });
 

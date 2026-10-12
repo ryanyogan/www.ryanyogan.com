@@ -33,7 +33,7 @@ function isDynamic(path: string): boolean {
  * pages. Rolldown would give each module shared between the entry and a lazy route a chunk of
  * its own, 16 small files the browser has to ask for one by one; as one group they are one
  * request. The group also takes what these modules import (not what they import lazily:
- * route components, the search index, the markdown renderer and the post bodies stay apart).
+ * route components, the markdown renderer and the post bodies stay apart).
  */
 // Part of every page-cache key (src/lib/page-cache.ts), so a deploy never serves a copy the
 // version before it stored. The commit in GitHub Actions; elsewhere the time of this build,

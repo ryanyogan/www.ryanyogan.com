@@ -33,7 +33,7 @@
   --muted: #5c5a55;
   /* Hairlines and dotted leaders. */
   --hair: #d5d3ce;
-  /* Kickers, dates, the classified numbers, Search, and one dot in each drawing. */
+  /* Kickers, dates, the classified numbers, and one dot in each drawing. */
   --accent: #c8102e;
   /* The edge of a form control: 3:1 against paper (WCAG 1.4.11), which a hairline is not.
      3.1:1 here, 3.2:1 in the dark theme. Rules between content stay --hair. */
@@ -311,7 +311,7 @@
 
   /* A short word (Work, Now) is still 44px to press: the box is wider than the word by
      what its margins take back, so the words keep their spacing. */
-  .mast-nav :is(a, button) {
+  .mast-nav a {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -328,18 +328,6 @@
   .colophon [aria-current="page"] {
     text-decoration: underline;
     text-underline-offset: 0.45em;
-  }
-
-  .mast-sep {
-    color: var(--hair);
-  }
-
-  .mast-nav .mast-search {
-    color: var(--accent);
-  }
-
-  .mast-search svg {
-    display: none;
   }
 
   @media (max-width: 900px) {
@@ -373,7 +361,7 @@
       letter-spacing: 0.14em;
     }
 
-    .mast-nav :is(a, button) {
+    .mast-nav a {
       min-width: 44px;
       padding: 0;
       margin: 0;
@@ -383,17 +371,8 @@
       justify-content: flex-start;
     }
 
-    .mast-nav .mast-search {
+    .mast-nav a:last-child {
       justify-content: flex-end;
-    }
-
-    .mast-sep,
-    .mast-search span {
-      display: none;
-    }
-
-    .mast-search svg {
-      display: block;
     }
   }
 
@@ -1096,7 +1075,7 @@
     }
   }
 
-  /* Keyboard layer: command palette and key help. An open dialog stops the page scrolling,
+  /* Keyboard layer: the key help. An open dialog stops the page scrolling,
      which takes a classic scrollbar away. The scrollbar's space is kept at all times, on a
      page too short to scroll as well, so the page under a dialog does not widen and jump
      sideways (e2e/scrollbar.spec.ts). Overlay scrollbars (phones, macOS) take no space. */
@@ -1123,17 +1102,6 @@
     border-top: 3px solid var(--ink);
     background: var(--paper);
     color: var(--ink);
-  }
-
-  /* The search field: the serif, over a hairline. */
-  .kb-input {
-    font-family: var(--font-serif);
-    font-size: 1.0625rem;
-  }
-
-  /* A result: its title in the serif, what it is in the muted ink beside it. */
-  .kb-row {
-    min-height: 44px;
   }
 
   .kb-dialog[open] {
@@ -1984,7 +1952,7 @@
       color: var(--ink);
     }
 
-    .mast-nav :is(a, button):hover span,
+    .mast-nav a:hover span,
     .plist a:hover b,
     .wlist a:hover,
     .pd-nav a:hover,

@@ -256,14 +256,8 @@ test("at 320px the masthead is the name on one line and one row of sections, eac
   await page.setViewportSize({ width: 320, height: 568 });
   await ready(page, "/");
   const header = page.locator("body > header");
-  // No menu: the four sections are links, and the only button is Search, as an icon.
-  const buttons = header.locator("button:visible");
-  await expect(buttons).toHaveCount(1);
-  await expect(buttons).toHaveAccessibleName("Search");
-  // The shortcut is still announced and shown on hover.
-  await expect(buttons).toHaveAttribute("aria-keyshortcuts", /\//);
-  await expect(buttons).toHaveAttribute("title", /\//);
-  await expect(buttons.locator("svg:visible")).toHaveCount(1);
+  // No menu and no search: the four sections are links, and there is no button.
+  await expect(header.locator("button")).toHaveCount(0);
 
   const name = header.getByRole("link", { name: "Ryan Yogan, home" });
   const wordmark = (await name.boundingBox())!;
@@ -275,8 +269,8 @@ test("at 320px the masthead is the name on one line and one row of sections, eac
   ).toBe(1);
 
   const nav = header.getByRole("navigation", { name: "Sections" });
-  const items = nav.locator("a:visible, button:visible");
-  await expect(items).toHaveCount(5);
+  const items = nav.locator("a:visible");
+  await expect(items).toHaveCount(4);
   let left = 0;
   let top: number | undefined;
   for (const item of await items.all()) {
@@ -347,19 +341,19 @@ test("200% text: every public page reflows at 320 CSS px with nothing lost (WCAG
   expect(report).toEqual([]);
 });
 
-test("reduced motion: the palette opens without an animation and scrolling is not smooth", async ({
+test("reduced motion: the key help opens without an animation and scrolling is not smooth", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 390, height: 844 });
   await ready(page, "/");
-  const palette = page.getByRole("dialog", { name: "Search the site" });
-  const search = page.getByRole("button", { name: "Search", exact: true });
+  const help = page.getByRole("dialog").filter({ has: page.locator("#kb-help-h") });
+  // By its key: the hint in the colophon is not shown at this width.
   await expect(async () => {
-    if (!(await palette.isVisible())) await search.click();
-    await expect(palette).toBeVisible({ timeout: 1000 });
+    if (!(await help.isVisible())) await page.keyboard.press("?");
+    await expect(help).toBeVisible({ timeout: 1000 });
   }).toPass({ timeout: 15_000 });
-  const motion = await palette.evaluate((dialog) => {
+  const motion = await help.evaluate((dialog) => {
     const seconds = (value: string) =>
       Math.max(
         ...value
@@ -377,19 +371,14 @@ test("reduced motion: the palette opens without an animation and scrolling is no
   expect(motion.transition).toBeLessThanOrEqual(0.01);
   expect(motion.scroll).toBe("auto");
 
-  // The open palette on a phone: inside the screen, with full-size targets.
-  const box = (await palette.boundingBox())!;
+  // The open dialog on a phone: inside the screen, with a full-size target to close it.
+  const box = (await help.boundingBox())!;
   expect(box.x).toBeGreaterThanOrEqual(0);
   expect(box.x + box.width).toBeLessThanOrEqual(390);
   expect(box.y + box.height).toBeLessThanOrEqual(844);
-  for (const target of [
-    palette.getByRole("combobox"),
-    palette.getByRole("button", { name: "Close search" }),
-  ]) {
-    const size = (await target.boundingBox())!;
-    expect(size.height).toBeGreaterThanOrEqual(44);
-    expect(size.width).toBeGreaterThanOrEqual(44);
-  }
+  const size = (await help.getByRole("button", { name: "Close" }).boundingBox())!;
+  expect(size.height).toBeGreaterThanOrEqual(44);
+  expect(size.width).toBeGreaterThanOrEqual(44);
 });
 
 test("admin on a phone: no overflow, and every field is 16px so iOS does not zoom on focus", async ({
