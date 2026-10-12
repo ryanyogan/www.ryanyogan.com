@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Hero } from "~/components/home/Hero";
-import { LeadAndBuild } from "~/components/home/LeadAndBuild";
 import { OffTheClock } from "~/components/home/OffTheClock";
 import { OpenTo } from "~/components/home/OpenTo";
 import { ProjectIndex } from "~/components/home/ProjectIndex";
@@ -31,10 +30,11 @@ function HomePage() {
   return (
     <main id="main" className="wrap home">
       <Hero />
-      <LatestWriting limit={HOME_ROWS} />
-      <ProjectIndex projects={projects} limit={HOME_ROWS} />
-      <LeadAndBuild />
-      <OffTheClock />
+      <div className="cols3 band">
+        <LatestWriting limit={HOME_ROWS} />
+        <ProjectIndex projects={projects} limit={HOME_ROWS} />
+        <OffTheClock />
+      </div>
       <OpenTo />
     </main>
   );

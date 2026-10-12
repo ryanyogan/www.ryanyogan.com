@@ -140,7 +140,7 @@ function ProjectsPage() {
           </p>
           <p>
             <a className="mail" href={`mailto:${contactEmail}`}>
-              {contactEmail}
+              <span>{contactEmail}</span>
             </a>
           </p>
         </div>
