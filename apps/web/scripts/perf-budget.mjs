@@ -60,9 +60,7 @@ const FONT_BUDGET = 150 * KB;
  * (src/lib/content.ts); with both copies it was 37.4 KB. The script that loads those two
  * faces is in every document: it measures 27.1 KB (93.8 KB raw) with it.
  */
-// 28.5 for this one change: the front page's new styles are in beside the inner pages' old
-// ones (28.4 KB). The inner pages' ticket takes the old ones out and puts this back to 28.
-const POST_HTML_BUDGET = 28.5 * KB;
+const POST_HTML_BUDGET = 28 * KB;
 const routes = [
   { path: "/", js: JS_BUDGET, requests: 9 },
   { path: "/work", js: JS_BUDGET, requests: 9 },

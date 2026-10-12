@@ -53,12 +53,12 @@ function NowPage() {
   return (
     <main id="main" className="wrap now-page">
       <article>
-        <header className="row post-head">
-          <p className="gut lab">Now</p>
-          <div className="col">
+        <header className="phead">
+          <div>
+            <div className="kicker">Now</div>
             <h1>What I am doing now.</h1>
             {lede && <Prose className="now-lede" html={lede} />}
-            <p className="small mt-4.5">
+            <p className="lab mt-3.5">
               Updated <time dateTime={nowPage.isoDate}>{nowPage.updated}</time> &middot;{" "}
               {nowPage.place}
             </p>
@@ -69,11 +69,11 @@ function NowPage() {
           const extra = extras.find(({ match }) => match.test(section.id));
           const Art = extra?.art;
           return (
-            <section key={section.id} className="row" aria-labelledby={section.id}>
-              <div className="gut">
+            <section key={section.id} className="sect" aria-labelledby={section.id}>
+              <div className="side">
                 <h2
                   id={section.id}
-                  className="lab"
+                  className="sec-h"
                   dangerouslySetInnerHTML={{ __html: section.title }}
                 />
               </div>

@@ -7,7 +7,7 @@ import type { Plugin } from "vite";
 import { parseFrontmatter } from "./src/lib/frontmatter";
 import {
   OG_FONT_FAMILY,
-  OG_FONT_WEIGHT,
+  OG_FONT_FILES,
   OG_HEIGHT,
   OG_WIDTH,
   type OgCard,
@@ -79,11 +79,13 @@ function cards(root: string): (OgCard & { route: string; file: string })[] {
   return [...PAGES, ...posts];
 }
 
-export async function renderCard(card: OgCard, font: Buffer): Promise<Buffer> {
+type CardFont = { name: string; data: Buffer; weight: 400 | 700; style: "normal" };
+
+export async function renderCard(card: OgCard, fonts: CardFont[]): Promise<Buffer> {
   const svg = await satori(ogCard(card) as never, {
     width: OG_WIDTH,
     height: OG_HEIGHT,
-    fonts: [{ name: OG_FONT_FAMILY, data: font, weight: OG_FONT_WEIGHT, style: "normal" }],
+    fonts,
   });
   return new Resvg(svg, { fitTo: { mode: "width", value: OG_WIDTH } }).render().asPng();
 }
@@ -100,11 +102,16 @@ export function ogImages(): Plugin {
   // Once per process: the client and server builds share the result.
   function build(): Promise<Built> {
     built ??= (async () => {
-      const font = readFileSync(join(root, "src/lib/og/hanken-grotesk-latin-500.woff.bin"));
+      const fonts = OG_FONT_FILES.map(({ weight, file }) => ({
+        name: OG_FONT_FAMILY,
+        data: readFileSync(join(root, "src/lib/og", file)),
+        weight,
+        style: "normal" as const,
+      }));
       const manifest: Built["manifest"] = {};
       const files: Built["files"] = new Map();
       for (const { route, file, ...card } of cards(root)) {
-        const png = await renderCard(card, font);
+        const png = await renderCard(card, fonts);
         const hash = createHash("sha256").update(png).digest("hex").slice(0, 10);
         const path = `og/${file}.${hash}.png`;
         files.set(path, png);
