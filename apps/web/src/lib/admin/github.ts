@@ -261,7 +261,7 @@ export function truncateReadme(
 
 /**
  * One public repository with its language breakdown and README (three requests). This is
- * the repo context for a draft: the import uses it now, the AI-draft ticket should too.
+ * the repo context for a draft: the import uses it, and so does the AI draft.
  */
 export async function getRepoDetail(
   config: GithubConfig,

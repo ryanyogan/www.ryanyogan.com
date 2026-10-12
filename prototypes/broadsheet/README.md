@@ -6,7 +6,7 @@ Open it directly in a browser — no build. Narrow the window under 600px for th
 600–900px for the tablet layout.
 
 It loads Newsreader and IBM Plex Sans Condensed from Google Fonts for convenience; the site itself
-self-hosts the static files in `fonts/` (see `HANDOFF.md` § Fonts). The Google variable font renders
+self-hosts the static files in `apps/web/src/styles/fonts/`. The Google variable font renders
 display sizes with optical sizing, which the static files do not — that is the one known difference
 between this file and what ships.
 

@@ -1,6 +1,6 @@
 // `pnpm perf [base URL] [--runs=3] [--strict] [--detail] [--applied]`: Lighthouse (mobile emulation, simulated Slow
 // 4G, 4x CPU slowdown: its defaults) for the home page, the longest post and one project
-// page, against the budgets of SPEC-seo-perf-reading section 1.9. Prints one line per metric
+// page, against the budgets below. Prints one line per metric
 // with the median of the runs, the budget and pass or FAIL; in GitHub Actions the table also
 // goes to the job summary.
 //
@@ -60,7 +60,7 @@ const longest = readdirSync(writingDir)
   .reduce((a, b) => (b.size > a.size ? b : a));
 
 /**
- * Section 1.9. Posts are prerendered; the home page and project pages read D1, so the Worker
+ * Posts are prerendered; the home page and project pages read D1, so the Worker
  * renders them and the edge cache answers a repeat request. The spec gives a transfer budget
  * for a post and for the home page; a project page takes the home page's.
  */

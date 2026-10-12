@@ -1,8 +1,7 @@
 /*
  * ryanyogan.com — "Broadsheet" design tokens
- * Source of truth for the redesign. Port these into apps/web/src/styles/app.css, replacing
- * the :root / .dark / @media(prefers-color-scheme) blocks at L22–68 and the --font-* lines in
- * @theme inline (L110–115). Keep the names below; HANDOFF.md and broadsheet.md use them.
+ * The tokens as designed. The site reads its own copy in apps/web/src/styles/app.css, which
+ * is the one to change; this file is what the prototype reads. broadsheet.md uses these names.
  *
  * Theme selection is unchanged from today: .dark / .light on <html>, else the OS preference
  * (lib/theme.ts). This file uses data-theme only so the standalone prototype can flip; in the
@@ -22,10 +21,6 @@
   --hair:   #D5D3CE;   /* hairline rules, dotted leaders (decorative, 1.37:1) */
   --accent: #C8102E;   /* kickers, dates, classified numbers, map dot   5.39:1 */
 
-  /* The old names, kept so nothing else in app.css breaks while you migrate.
-     --ink-soft → --ink2, --rule → --hair. Delete once no selector reads them. */
-  --ink-soft: var(--ink2);
-  --rule: var(--hair);
   --control-border: #8A8882;   /* 3.1:1 on paper (WCAG 1.4.11) */
   --error: #A1321F;            /* unchanged */
 }
@@ -41,8 +36,6 @@
   --hair:   #34332F;
   --accent: #FF5A5F;   /*  6.14:1 */
 
-  --ink-soft: var(--ink2);
-  --rule: var(--hair);
   --control-border: #6F6D68;   /* 3.2:1 on night paper */
   --error: #E8998A;
 }
@@ -56,8 +49,6 @@
     --muted:  #A3A09A;
     --hair:   #34332F;
     --accent: #FF5A5F;
-    --ink-soft: var(--ink2);
-    --rule: var(--hair);
     --control-border: #6F6D68;
     --error: #E8998A;
   }
@@ -71,7 +62,7 @@
     ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
-  /* Weights actually shipped (see HANDOFF.md § Fonts). Nothing else is loaded:
+  /* Weights actually shipped (apps/web/src/styles/fonts.css). Nothing else is loaded:
      the browser must never be asked for a 500, 600 or 800. */
   --w-serif-regular: 400;
   --w-serif-bold: 700;        /* masthead, headlines, numbers, <strong>, drop cap */

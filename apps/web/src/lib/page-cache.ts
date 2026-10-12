@@ -156,7 +156,7 @@ export interface PageCache {
 
 // Purges bump this. A render that started before a purge must not be stored after it: it
 // may hold the old content, and it would then outlive the edit by a full TTL. Per isolate,
-// which is where that race is likeliest (the admin's own next request); see the handoff.
+// which is where that race is likeliest (the admin's own next request).
 let generation = 0;
 const revalidating = new Set<string>();
 

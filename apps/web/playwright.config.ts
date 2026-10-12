@@ -65,7 +65,7 @@ export default defineConfig({
       },
       testIgnore: /mobile\.spec\.ts$/,
     },
-    // The public smoke tests again at phone size, plus the mobile menu and the view count
+    // The public smoke tests again at phone size, plus the masthead and the view count
     // (its reserved space sits on a line of its own at this width).
     {
       name: "mobile",
@@ -78,7 +78,7 @@ export default defineConfig({
       testMatch: /(mobile|pages|views)\.spec\.ts$/,
     },
     // Safari's engine at iPhone size, for what Chromium emulation cannot show (font metrics,
-    // hyphenation, dvh, focus). Public pages only: the device matrix, the mobile menu, the
+    // hyphenation, dvh, focus). Public pages only: the device matrix, the masthead, the
     // page smoke tests, the view count, the route chunk tests (chunks.spec.ts is about what
     // this engine does), where a post's body comes from (post-body.spec.ts) and a first load
     // with slow fonts (first-load.spec.ts: what each engine does with a late font), plus one test

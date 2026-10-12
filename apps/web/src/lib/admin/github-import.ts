@@ -2,7 +2,7 @@ import type { ProjectOrigin } from "../db/projects";
 import type { RepoDetail } from "./github";
 
 // Turns a public GitHub repository into the DRAFT project the import creates. Nothing here
-// writes prose: the body is a neutral stub the owner (or the AI-draft ticket) replaces.
+// writes prose: the body is a neutral stub the owner (or the AI draft) replaces.
 
 const MAX_SLUG = 64;
 const MAX_TITLE = 120;
