@@ -35,9 +35,6 @@
   --hair: #d5d3ce;
   /* Kickers, dates, the classified numbers, Search, and one dot in each drawing. */
   --accent: #c8102e;
-  /* The names from before the redesign, for the rules that still read them. */
-  --ink-soft: var(--ink2);
-  --rule: var(--hair);
   /* The edge of a form control: 3:1 against paper (WCAG 1.4.11), which a hairline is not.
      3.1:1 here, 3.2:1 in the dark theme. Rules between content stay --hair. */
   --control-border: #8a8882;
@@ -85,11 +82,12 @@
   --color-paper: var(--paper);
   --color-ink: var(--ink);
   --color-ink2: var(--ink2);
-  --color-ink-soft: var(--ink-soft);
+  /* ink-soft and rule: the names the admin and the dialogs still use for ink2 and hair. */
+  --color-ink-soft: var(--ink2);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-hair: var(--hair);
-  --color-rule: var(--rule);
+  --color-rule: var(--hair);
   --color-error: var(--error);
 
   /* Serif: everything a reader reads (masthead, headlines, body, numbers). Sans is the
@@ -1196,7 +1194,7 @@
     align-items: center;
     justify-content: space-between;
     column-gap: 24px;
-    border-bottom: 1px solid var(--rule);
+    border-bottom: 1px solid var(--hair);
   }
 
   .adm-head {
@@ -1212,7 +1210,7 @@
     list-style: none;
     margin: 0;
     padding: 0;
-    border-top: 1px solid var(--rule);
+    border-top: 1px solid var(--hair);
   }
 
   .adm-rows > li {
@@ -1222,7 +1220,7 @@
     justify-content: space-between;
     gap: 4px 24px;
     padding: 12px 0;
-    border-bottom: 1px solid var(--rule);
+    border-bottom: 1px solid var(--hair);
   }
 
   .adm-title {
@@ -1371,7 +1369,7 @@
 
   /* A plain bordered section (preview, delete). */
   .adm-box {
-    border: 1px solid var(--rule);
+    border: 1px solid var(--hair);
     padding: clamp(16px, 2.4vw, 24px);
   }
 }
