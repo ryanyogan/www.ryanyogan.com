@@ -1,5 +1,5 @@
-// The site's icon: the letters RY in the header wordmark's face, a step bolder, ink on paper,
-// and nothing else. It is a stand-in until there is a real mark. This file is the whole
+// The site's icon: the letters RY in the masthead's face and weight, ink on paper, and
+// nothing else. It is a stand-in until there is a real mark. This file is the whole
 // definition; the build draws the three files from it (vite-plugin-icons.ts) and no icon
 // file is committed.
 //
@@ -9,14 +9,11 @@
 
 export const MARK = {
   text: "RY",
-  /**
-   * Hanken Grotesk one step heavier than the wordmark (Header.tsx: font-semibold). In a tab
-   * the letters are 8px tall, and at 600 their stems were a thin pixel.
-   */
-  font: "src/lib/og/hanken-grotesk-latin-700.woff.bin",
+  /** Newsreader bold, as the masthead is set (styles/app.css, .mast-name). */
+  font: "src/lib/og/newsreader-latin-700.woff.bin",
   weight: 700,
   /** Space added between the letters, in em: the R's leg sits a little under the Y's arm. */
-  tracking: -0.03,
+  tracking: -0.04,
   /** --paper and --ink in styles/app.css. PNGs are always light; the SVG follows the scheme. */
   light: { paper: "#f6f5f1", ink: "#111111" },
   dark: { paper: "#121212", ink: "#eceae4" },
