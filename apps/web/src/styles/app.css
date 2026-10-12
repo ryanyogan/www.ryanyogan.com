@@ -860,10 +860,11 @@
   }
 
   .home .plist a {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    column-gap: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
     align-items: baseline;
+    column-gap: 12px;
     border-bottom: 1px dotted var(--hair);
     padding: 10px 0;
   }
@@ -877,7 +878,7 @@
   }
 
   .home .plist .sum {
-    grid-column: 1 / -1;
+    flex: 0 0 100%;
     font-size: 0.9375rem;
     color: var(--ink2);
   }
