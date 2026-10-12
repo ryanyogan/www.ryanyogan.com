@@ -70,19 +70,3 @@ export function TrendIcon(props: IconProps) {
     </Icon>
   );
 }
-
-export function MenuIcon(props: IconProps) {
-  return (
-    <Icon {...props}>
-      <path d="M2 5.5h12M2 10.5h12" />
-    </Icon>
-  );
-}
-
-export function CloseIcon(props: IconProps) {
-  return (
-    <Icon {...props}>
-      <path d="M3.5 3.5l9 9M12.5 3.5l-9 9" />
-    </Icon>
-  );
-}

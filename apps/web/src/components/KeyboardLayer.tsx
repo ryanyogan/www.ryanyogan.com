@@ -301,7 +301,7 @@ function Palette({ onClose }: { onClose: () => void }) {
           spellCheck={false}
           enterKeyHint="go"
           placeholder="Search pages, projects and writing"
-          className="min-h-11 min-w-0 flex-1 bg-transparent py-1 text-[1.1rem] text-ink outline-none placeholder:text-muted"
+          className="kb-input min-h-11 min-w-0 flex-1 bg-transparent py-1 text-ink outline-none placeholder:text-muted"
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);
@@ -351,16 +351,14 @@ function Palette({ onClose }: { onClose: () => void }) {
                   id={optionId(index)}
                   role="option"
                   aria-selected={index === active}
-                  className="group flex cursor-pointer scroll-my-10 flex-col gap-x-4 border-l-2 border-transparent px-3 py-2 aria-selected:border-accent sm:flex-row sm:items-baseline"
+                  className="kb-row group flex cursor-pointer scroll-my-10 flex-col justify-center gap-x-4 border-l-2 border-transparent px-3 py-2 aria-selected:border-ink sm:flex-row sm:items-baseline sm:justify-start"
                   onMouseMove={() => setActive(index)}
                   onClick={() => run(entry)}
                 >
-                  <span className="flex-none font-medium text-ink decoration-accent underline-offset-[0.3em] group-aria-selected:underline sm:max-w-[60%]">
+                  <span className="flex-none text-ink underline-offset-[0.3em] group-aria-selected:underline sm:max-w-[60%]">
                     {entry.title}
                   </span>
-                  <span className="min-w-0 truncate text-[0.875rem] text-muted">
-                    {entry.detail}
-                  </span>
+                  <span className="small min-w-0 truncate">{entry.detail}</span>
                 </div>
               ))}
             </div>
@@ -368,7 +366,7 @@ function Palette({ onClose }: { onClose: () => void }) {
         })}
       </div>
 
-      <div className="flex items-center justify-between gap-4 border-t border-rule px-4 py-2.5 text-[0.8125rem] text-muted">
+      <div className="lab flex items-center justify-between gap-4 border-t border-rule px-4 py-2.5">
         <span role="status" aria-live="polite" aria-atomic="true">
           {notice || (index ? count : "Loading")}
         </span>
@@ -397,16 +395,11 @@ function Help({ onClose }: { onClose: () => void }) {
     <div className="overflow-y-auto p-[clamp(18px,4vw,28px)]">
       <div className="flex items-baseline justify-between gap-4">
         <h2 id="kb-help-h">Keys</h2>
-        <button
-          data-autofocus
-          type="button"
-          className="link cursor-pointer text-[0.9375rem] font-medium text-ink-soft"
-          onClick={onClose}
-        >
-          Close
+        <button data-autofocus type="button" className="cta" onClick={onClose}>
+          <span>Close</span>
         </button>
       </div>
-      <p className="mt-1.5 text-[0.9375rem] text-muted">
+      <p className="small mt-1.5">
         Optional. Everything here is also a link or a button on the page.
       </p>
       <dl className="mt-4 border-t border-rule">
@@ -418,9 +411,7 @@ function Help({ onClose }: { onClose: () => void }) {
             <dt className="flex items-center gap-1.5">
               {row.keys.map((key, index) => (
                 <span key={key} className="contents">
-                  {index > 0 ? (
-                    <span className="text-[0.8125rem] text-muted">{row.chord ? "then" : "/"}</span>
-                  ) : null}
+                  {index > 0 ? <span className="lab">{row.chord ? "then" : "/"}</span> : null}
                   <kbd className="kbd">{key}</kbd>
                 </span>
               ))}

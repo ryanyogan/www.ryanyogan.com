@@ -45,7 +45,7 @@ test("the chosen theme persists across client and full navigation", async ({ pag
   }).toPass({ timeout: 15_000 });
 
   await page
-    .getByRole("navigation", { name: "Primary" })
+    .getByRole("navigation", { name: "Sections" })
     .getByRole("link", { name: "Projects" })
     .click();
   await expect(page).toHaveURL(/\/projects$/);

@@ -49,8 +49,8 @@
   --gutter-label: 232px;
   --gutter-gap: 40px;
   --space-section: 128px;
-  /* Fluid page gutter: 20px on a phone up to 64px on a desktop. */
-  --page-gutter: clamp(20px, 5vw, 64px);
+  /* The page's side margin: 24px, 18px on a phone. */
+  --page-gutter: 24px;
 }
 
 .dark {
@@ -98,6 +98,12 @@
   }
 }
 
+@media (max-width: 600px) {
+  :root {
+    --page-gutter: 18px;
+  }
+}
+
 @theme inline {
   --color-paper: var(--paper);
   --color-ink: var(--ink);
@@ -119,7 +125,7 @@
     system-ui, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
-  --container-wrap: 1296px;
+  --container-wrap: 1200px;
   --container-measure: 32em;
 }
 
@@ -140,18 +146,12 @@
     background-color: var(--paper);
     color: var(--ink);
     font-family: var(--font-serif);
-    font-size: 1.1875rem;
-    line-height: 1.6;
+    font-size: 1.0625rem;
+    line-height: 1.5;
     overflow-wrap: break-word;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     margin: 0;
-  }
-
-  @media (max-width: 640px) {
-    body {
-      font-size: 1.0625rem;
-    }
   }
 
   h1,
@@ -164,28 +164,41 @@
   }
 
   h1 {
-    font-size: clamp(1.75rem, 3vw, 2.375rem);
-    line-height: 1.18;
-    letter-spacing: -0.02em;
+    font-size: 2.75rem;
+    line-height: 1.08;
+    letter-spacing: -0.012em;
   }
 
   h2 {
-    font-size: clamp(1.3125rem, 2vw, 1.625rem);
-    line-height: 1.25;
-    letter-spacing: -0.015em;
+    font-size: 1.75rem;
+    line-height: 1.2;
   }
 
   h3 {
-    font-size: 1.1875rem;
-    line-height: 1.3;
-    letter-spacing: -0.01em;
+    font-size: 1.375rem;
+    line-height: 1.25;
   }
 
   h4 {
-    font-size: 1rem;
+    font-size: 1.0625rem;
     line-height: 1.4;
   }
 
+  @media (max-width: 600px) {
+    h1 {
+      font-size: 2.125rem;
+      letter-spacing: -0.01em;
+    }
+  }
+
+  b,
+  strong {
+    font-weight: 700;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
   p {
     text-wrap: pretty;
   }
@@ -197,7 +210,7 @@
 
   hr {
     border: 0;
-    border-top: 1px solid var(--rule);
+    border-top: 1px solid var(--hair);
   }
 
   /* Numbers that line up in columns. */
@@ -217,7 +230,7 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--ink);
     outline-offset: 3px;
   }
 
@@ -232,12 +245,290 @@
 }
 
 @layer components {
-  /* Page column: 1296px with the fluid gutter, clear of a notch in landscape. */
+  /* Page column: 1200px between the side margins, clear of a notch in landscape. */
   .wrap {
-    max-width: var(--container-wrap);
+    max-width: calc(var(--container-wrap) + 2 * var(--page-gutter));
     margin-inline: auto;
     padding-left: max(var(--page-gutter), env(safe-area-inset-left));
     padding-right: max(var(--page-gutter), env(safe-area-inset-right));
+  }
+
+  /* The agate: everything a reader scans. One condensed face in one weight, always upper
+     case and letter-spaced (docs/design/broadsheet.md, principle 2). */
+  .lab,
+  .kicker,
+  .sec-h,
+  .cap,
+  .cta,
+  .st,
+  .mast-nav,
+  .colophon,
+  .kbd {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* Masthead: the name, the tagline, then the section index between two rules. Nothing
+     above the name. */
+  .mast-head {
+    padding: 36px 0 18px;
+    text-align: center;
+  }
+
+  .mast-name {
+    display: inline-block;
+    font-size: 5.75rem;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .mast-tag {
+    margin-top: 10px;
+    font-size: 1.125rem;
+    font-style: italic;
+    color: var(--ink2);
+  }
+
+  .mast-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0 34px;
+    border-top: 1px solid var(--ink);
+    border-bottom: 3px double var(--ink);
+    padding: 2px 0;
+    font-size: 0.8125rem;
+    letter-spacing: 0.16em;
+  }
+
+  /* A short word (Work, Now) is still 44px to press: the box is wider than the word by
+     what its margins take back, so the words keep their spacing. */
+  .mast-nav :is(a, button) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 8px;
+    margin: 0 -8px;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    cursor: pointer;
+  }
+
+  .mast-nav [aria-current="page"] span,
+  .colophon [aria-current="page"] {
+    text-decoration: underline;
+    text-underline-offset: 0.45em;
+  }
+
+  .mast-sep {
+    color: var(--hair);
+  }
+
+  .mast-nav .mast-search {
+    color: var(--accent);
+  }
+
+  .mast-search svg {
+    display: none;
+  }
+
+  @media (max-width: 900px) {
+    .mast-name {
+      font-size: min(5.75rem, 11.5vw);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .mast-head {
+      padding-top: 28px;
+    }
+
+    /* Narrower than 390px the name is smaller than 44px, and still 44px to press. */
+    .mast-name {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      font-size: min(2.75rem, 11.28vw);
+      letter-spacing: 0.04em;
+    }
+
+    .mast-tag {
+      font-size: 0.9375rem;
+    }
+
+    .mast-nav {
+      justify-content: space-between;
+      gap: 0;
+      letter-spacing: 0.14em;
+    }
+
+    .mast-nav :is(a, button) {
+      min-width: 44px;
+      padding: 0;
+      margin: 0;
+    }
+
+    .mast-nav a:first-child {
+      justify-content: flex-start;
+    }
+
+    .mast-nav .mast-search {
+      justify-content: flex-end;
+    }
+
+    .mast-sep,
+    .mast-search span {
+      display: none;
+    }
+
+    .mast-search svg {
+      display: block;
+    }
+  }
+
+  /* Colophon: a heavy rule, then one agate line. Every link is a 44px row. */
+  .colophon {
+    color: var(--muted);
+  }
+
+  .colophon > div {
+    padding-bottom: max(35px, env(safe-area-inset-bottom));
+  }
+
+  .colo {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0 24px;
+    margin-top: 28px;
+    border-top: 3px solid var(--ink);
+    padding-top: 5px;
+  }
+
+  .colo > p,
+  .colo nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .colo nav {
+    gap: 0 20px;
+  }
+
+  .colo :is(a, button) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 10px;
+    margin: 0 -10px;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    cursor: pointer;
+  }
+
+  .colo [data-testid="keys-hint"] {
+    display: none;
+    padding: 0;
+    margin: 0;
+    white-space: pre;
+  }
+
+  .colo .theme-icon {
+    width: 44px;
+    padding: 0;
+    margin: 0 -13px 0 -4px;
+  }
+
+  @media (min-width: 1024px) {
+    .colo [data-testid="keys-hint"]:not([hidden]) {
+      display: inline-flex;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .colophon > div {
+      padding-bottom: max(27px, env(safe-area-inset-bottom));
+    }
+
+    .colo nav {
+      flex: 1 0 100%;
+    }
+
+    .colo nav .theme-icon {
+      order: 1;
+      margin-left: auto;
+    }
+
+    .colo nav a[href^="mailto"] {
+      order: 2;
+      flex: 1 0 100%;
+      justify-content: flex-start;
+      padding: 0;
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  /* A text link: ink, under a 1px ink rule, the weight of the page's hairlines. */
+  .link {
+    border-bottom: 1px solid var(--ink);
+  }
+
+  /* A link that ends a list ("All writing"): agate, underlined, 44px to press. The box is
+     taller than the line; its margins take the difference back. */
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin: -13px 0;
+    font-size: 0.8125rem;
+  }
+
+  .cta span {
+    border-bottom: 1px solid var(--ink);
+  }
+
+  /* Small red label over a headline. */
+  .kicker {
+    letter-spacing: 0.16em;
+    color: var(--accent);
+  }
+
+  /* Section head: agate over a double rule. */
+  .sec-h {
+    border-bottom: 3px double var(--ink);
+    padding-bottom: 6px;
+    font-size: 0.8125rem;
+    letter-spacing: 0.16em;
+    text-wrap: wrap;
+  }
+
+  /* The italic line under a section head. */
+  .stand {
+    font-size: 0.875rem;
+    font-style: italic;
+    color: var(--muted);
+  }
+
+  /* Figure caption. */
+  .cap {
+    letter-spacing: 0.06em;
+    color: var(--muted);
   }
 
   /* A section: its label in the left gutter, its content in the column beside it. */
@@ -269,62 +560,15 @@
     }
   }
 
-  /* Gutter label, and small interface text. */
+  /* A label: the agate in the muted ink. */
   .lab {
-    font-family: var(--font-sans);
-    font-size: 0.875rem;
-    font-weight: 500;
-    line-height: 1.5;
     color: var(--muted);
   }
 
   .small {
-    font-family: var(--font-sans);
-    font-size: 0.875rem;
-    line-height: 1.55;
+    font-size: 0.9375rem;
+    line-height: 1.5;
     color: var(--muted);
-  }
-
-  /* Inline text link: ink text, accent underline. */
-  .link {
-    text-decoration-line: underline;
-    text-decoration-color: var(--accent);
-  }
-
-  /* Header, footer and other quiet controls: plain text, 44px to press. */
-  .quiet {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    font-family: var(--font-sans);
-    color: var(--muted);
-    cursor: pointer;
-  }
-
-  .quiet[aria-current="page"] {
-    color: var(--ink);
-    text-decoration: underline;
-    text-decoration-color: var(--accent);
-    text-underline-offset: 0.5em;
-  }
-
-  /* An icon alone in a 44px square. The header's group is pulled right by the space beside
-     an 18px icon, so the last icon and not its empty edge sits on the page margin. */
-  .icon-btn {
-    width: 44px;
-    justify-content: center;
-  }
-
-  .header-tools {
-    display: flex;
-    margin-right: -13px;
-  }
-
-  /* If enlarged text sends the buttons to a second row, they stay on the right. */
-  @media (max-width: 767.98px) {
-    .header-tools {
-      margin-left: auto;
-    }
   }
 
   /* The theme button holds three icons; the theme on <html> shows one. */
@@ -338,11 +582,9 @@
     display: block;
   }
 
-  /* Project status: small plain text. */
+  /* Project status: a muted agate word. */
   .st {
-    font-family: var(--font-sans);
-    font-size: 0.8125rem;
-    line-height: 1.4;
+    letter-spacing: 0.08em;
     color: var(--muted);
     white-space: nowrap;
   }
@@ -836,12 +1078,21 @@
     margin: min(12dvh, 110px) auto auto;
     padding: 0;
     overflow: hidden;
-    border: 1px solid var(--rule);
+    border: 1px solid var(--hair);
+    border-top: 3px solid var(--ink);
     background: var(--paper);
     color: var(--ink);
-    font-family: var(--font-sans);
-    font-size: 1rem;
-    line-height: 1.5;
+  }
+
+  /* The search field: the serif, over a hairline. */
+  .kb-input {
+    font-family: var(--font-serif);
+    font-size: 1.0625rem;
+  }
+
+  /* A result: its title in the serif, what it is in the muted ink beside it. */
+  .kb-row {
+    min-height: 44px;
   }
 
   .kb-dialog[open] {
@@ -869,12 +1120,9 @@
   .kbd {
     display: inline-block;
     min-width: 1.6em;
-    padding: 0 5px;
-    border: 1px solid var(--rule);
-    color: var(--ink-soft);
-    font-family: var(--font-sans);
-    font-size: 0.75rem;
-    line-height: 1.6;
+    padding: 0 4px;
+    border: 1px solid var(--hair);
+    letter-spacing: 0;
     text-align: center;
   }
 }
@@ -885,6 +1133,18 @@
     font-family: var(--font-sans);
     font-size: 1rem;
     line-height: 1.5;
+  }
+
+  /* The admin bar's links: plain text, 44px to press. */
+  .quiet {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--muted);
+  }
+
+  .quiet[aria-current="page"] {
+    color: var(--ink);
   }
 
   .adm-bar {
@@ -1669,7 +1929,6 @@
 
   /* Hover only where a pointer can hover: after a tap on a touch screen the colour would stay. */
   @media (hover: hover) {
-    .link:hover,
     .more a:hover,
     .mail:hover,
     .ext a:hover,
@@ -1677,7 +1936,6 @@
       color: var(--accent);
     }
 
-    .quiet:hover,
     .else a:hover,
     .pick button:hover {
       color: var(--ink);
@@ -2080,8 +2338,7 @@ summary {
 /* Anything pressed with a finger is 44px both ways: short words get the width. Desktop keeps
    its tighter text controls. */
 @media (max-width: 1024px) {
-  .pick button,
-  footer .quiet {
+  .pick button {
     min-width: 44px;
     justify-content: center;
   }
@@ -2105,15 +2362,6 @@ summary {
 
 /* Nothing a phone shows is under 14px. */
 @media (max-width: 640px) {
-  /* The footer's links span the column: the first word and the last sit on its two edges. */
-  footer a.quiet:first-of-type {
-    justify-content: flex-start;
-  }
-
-  footer a[href$=".xml"] {
-    justify-content: flex-end;
-  }
-
   .st,
   .nums dd,
   .wlist time,
@@ -2154,6 +2402,11 @@ summary {
     display: flex;
     flex-wrap: wrap;
     column-gap: 16px;
+  }
+
+  /* A long status is one line at the default size and may break when the text is enlarged. */
+  .plist .st {
+    white-space: normal;
   }
 
   .plist a {

@@ -23,7 +23,7 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={() => applyTheme(NEXT[theme])}
-      className="quiet icon-btn theme-icon"
+      className="theme-icon"
       aria-label={`Colour theme: ${LABEL[theme]}. Switch to ${LABEL[NEXT[theme]]}.`}
       title={`Theme: ${LABEL[theme]}`}
     >

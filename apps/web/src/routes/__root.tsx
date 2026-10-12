@@ -65,11 +65,11 @@ function RootComponent() {
 function NotFound() {
   return (
     <main id="main" className="wrap pt-[clamp(40px,7vw,84px)] pb-[72px]">
-      <span className="lab mb-[18px] block">404</span>
-      <h1>I couldn&rsquo;t find that page.</h1>
-      <p className="mt-[22px]">
-        <Link to="/" className="link">
-          Back to home &rarr;
+      <p className="kicker mb-2.5">Page not found</p>
+      <h1>Nothing under this headline.</h1>
+      <p className="mt-5">
+        <Link to="/" className="cta">
+          <span>Back to home &rarr;</span>
         </Link>
       </p>
     </main>
@@ -111,11 +111,11 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
             __html: `(function(){try{var t=localStorage.getItem("theme");if(t==="dark"||t==="light"){document.documentElement.classList.add(t);document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.setAttribute("media",m.getAttribute("data-scheme")===t?"all":"not all")})}}catch(e){}}())`,
           }}
         />
-        {/* The serif italic and semibold, added when no reader can see the change (styles/fonts.ts). */}
+        {/* The agate, added when no reader can see the change (styles/fonts.ts). */}
         <script dangerouslySetInnerHTML={{ __html: lateFontsScript }} />
         <a
           href="#main"
-          className="absolute -top-20 left-4 z-50 bg-ink px-4 py-3.5 font-sans text-[0.9375rem] font-medium text-paper focus:top-3"
+          className="lab absolute -top-20 left-4 z-50 bg-ink px-4 py-3.5 text-paper! focus:top-3"
         >
           Skip to content
         </a>
