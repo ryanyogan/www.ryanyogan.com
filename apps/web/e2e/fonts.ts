@@ -1,12 +1,13 @@
 import type { Page } from "@playwright/test";
 import { expect } from "./fixtures";
 
-// Which faces a page is drawn in, said outright. The two romans are `optional`
-// (styles/fonts.css): one that misses the first paint is not used for the whole visit, and the
-// page stays in the fallback faces at the foot of that file. On a busy machine that happens to
-// a test now and then, so a test that measures text says which page it means and loads that
-// one: `inWebFaces` or `inFallbackFaces`. (e2e/visual.spec.ts has its own copy of the first,
-// which also waits for the italic and semibold; its pictures depend on it and it is left alone.)
+// Which faces a page is drawn in, said outright. The serif is `optional` (styles/fonts.css):
+// if it misses the first paint it is not used for the whole visit, and the page stays in the
+// fallback faces at the foot of that file. The agate (`sans` here) is added by a script and
+// only joins a page drawn in the serif (styles/fonts.ts). On a busy machine a load misses them
+// now and then, so a test that measures text says which page it means and loads that one:
+// `inWebFaces` or `inFallbackFaces`. (e2e/visual.spec.ts has its own copy of the first; its
+// pictures depend on it and it is left alone.)
 
 const FONT_FILE = /\.woff2(\?.*)?$/;
 
@@ -24,8 +25,8 @@ export const romans = (page: Page) =>
     };
     const none = width("monospace");
     return {
-      sans: width('"Hanken Grotesk", monospace') !== none,
-      serif: width('"Source Serif 4", monospace') !== none,
+      sans: width('"IBM Plex Sans Condensed", monospace') !== none,
+      serif: width('"Newsreader", monospace') !== none,
       loading: [...document.fonts].filter((face) => face.status === "loading").length,
     };
   });
@@ -34,10 +35,11 @@ const WEB = { sans: true, serif: true, loading: 0 };
 const FALLBACK = { sans: false, serif: false, loading: 0 };
 
 /**
- * Opens `path` drawn in the two web romans, as a reader with the files in their cache has it.
+ * Opens `path` drawn in the web faces, as a reader with the files in their cache has it.
  * The first load in a context puts every font file in the cache (the script in styles/fonts.ts
- * notes it in localStorage once its two are there); a load that still missed the romans is
- * loaded again, now from the cache. Returns the number of loads it took.
+ * notes it in localStorage once its own is there) and leaves the agate out, its nav having
+ * been drawn; the page is loaded again, now from the cache, until a load has both. Returns the
+ * number of loads it took.
  */
 export async function inWebFaces(page: Page, path: string): Promise<number> {
   let loads = 1;
@@ -50,7 +52,7 @@ export async function inWebFaces(page: Page, path: string): Promise<number> {
     await page.reload();
     await page.evaluate(() => document.fonts.ready.then(() => undefined));
     await expect.poll(() => romans(page), { timeout: 2000 }).toEqual(WEB);
-  }, "drawn in the web romans").toPass({ timeout: 45_000 });
+  }, "drawn in the web faces").toPass({ timeout: 45_000 });
   return loads;
 }
 

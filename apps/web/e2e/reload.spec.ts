@@ -1,5 +1,6 @@
 import type { CDPSession, Page } from "@playwright/test";
 import { expect, routes, test } from "./fixtures";
+import { inWebFaces } from "./fonts";
 
 // What a reader sees when they reload a page they have already loaded (a warm cache): which
 // files the browser asks the network for again, whether any text is drawn in a fallback face
@@ -254,11 +255,14 @@ for (const [size, viewport] of [
         expect(measure.drawn.h1.join(), "the heading's font").toContain("(web)");
         expect(measure.shift, `layout shift, by ${measure.shifted.join(" ")}`).toBe(0);
         expect(measure.moved, "px the heading and first paragraph moved").toEqual({ h1: 0, p: 0 });
-        // Every face on the first screen is one of the two preloaded files (styles/fonts.ts):
-        // the serif italic and semibold are not preloaded, so they may not be needed up here.
+        // Every serif face on the first screen is one of the three preloaded files
+        // (styles/fonts.ts): roman, bold and italic. No other weight, and no bold italic.
         expect(
-          measure.faces.filter((face) => /italic$|^Source Serif 4 [6-9]00 /.test(face)),
-          "first-screen faces that are not preloaded",
+          measure.faces.filter(
+            (face) =>
+              face.startsWith("Newsreader ") && !/ (400 (normal|italic)|700 normal)$/.test(face),
+          ),
+          "first-screen serif faces that are not preloaded",
         ).toEqual([]);
       });
     }
@@ -268,45 +272,52 @@ for (const [size, viewport] of [
 // The fallback faces in styles/fonts.css are what a reader sees until a web font arrives.
 // They are local() faces, which a machine without the named font ignores without a word: this
 // runner has Liberation Sans and Liberation Serif, as most Linux desktops do, and neither
-// Arial nor Georgia.
+// Arial nor Georgia. Each cut the site ships has a fallback of its own (the bold and the
+// italic are not the regular thickened or slanted), and each is measured in its own cut.
 test("the fallback faces are found on Linux and set text as wide as the web fonts", async ({
   page,
 }) => {
-  await page.goto("/work");
+  // The agate is on a page only once its file is cached (styles/fonts.ts).
+  await inWebFaces(page, "/work");
   const widths = await page.evaluate(async () => {
     const text =
       "The quick brown fox jumps over the lazy dog, and then reads the rest of the page.";
-    const families = ["Hanken Grotesk", "Source Serif 4"];
+    const cuts = [
+      ["Newsreader", "normal 400"],
+      ["Newsreader", "normal 700"],
+      ["Newsreader", "italic 400"],
+      ["IBM Plex Sans Condensed", "normal 600"],
+    ] as const;
     // Settled, not all: the rule for a face this machine lacks (Georgia) rejects.
     await Promise.allSettled(
-      families.flatMap((family) => [
-        document.fonts.load(`100px "${family}"`, text),
-        document.fonts.load(`100px "${family} Fallback"`, text),
+      cuts.flatMap(([family, cut]) => [
+        document.fonts.load(`${cut} 100px "${family}"`, text),
+        document.fonts.load(`${cut} 100px "${family} Fallback"`, text),
       ]),
     );
-    const width = (family: string) => {
+    const width = (cut: string, family: string) => {
       const span = document.createElement("span");
-      span.style.cssText = `position:absolute;white-space:nowrap;font:400 100px ${family}`;
+      span.style.cssText = `position:absolute;white-space:nowrap;font:${cut} 100px ${family}`;
       span.textContent = text;
       document.body.appendChild(span);
       const measured = span.getBoundingClientRect().width;
       span.remove();
       return measured;
     };
-    return families.map((family) => ({
-      family,
-      web: width(`"${family}", monospace`),
-      fallback: width(`"${family} Fallback", monospace`),
-      none: width("monospace"),
+    return cuts.map(([family, cut]) => ({
+      face: `${family} ${cut}`,
+      web: width(cut, `"${family}", monospace`),
+      fallback: width(cut, `"${family} Fallback", monospace`),
+      none: width(cut, "monospace"),
     }));
   });
-  for (const { family, web, fallback, none } of widths) {
+  for (const { face, web, fallback, none } of widths) {
     test.info().annotations.push({
       type: "measure",
-      description: `${family}: fallback is ${(fallback / web).toFixed(4)} of the web font's width`,
+      description: `${face}: fallback is ${(fallback / web).toFixed(4)} of the web font's width`,
     });
-    expect(web, `${family} loaded`).not.toBe(none);
-    expect(fallback, `${family} Fallback was found`).not.toBe(none);
-    expect(Math.abs(fallback / web - 1), `${family} Fallback width`).toBeLessThan(0.03);
+    expect(web, `${face} loaded`).not.toBe(none);
+    expect(fallback, `${face} Fallback was found`).not.toBe(none);
+    expect(Math.abs(fallback / web - 1), `${face} Fallback width`).toBeLessThan(0.03);
   }
 });

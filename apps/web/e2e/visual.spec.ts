@@ -38,9 +38,9 @@ const pages = [
 ];
 
 /**
- * Which faces the page is drawn in. The romans are `optional` (styles/fonts.css): one that
- * misses the first paint is not used for the whole visit, and then the serif italic and
- * semibold (styles/fonts.ts) stay out too. A face shows in the width of a line of text.
+ * Which faces the page is drawn in. The serif is `optional` (styles/fonts.css): if it
+ * misses the first paint it is not used for the whole visit, and then the agate
+ * (styles/fonts.ts) stays out too. A face shows in the width of a line of text.
  */
 const faces = (page: Page) =>
   page.evaluate(() => {
@@ -56,13 +56,10 @@ const faces = (page: Page) =>
     const none = width("monospace");
     const all = [...document.fonts];
     return {
-      sans: width('"Hanken Grotesk", monospace') !== none,
-      serif: width('"Source Serif 4", monospace') !== none,
-      late: all.filter(
-        (face) =>
-          face.family.includes("Source Serif 4") &&
-          (face.style === "italic" || face.weight === "600"),
-      ).length,
+      sans: width('"IBM Plex Sans Condensed", monospace') !== none,
+      serif: width('"Newsreader", monospace') !== none,
+      late: all.filter((face) => face.family.replace(/["']/g, "") === "IBM Plex Sans Condensed")
+        .length,
       loading: all.filter((face) => face.status === "loading").length,
     };
   });
@@ -115,14 +112,14 @@ for (const colorScheme of ["light", "dark"] as const) {
           );
 
           // The first load puts every font file in the cache (the script in styles/fonts.ts
-          // notes it once its two are there). A reload then has the romans before its first
+          // notes it once its own is there). A reload then has the serif before its first
           // frame; one that does not, on a busy machine, is loaded again.
           //
-          // The italic and semibold join a page whenever none of their text is in the window,
-          // and otherwise only if they beat the first frame, which a cached file does on some
-          // loads and not on others. So the page loads in a window that shows none of its
-          // text, and is given its real height afterwards: always the faces themselves, as a
-          // returning reader has them, never the roman slanted or thickened by the browser.
+          // The agate joins a page whenever none of its text is in the window, and otherwise
+          // only if it beats the first frame, which a cached file does on some loads and not
+          // on others. So the page loads in a window that shows none of its text (the top of
+          // the page is the masthead's own space), and is given its real height afterwards:
+          // always the faces themselves, as a returning reader has them, never the fallback.
           await page.setViewportSize({ width, height: LOADING_HEIGHT });
           await page.goto(path);
           await page.waitForFunction(() => localStorage.getItem("fonts") !== null);
@@ -133,8 +130,8 @@ for (const colorScheme of ["light", "dark"] as const) {
             await page.evaluate(() => document.fonts.ready);
             await expect
               .poll(() => faces(page), { timeout: 2000 })
-              .toEqual({ sans: true, serif: true, late: 4, loading: 0 });
-          }, "drawn in the web faces, the italic and semibold among them").toPass({
+              .toEqual({ sans: true, serif: true, late: 2, loading: 0 });
+          }, "drawn in the web faces, the agate among them").toPass({
             timeout: 45_000,
           });
           test.info().annotations.push({ type: "measure", description: `loads: ${loads}` });
@@ -154,7 +151,7 @@ for (const colorScheme of ["light", "dark"] as const) {
           expect(await faces(page), "faces at the time of the picture").toEqual({
             sans: true,
             serif: true,
-            late: 4,
+            late: 2,
             loading: 0,
           });
 
