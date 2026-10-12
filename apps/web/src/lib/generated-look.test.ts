@@ -165,14 +165,17 @@ const allow = (rule: string, entries: [file: string, count: number, reason: stri
 /** Tells that are on the site on purpose. `count` is exact, so an entry cannot outlive its tell. */
 const ALLOWED = [
   ...allow("arrow", [
-    ["components/home/Hero.tsx", 1, "the figures (150 → 2,300); the owner has seen and kept it"],
+    ["components/home/Hero.tsx", 2, "the figures (150 → 2,300), and the link to Work"],
+    ["components/home/WritingList.tsx", 1, "the link to all writing"],
+    ["components/home/ProjectIndex.tsx", 1, "the link to all projects"],
     ["routes/work.tsx", 2, "the same figures, and the link to Projects"],
-    ["components/home/LeadAndBuild.tsx", 1, "the link to Work"],
     ["routes/projects.index.tsx", 1, "the link to what I am open to"],
     ["routes/projects.$slug.tsx", 4, "previous and next project, which point a direction"],
     ["routes/__root.tsx", 1, "the 404 page's link home"],
   ]),
   ...allow("middle-dot", [
+    ["components/home/Hero.tsx", 1, "the kicker over the lead story"],
+    ["components/home/OpenTo.tsx", 1, "the classifieds' section head"],
     ["components/Footer.tsx", 3, "the colophon: name, city, coordinates and the key hint"],
     ["routes/now.tsx", 1, "the updated line"],
     ["routes/writing.index.tsx", 1, "post count and RSS"],

@@ -237,7 +237,7 @@ function WorkPage() {
         <p className="after">Say hello. Tell me what you are building and where it is stuck.</p>
         <p>
           <a className="mail" href={`mailto:${contactEmail}`}>
-            {contactEmail}
+            <span>{contactEmail}</span>
           </a>
         </p>
       </Chapter>

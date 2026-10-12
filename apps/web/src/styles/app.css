@@ -272,6 +272,7 @@
   .cap,
   .cta,
   .st,
+  .nums-h,
   .mast-nav,
   .colophon,
   .kbd {
@@ -329,7 +330,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 44px;
+    min-height: 68px;
     padding: 0 8px;
     margin: 0 -8px;
     font: inherit;
@@ -372,7 +373,7 @@
       display: inline-flex;
       align-items: center;
       min-height: 44px;
-      font-size: min(2.75rem, 11.28vw);
+      font-size: min(2.75rem, 11.29vw);
       letter-spacing: 0.04em;
     }
 
@@ -383,6 +384,7 @@
     .mast-nav {
       justify-content: space-between;
       gap: 0;
+      padding: 0;
       letter-spacing: 0.14em;
     }
 
@@ -519,7 +521,7 @@
     display: inline-flex;
     align-items: center;
     min-height: 44px;
-    margin: -13px 0;
+    margin: -12.25px 0;
     font-size: 0.8125rem;
   }
 
@@ -613,55 +615,7 @@
     white-space: nowrap;
   }
 
-  /* ---------- Page pieces (Home; reused by the later page tickets) ---------- */
-  .row.first {
-    padding-top: 52px;
-    padding-bottom: 72px;
-  }
-
-  .gnote {
-    font: 400 0.875rem/1.55 var(--font-sans);
-    color: var(--muted);
-    margin-top: 6px;
-    max-width: 16rem;
-  }
-
-  .gnote a {
-    padding: 13px 0;
-    color: var(--accent);
-    text-decoration: underline;
-  }
-
-  .h-xl {
-    font: 500 clamp(1.3125rem, 2vw, 1.625rem) / 1.25 var(--font-sans);
-    letter-spacing: -0.015em;
-    max-width: 22em;
-  }
-
-  .h-m {
-    font: 600 1rem/1.4 var(--font-sans);
-    letter-spacing: 0;
-  }
-
-  .more {
-    font: 500 0.9375rem var(--font-sans);
-  }
-
-  .more a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    text-decoration: underline;
-    text-decoration-color: var(--accent);
-    text-underline-offset: 0.35em;
-  }
-
-  .home b {
-    font-weight: 700;
-    color: var(--ink);
-  }
-
-  /* Drawings: thin lines in the text colour, the accent used once each. */
+  /* Drawings: thin lines in the ink, the accent used once each. */
   .art {
     display: block;
     width: 100%;
@@ -669,41 +623,538 @@
   }
 
   .art text {
-    font: 400 17px var(--font-sans);
+    font: 600 17px var(--font-sans);
     fill: var(--muted);
   }
 
-  .lake figcaption,
-  .graph figcaption {
-    font: 400 0.75rem/1.5 var(--font-sans);
+  /* The deck under a headline. */
+  .lede {
+    max-width: 38em;
+    margin-top: 14px;
+    font-size: 1.25rem;
+    line-height: 1.35;
+    font-style: italic;
+    color: var(--ink2);
+  }
+
+  /* The email address, set to be copied: agate in its own case. */
+  .mail {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin: -11.5px 0;
+    font: 600 0.875rem/1.5 var(--font-sans);
+    letter-spacing: 0.08em;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .mail span {
+    border-bottom: 1px solid var(--ink);
+  }
+
+  /* ---------- Home: the front page (docs/design/broadsheet.md, sections 3 and 4) ---------- */
+
+  /* The front page breaks its lines as a column of type does: as they fall. */
+  .home :is(h1, h3, p) {
+    text-wrap: wrap;
+  }
+
+  /* A band of the page, closed by a hairline. */
+  .band {
+    border-bottom: 1px solid var(--hair);
+    padding: 28px 0 30px;
+  }
+
+  /* The lead story: headline and two ruled columns on the left, the map and the numbers in
+     a ruled aside. */
+  .lead {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
+    grid-template-areas: "head fig" "body nums";
+    gap: 0 40px;
+    padding-top: 34px;
+  }
+
+  .lead-head {
+    grid-area: head;
+  }
+
+  .lead .kicker {
+    margin-bottom: 10px;
+  }
+
+  .lead h1 {
+    font-size: 3.625rem;
+    line-height: 1.04;
+  }
+
+  .lead .lede {
+    max-width: none;
+    margin-bottom: 22px;
+    font-size: 1.375rem;
+  }
+
+  .lead-body {
+    grid-area: body;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 32px;
+  }
+
+  .lead-body > :first-child,
+  .cols3 > :not(:last-child) {
+    border-right: 1px solid var(--hair);
+    padding-right: 32px;
+  }
+
+  .lead-body p {
+    margin-bottom: 14px;
+  }
+
+  .lead-body > :last-child .said p {
+    margin-bottom: 0;
+  }
+
+  .said {
+    font-style: italic;
+    color: var(--ink2);
+  }
+
+  .lead .cta span {
+    padding-bottom: 2px;
+  }
+
+  .dropcap::first-letter {
+    float: left;
+    padding: 6px 8px 0 0;
+    font-size: 4.2em;
+    line-height: 0.82;
+    font-weight: 700;
+  }
+
+  .lake,
+  .nums-box {
+    border-left: 1px solid var(--hair);
+    padding-left: 32px;
+  }
+
+  .lake {
+    grid-area: fig;
+  }
+
+  .lake .art {
+    max-width: 300px;
+    margin: 0 auto;
+  }
+
+  .lake .cap {
+    margin-top: 10px;
+    text-align: center;
+  }
+
+  .nums-box {
+    grid-area: nums;
+    align-self: start;
+    padding-top: 26px;
+  }
+
+  .nums-box > div {
+    border-top: 3px solid var(--ink);
+    padding-top: 10px;
+  }
+
+  .nums-h {
+    margin-bottom: 10px;
+    letter-spacing: 0.16em;
+  }
+
+  /* The second column is the wider: it holds the longest figure, on one line. The figures
+     are 26px from 1280 up and a little smaller in a narrower aside. */
+  .nums {
+    display: grid;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 5fr);
+    gap: 14px 16px;
+  }
+
+  .nums dt {
+    font-size: clamp(1.125rem, 2.04vw, 1.625rem);
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .nums dt i,
+  .figs dt i {
+    font-style: normal;
+  }
+
+  .nums dd {
+    margin-top: 4px;
+    font: 600 0.8125rem/1.5 var(--font-sans);
     color: var(--muted);
+  }
+
+  /* Writing, projects and off the clock: three ruled columns, each under a section head. */
+  .cols3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0 32px;
+  }
+
+  .stand {
+    margin: 8px 0 16px;
+  }
+
+  /* A list of posts: the date in red agate over the title. The title's link is the row. */
+  .home .wlist li {
+    margin-bottom: 13px;
+    border-bottom: 1px solid var(--hair);
+  }
+
+  .home .wlist li:last-child {
+    margin-bottom: 9px;
+    border: 0;
+  }
+
+  .wlist time {
+    display: block;
+    font: 600 0.75rem/1.5 var(--font-sans);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .home .wlist h3 {
+    font-size: 1.25rem;
+    line-height: 1.25;
+  }
+
+  .home .wlist li:first-child h3 {
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+
+  /* 44px to press even when the title is one line. */
+  .home .wlist a {
+    display: block;
+    padding: 4px 0 15px;
+  }
+
+  /* A list of projects: name and status on one baseline, the description under them, a
+     dotted rule between rows. The whole row is the link. */
+  .graph {
+    margin-bottom: 16px;
+  }
+
+  .graph .cap {
     margin-top: 6px;
   }
 
-  /* Hero */
-  .who,
-  .else {
-    font: 400 0.875rem/1.55 var(--font-sans);
+  .home .plist {
+    border-top: 1px solid var(--hair);
+  }
+
+  .plist + .cta {
+    margin-top: 1.75px;
+  }
+
+  .home .plist a {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    column-gap: 12px;
+    border-bottom: 1px dotted var(--hair);
+    padding: 10px 0;
+  }
+
+  .home .plist li:last-child a {
+    border-bottom-style: solid;
+  }
+
+  .home .plist b {
+    font-size: 1.1875rem;
+  }
+
+  .home .plist .sum {
+    flex: 0 0 100%;
+    font-size: 0.9375rem;
+    color: var(--ink2);
+  }
+
+  .off-h {
+    margin: 12px 0 10px;
+    font-size: 1.625rem;
+    line-height: 1.15;
+  }
+
+  .rink-fig {
+    margin-bottom: 14px;
+  }
+
+  .rink-fig .cap {
+    margin-top: 4px;
+  }
+
+  .off li {
+    font-size: 1rem;
+  }
+
+  .off li + li {
+    margin-top: 10px;
+  }
+
+  /* Classifieds: the section head beside a ruled box of three numbered items. */
+  .cls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    gap: 0 40px;
+    padding: 28px 0 10px;
+  }
+
+  .cls .stand {
+    margin-bottom: 0;
+  }
+
+  .cls-box {
+    border: 1px solid var(--ink);
+    padding: 20px 24px;
+  }
+
+  .cls ol {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px 24px;
+    counter-reset: no;
+  }
+
+  .cls li {
+    counter-increment: no;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .cls li:not(:last-child) {
+    padding-right: 20px;
+  }
+
+  .cls li::before {
+    content: "No. " counter(no);
+    display: block;
+    margin-bottom: 2px;
+    font: 600 0.75rem/1.5 var(--font-sans);
+    letter-spacing: 0.1em;
+    color: var(--accent);
+  }
+
+  .cls small {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  .hello {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px 24px;
+    margin-top: 18px;
+    border-top: 1px dotted var(--hair);
+    padding-top: 14px;
+  }
+
+  .hello p {
+    font-size: 1.25rem;
+    font-style: italic;
+  }
+
+  /* Narrower than 1000px the lead is one column, with the map between the deck and the two
+     columns and the numbers under them. */
+  @media (max-width: 1000px) {
+    .lead {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: "head" "fig" "body" "nums";
+    }
+
+    .lake,
+    .nums-box {
+      border-left: 0;
+      padding-left: 0;
+    }
+
+    .lake {
+      margin-bottom: 20px;
+    }
+
+    .nums-box {
+      padding-top: 24px;
+    }
+
+    .nums {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .nums dt {
+      font-size: 1.625rem;
+    }
+  }
+
+  /* A tablet: the third column goes under the first two, across the page. */
+  @media (max-width: 900px) {
+    .cols3 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .cols3 > :nth-child(2) {
+      border-right: 0;
+      padding-right: 0;
+    }
+
+    .cols3 > :last-child {
+      grid-column: 1 / -1;
+      margin-top: 26px;
+      border-top: 1px solid var(--hair);
+      padding-top: 24px;
+    }
+
+    .cols3 .rink-fig {
+      max-width: 28rem;
+    }
+
+    .cls {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: 14px;
+    }
+  }
+
+  /* A phone: every band is one column. */
+  @media (max-width: 600px) {
+    .band {
+      padding: 24px 0 26px;
+    }
+
+    .lead h1 {
+      font-size: 2.375rem;
+      line-height: 1.06;
+    }
+
+    .lead .lede {
+      font-size: 1.1875rem;
+    }
+
+    .lake .art,
+    .graph .art {
+      max-width: 250px;
+      margin: 0 auto;
+    }
+
+    .lead-body,
+    .cols3,
+    .cls ol {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .lead-body {
+      row-gap: 14px;
+    }
+
+    .lead-body > :first-child,
+    .cols3 > :not(:last-child) {
+      border-right: 0;
+      padding-right: 0;
+    }
+
+    .cols3 > * + * {
+      margin-top: 26px;
+      border-top: 1px solid var(--hair);
+      padding-top: 24px;
+    }
+
+    /* A figure such as "150 to 2,300" is one line where it fits, which at 26px is a phone of
+       375px or more (the spec's 28px is the variable font's; the static cut is wider), and
+       may break at its arrow on a narrower one or when the text is enlarged. */
+    .nums dt {
+      white-space: normal;
+    }
+
+    .st,
+    .cap {
+      font-size: 0.6875rem;
+    }
+
+    .home .wlist h3 {
+      font-size: 1.3125rem;
+      line-height: 1.22;
+    }
+
+    .home .wlist li:first-child h3 {
+      font-size: 1.5625rem;
+      line-height: 1.18;
+    }
+
+    .home .plist b {
+      font-size: 1.25rem;
+    }
+
+    .off-h {
+      font-size: 1.6875rem;
+    }
+
+    .cls-box {
+      padding: 16px 18px;
+    }
+
+    .cls li:not(:last-child) {
+      padding-right: 0;
+    }
+
+    .hello {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .hello p {
+      font-size: 1.1875rem;
+    }
+  }
+
+  /* ---------- Work, Projects, Writing and Now, until they leave the gutter grid ---------- */
+  .row.first {
+    padding-top: 52px;
+    padding-bottom: 72px;
+  }
+
+  .gnote {
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--muted);
+    margin-top: 6px;
+    max-width: 16rem;
+  }
+
+  .h-xl {
+    font-size: 1.625rem;
+    max-width: 22em;
+  }
+
+  .h-m {
+    font-size: 1.0625rem;
+    line-height: 1.4;
+  }
+
+  .who {
+    font-size: 1rem;
     color: var(--muted);
   }
 
   .who b {
     display: block;
-  }
-
-  .else {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0 18px;
-  }
-
-  .else a {
-    display: flex;
-    align-items: center;
-    min-height: 44px;
-    min-width: 44px;
-    color: var(--ink-soft);
-    text-decoration: underline;
   }
 
   .hero {
@@ -717,57 +1168,13 @@
     max-width: 17em;
   }
 
-  .lede {
-    font-size: 1.1875rem;
-    color: var(--ink-soft);
-    max-width: 33em;
-    margin-top: 22px;
-  }
-
-  .lake {
-    color: var(--muted);
-    margin-top: 4px;
-  }
-
-  .nums {
-    grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: repeat(4, max-content);
-    justify-content: start;
-    gap: 8px 56px;
-    margin-top: 44px;
-  }
-
-  .nums dt {
-    font: 500 1.125rem/1.3 var(--font-sans);
-    font-variant-numeric: tabular-nums lining-nums;
-    white-space: nowrap;
-  }
-
-  .nums dt i {
-    font-style: normal;
-    font-weight: 400;
-    color: var(--muted);
-    padding: 0 0.2em;
-  }
-
-  .nums dd {
-    font: 400 0.8125rem/1.45 var(--font-sans);
-    color: var(--muted);
-    margin-top: 2px;
-    max-width: 10.5rem;
-  }
-
-  /* Project index */
-  .idx {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 48px 64px;
-  }
-
   /* On /projects the column is wide: keep a status within reach of its title. */
   .plist {
     max-width: 40rem;
+  }
+
+  .home .plist {
+    max-width: none;
   }
 
   .plist li {
@@ -778,55 +1185,25 @@
     padding-bottom: 8px;
   }
 
-  .plist a {
-    font: 500 1rem/1.3 var(--font-sans);
+  .home .plist li {
+    display: block;
+    padding: 0;
+  }
+
+  .plist > li > a:not(:only-child) {
+    font-weight: 700;
     display: flex;
     align-items: center;
     min-height: 44px;
   }
 
-  .plist .sum {
+  .plist li > .sum {
     grid-column: 1 / -1;
-    font: 400 0.875rem/1.5 var(--font-sans);
+    font-size: 0.9375rem;
     color: var(--muted);
     margin-top: -8px;
   }
 
-  .graph {
-    color: var(--muted);
-    width: 220px;
-    max-width: 100%;
-  }
-
-  /* Lead and build */
-  .twin {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 48px 56px;
-  }
-
-  .twin > div > * + * {
-    margin-top: 18px;
-  }
-
-  .twin p,
-  .facts li,
-  .off li {
-    font-size: 1.0625rem;
-    color: var(--ink-soft);
-  }
-
-  .facts li {
-    padding: 7px 0;
-  }
-
-  .twin .said p {
-    color: var(--ink);
-    max-width: 24em;
-    font-style: italic;
-  }
-
-  /* Writing */
   .wlist li {
     display: grid;
     grid-template-columns: 6.5rem minmax(0, 1fr);
@@ -834,141 +1211,32 @@
     align-items: baseline;
   }
 
-  .wlist time,
+  .home .wlist li {
+    display: block;
+  }
+
   .wlist .views {
-    font: 400 0.8125rem var(--font-sans);
+    font: 600 0.75rem var(--font-sans);
     color: var(--muted);
     font-variant-numeric: tabular-nums;
   }
 
   .wlist h3 {
-    font: inherit;
-    letter-spacing: 0;
+    font-size: 1.25rem;
+    line-height: 1.25;
   }
 
   .wlist a {
     display: block;
-    padding: 11px 0;
-    font-size: 1.125rem;
-    line-height: 1.4;
-    max-width: 34em;
-  }
-
-  /* Off the clock */
-  .off {
-    display: grid;
-    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-    gap: 40px 56px;
-    align-items: center;
-    margin-top: 32px;
-  }
-
-  .off li {
-    padding: 8px 0;
-  }
-
-  .rink {
-    color: var(--ink-soft);
-  }
-
-  /* Open to */
-  .open {
-    counter-reset: o;
-    max-width: 32em;
-  }
-
-  .open li {
-    counter-increment: o;
-    display: grid;
-    grid-template-columns: 2rem minmax(0, 1fr);
-    padding: 9px 0;
-    font-size: 1.125rem;
-    line-height: 1.45;
-  }
-
-  .open li::before {
-    content: counter(o);
-    font: 400 0.8125rem/2 var(--font-sans);
-    color: var(--muted);
-  }
-
-  .open small {
-    display: block;
-    font: 400 0.875rem/1.5 var(--font-sans);
-    color: var(--muted);
-    margin-top: 2px;
-  }
-
-  .open-way {
-    color: var(--ink-soft);
-    max-width: 32em;
-    margin-top: 28px;
-  }
-
-  .mail {
-    display: inline-flex;
-    align-items: center;
     min-height: 44px;
-    margin: 4px 0 12px;
-    font: 500 1.25rem var(--font-sans);
-    letter-spacing: -0.01em;
-    text-decoration: underline;
-    text-decoration-color: var(--accent);
-    text-underline-offset: 0.3em;
-  }
-
-  /* Home beside its gutter (D1): the parts of one section sit as close as the rows of a
-     group on /projects, so the space between two sections is the largest on the page. */
-  @media (min-width: 860.02px) {
-    .home .nums {
-      margin-top: 28px;
-    }
-
-    .home .twin > div > * + * {
-      margin-top: 12px;
-    }
-
-    .home .twin .h-m + * {
-      margin-top: 8px;
-    }
-
-    .home .facts li {
-      padding: 6px 0;
-    }
-
-    .home .off,
-    .home .open-way {
-      margin-top: 16px;
-    }
-  }
-
-  /* Home above phones (D2): each section after the hero opens with a hairline across the
-     page and its label in ink. More space above the rule than below, so the rule belongs
-     to the section under it. Phones do the same on the gutter, further down. */
-  @media (min-width: 640.02px) {
-    .home .row {
-      padding-bottom: 88px;
-    }
-
-    .home .row + .row {
-      border-top: 1px solid var(--rule);
-      padding-top: 32px;
-    }
-
-    .home .lab {
-      color: var(--ink);
-    }
+    padding: 9px 0;
+    max-width: 34em;
   }
 
   @media (max-width: 1080px) {
     .hero {
       grid-template-columns: minmax(0, 1fr) 180px;
       column-gap: 32px;
-    }
-
-    .nums {
-      grid-template-columns: repeat(2, max-content);
-      gap: 20px 40px;
     }
   }
 
@@ -985,44 +1253,10 @@
     .gnote {
       max-width: 31em;
     }
-
-    .off {
-      grid-template-columns: minmax(0, 1fr);
-    }
-  }
-
-  /* Home on a tablet (V3): one column under a stacked label, so it takes the phone's closer
-     sections (the hero's 64px above each rule). The project list has the row less the
-     graph's own 220px, not half of it, and the rink is drawn at the size it has on a desktop
-     instead of the width of the page. */
-  @media (min-width: 640.02px) and (max-width: 860px) {
-    .home .row {
-      padding-bottom: 64px;
-    }
-
-    .home .idx {
-      grid-template-columns: minmax(0, 1fr) 220px;
-      column-gap: 40px;
-    }
-
-    .home .plist .sum {
-      text-wrap: pretty;
-    }
-
-    .home .rink {
-      max-width: 28rem;
-    }
-
-    /* A heading sits as near its own text as it does on a phone and beside the gutter. */
-    .home .twin .h-m + * {
-      margin-top: 8px;
-    }
   }
 
   @media (max-width: 640px) {
     .hero,
-    .idx,
-    .twin,
     .wlist li {
       grid-template-columns: minmax(0, 1fr);
     }
@@ -1038,34 +1272,8 @@
       color: var(--ink);
     }
 
-    .lake,
-    .graph,
-    .rink,
     .dim {
       display: none;
-    }
-
-    /* A heading sits nearer its own text than the text above it. */
-    .twin .h-m + * {
-      margin-top: 8px;
-    }
-
-    .off {
-      margin-top: 12px;
-    }
-
-    .lede {
-      font-size: 1.125rem;
-    }
-
-    .nums {
-      margin-top: 32px;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      column-gap: 24px;
-    }
-
-    .idx {
-      gap: 40px;
     }
 
     .wlist li {
@@ -1074,7 +1282,6 @@
 
     .wlist a {
       padding: 2px 0 12px;
-      font-size: 1.0625rem;
       min-height: 44px;
     }
   }
@@ -1390,7 +1597,6 @@
   }
 
   .prin .h-m {
-    font-weight: 500;
     padding-top: 0.15em;
   }
 
@@ -1954,25 +2160,32 @@
 
   /* Hover only where a pointer can hover: after a tap on a touch screen the colour would stay. */
   @media (hover: hover) {
-    .more a:hover,
-    .mail:hover,
-    .ext a:hover,
     .adm-btn:hover:not(:disabled) {
       color: var(--accent);
     }
 
-    .else a:hover,
+    .colo :is(a, button):hover,
+    .ext a:hover,
     .pick button:hover {
       color: var(--ink);
     }
 
-    .plist a:hover,
+    .mast-nav :is(a, button):hover span,
+    .plist a:hover b,
+    .plist > li > a:not(:only-child):hover,
     .wlist a:hover,
     .pd-nav a:hover,
     .crumbs a:hover,
     .post-nav a:hover {
       text-decoration: underline;
-      text-decoration-color: var(--accent);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.2em;
+    }
+
+    .cta:hover span,
+    .mail:hover span {
+      border-bottom-width: 2px;
+      margin-bottom: -1px;
     }
 
     /* :where keeps this below the focus and invalid borders. */
@@ -2396,23 +2609,13 @@ summary {
   }
 }
 
-/* Nothing a phone shows is under 14px. */
 @media (max-width: 640px) {
-  .st,
-  .nums dd,
-  .wlist time,
-  .wlist .views,
-  .open li::before,
   .tl .d,
   .arc .when,
   .tech,
   .pd-nav span,
   .post-nav span {
     font-size: 0.875rem;
-  }
-
-  .plist .sum {
-    font-size: 0.9375rem;
   }
 
   /* With the reader's text enlarged (WCAG 1.4.4) a long word must not push the page wide:
@@ -2422,34 +2625,28 @@ summary {
     row-gap: 0;
   }
 
-  .mail {
-    max-width: 100%;
-    overflow-wrap: anywhere;
-  }
-
-  /* Likewise: a figure such as "150 → 2,300" may break at its arrow, and on a project row the
-     status drops under the title once the title's longest word no longer fits beside it. */
-  .nums dt,
+  /* Likewise: a figure such as "150 to 2,300" may break at its arrow, and on a project row
+     the status drops under the title once the title's longest word no longer fits beside it. */
   .figs dt {
     white-space: normal;
   }
 
-  .plist li {
+  .row .plist li {
     display: flex;
     flex-wrap: wrap;
     column-gap: 16px;
   }
 
   /* A long status is one line at the default size and may break when the text is enlarged. */
-  .plist .st {
+  .row .plist .st {
     white-space: normal;
   }
 
-  .plist a {
+  .row .plist a {
     flex: 1 1 0;
   }
 
-  .plist .sum {
+  .row .plist .sum {
     flex: 0 0 100%;
   }
 }
