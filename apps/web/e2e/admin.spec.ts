@@ -351,7 +351,10 @@ test.describe("signed in (local bypass, test-only database)", () => {
     expect(await cacheStatus(request, `/projects/${widget.slug}`)).toBe("HIT");
 
     await page.goto(`${ADMIN_ORIGIN}/projects`);
-    await expect(page.getByRole("link", { name: widget.title, exact: true })).toBeVisible();
+    // A project's row is one link: its title, then its status and its summary.
+    await expect(
+      page.locator("main .plist a", { has: page.getByText(widget.title, { exact: true }) }),
+    ).toBeVisible();
   });
 
   test("edit it: the public pages show the new text", async ({ page, request }) => {

@@ -140,22 +140,16 @@ const offers: { label: string; title: string; detail?: string; basis: string }[]
 function WorkPage() {
   return (
     <main id="main" className="wrap">
-      <section className="row first" aria-labelledby="work-h">
-        <div className="gut">
-          <p className="who">
-            <b>Work</b>More a manual than a resume.
+      <section className="phead" aria-labelledby="work-h">
+        <div>
+          <div className="kicker">Work &middot; More a manual than a resume</div>
+          <h1 id="work-h">Work with me.</h1>
+          <p className="lede">
+            Here&rsquo;s how I like to work. How I lead, what I have scaled, what I am building now,
+            and what I am open to. The timeline comes last.
           </p>
         </div>
-        <div className="col head">
-          <div>
-            <h1 id="work-h">Work with me.</h1>
-            <p className="lede">
-              Here&rsquo;s how I like to work. How I lead, what I have scaled, what I am building
-              now, and what I am open to. The timeline comes last.
-            </p>
-          </div>
-          <OrgTree />
-        </div>
+        <OrgTree />
       </section>
 
       <Chapter index={0} note="I call the approach Empathy Driven Development, a term I coined.">
@@ -212,10 +206,10 @@ function WorkPage() {
         <p className="after">
           Recurring themes: {themes.slice(0, -1).join(", ")}, and {themes.at(-1)}.
         </p>
-        <p className="small mt-2 max-w-[36rem]">
+        <p className="after">
           Lincoln's September experiment has run, and lived history helped. GitHub contributions
           more than doubled year over year.{" "}
-          <Link to="/projects" className="tlink">
+          <Link to="/projects" className="link">
             The rest is on the Projects page &rarr;
           </Link>
         </p>
@@ -237,7 +231,7 @@ function WorkPage() {
         <p className="after">Say hello. Tell me what you are building and where it is stuck.</p>
         <p>
           <a className="mail" href={`mailto:${contactEmail}`}>
-            {contactEmail}
+            <span>{contactEmail}</span>
           </a>
         </p>
       </Chapter>
@@ -274,12 +268,12 @@ function Chapter({ index, note, children }: { index: number; note?: string; chil
   if (!c) return null;
   const headingId = `${c.id}-h`;
   return (
-    <section id={c.id} aria-labelledby={headingId} className="row scroll-mt-[84px]">
-      <div className="gut">
-        <h2 id={headingId} className="lab">
+    <section id={c.id} aria-labelledby={headingId} className="sect scroll-mt-6">
+      <div className="side">
+        <h2 id={headingId} className="sec-h">
           {c.title}
         </h2>
-        {note && <p className="gnote">{note}</p>}
+        {note && <p className="stand">{note}</p>}
       </div>
       <div className="col">{children}</div>
     </section>

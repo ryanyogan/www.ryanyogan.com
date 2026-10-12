@@ -45,27 +45,25 @@ function WritingPage() {
   const counts = useViewCounts();
   return (
     <main id="main" className="wrap">
-      <header className="row wr-head">
-        <p className="gut lab">Writing</p>
-        <div className="col head">
-          <div>
-            <h1 id="wr-h">Build logs, one retraction, and what I learned running teams.</h1>
-            <p className="lede">
-              Newest first, grouped by year. The 2026 posts are build logs for projects on this
-              site. The 2024 posts cover teams, startups and embedded work.
-            </p>
-            <p className="small wr-count">
-              {writingPosts.length} posts &middot; <a href="/rss.xml">RSS</a>
-            </p>
-          </div>
-          <Sheet />
+      <header className="phead">
+        <div>
+          <div className="kicker">Writing</div>
+          <h1 id="wr-h">Build logs, one retraction, and what I learned running teams.</h1>
+          <p className="lede">
+            Newest first, grouped by year. The 2026 posts are build logs for projects on this site.
+            The 2024 posts cover teams, startups and embedded work.
+          </p>
+          <p className="lab wr-count">
+            {writingPosts.length} posts &middot; <a href="/rss.xml">RSS</a>
+          </p>
         </div>
+        <Sheet />
       </header>
 
       {years.map(({ year, posts }) => (
-        <section key={year} aria-labelledby={`y-${year}`} className="row wr-year">
-          <div className="gut">
-            <h2 id={`y-${year}`} className="lab">
+        <section key={year} aria-labelledby={`y-${year}`} className="sect wr-year">
+          <div className="side">
+            <h2 id={`y-${year}`} className="sec-h">
               {year}
             </h2>
           </div>

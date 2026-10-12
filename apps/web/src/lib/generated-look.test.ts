@@ -5,6 +5,12 @@ import { describe, expect, it } from "vitest";
 // The "generated look" tells from the redesign brief, as greps over the public source. A tell
 // that is on the site on purpose goes in ALLOWED with its exact count and a reason; anything
 // else fails with the file, line and rule. Admin pages are not public and are skipped.
+//
+// The Broadsheet look (docs/design/broadsheet.md) is a newspaper's, and three of the old tells
+// are its vocabulary: the agate is always upper case and letter-spaced, a link that ends a
+// list points with an arrow, and a kicker or a colophon separates with a middle dot. The
+// agate is defined once, in the stylesheet, so "eyebrow" now holds markup alone; the arrows
+// and dots are counted below like every other tell.
 
 const ROOT = fileURLToPath(new URL("../../../../", import.meta.url));
 const DIRS = ["apps/web/src", "packages/shared/src"];
@@ -84,11 +90,8 @@ const rules: Rule[] = [
   },
   {
     id: "eyebrow",
-    fix: "no uppercase or tracked-out labels; sentence case in the body face",
-    find: either(
-      inCss(/text-transform\s*:\s*uppercase|letter-spacing\s*:\s*\+?(?:[1-9]|0*\.0*[1-9])/g),
-      asClass(String.raw`uppercase|tracking-wide(?:r|st)?|tracking-\[(?!-|0\])[^\]]*\]`),
-    ),
+    fix: "upper case and letter-spacing are the agate's, set by its classes in app.css; never ad hoc in markup",
+    find: asClass(String.raw`uppercase|tracking-wide(?:r|st)?|tracking-\[(?!-|0\])[^\]]*\]`),
   },
   {
     id: "radius",
@@ -162,15 +165,20 @@ const allow = (rule: string, entries: [file: string, count: number, reason: stri
 /** Tells that are on the site on purpose. `count` is exact, so an entry cannot outlive its tell. */
 const ALLOWED = [
   ...allow("arrow", [
-    ["components/home/Hero.tsx", 1, "the figures (150 → 2,300); the owner has seen and kept it"],
+    ["components/home/Hero.tsx", 2, "the figures (150 → 2,300), and the link to Work"],
+    ["components/home/WritingList.tsx", 1, "the link to all writing"],
+    ["components/home/ProjectIndex.tsx", 1, "the link to all projects"],
     ["routes/work.tsx", 2, "the same figures, and the link to Projects"],
-    ["components/home/LeadAndBuild.tsx", 1, "the link to Work"],
     ["routes/projects.index.tsx", 1, "the link to what I am open to"],
     ["routes/projects.$slug.tsx", 4, "previous and next project, which point a direction"],
     ["routes/__root.tsx", 1, "the 404 page's link home"],
   ]),
   ...allow("middle-dot", [
-    ["components/Footer.tsx", 1, "name and city in the footer"],
+    ["components/home/Hero.tsx", 1, "the kicker over the lead story"],
+    ["components/home/OpenTo.tsx", 1, "the classifieds' section head"],
+    ["components/Footer.tsx", 3, "the colophon: name, city, coordinates and the key hint"],
+    ["routes/work.tsx", 1, "the kicker over the page's headline"],
+    ["routes/projects.index.tsx", 1, "the kicker over the page's headline"],
     ["routes/now.tsx", 1, "the updated line"],
     ["routes/writing.index.tsx", 1, "post count and RSS"],
     ["routes/writing.$slug.tsx", 2, "date, reading time and author under a post title"],
@@ -189,7 +197,7 @@ const ALLOWED = [
 ];
 
 /** Arbitrary Tailwind values ("text-[0.97rem]") on public pages. This only goes down. */
-const ARBITRARY_VALUES = 23;
+const ARBITRARY_VALUES = 7;
 
 const lineOf = (file: Source, at: number) => file.code.slice(0, at).split("\n").length;
 

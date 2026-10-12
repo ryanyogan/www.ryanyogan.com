@@ -34,7 +34,7 @@ export function Lakefront() {
         </g>
         <circle fill="var(--accent)" cx="131" cy="99" r="3.5" />
       </svg>
-      <figcaption>41.88 N, 87.63 W</figcaption>
+      <figcaption className="cap">Fig. 1 &mdash; Chicago, 41.88 N, 87.63 W</figcaption>
     </figure>
   );
 }
@@ -102,7 +102,9 @@ export function ProjectGraph({ projects }: { projects: Project[] }) {
           />
         ))}
       </svg>
-      <figcaption>One node per project, clustered by group.</figcaption>
+      <figcaption className="cap">
+        Fig. 2 &mdash; One node per project, clustered by group
+      </figcaption>
     </figure>
   );
 }

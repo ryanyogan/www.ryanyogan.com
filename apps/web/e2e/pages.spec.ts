@@ -57,8 +57,13 @@ test("Home links the newest posts above the project index, and no post twice", a
   const top = await links.first().boundingBox();
   const hero = await page.locator("h1").boundingBox();
   const index = await page.locator("#idx-h").boundingBox();
-  expect(top!.y).toBeGreaterThan(hero!.y);
-  expect(top!.y + top!.height).toBeLessThan(index!.y);
+  // Under the lead story and before the projects: the column to their left, or above them
+  // where the page is one column.
+  expect(top!.y).toBeGreaterThan(hero!.y + hero!.height);
+  expect(
+    top!.x + top!.width <= index!.x || top!.y + top!.height < index!.y,
+    "the writing list comes before the projects",
+  ).toBe(true);
 
   // It is the only writing list on the page: no post is linked twice.
   const hrefs = await page
@@ -245,7 +250,7 @@ test("/rss.xml carries each post in full, with absolute addresses and valid date
 test("an unknown path renders the 404 page", async ({ page, consoleErrors }) => {
   const response = await page.goto("/no-such-page");
   expect(response?.status()).toBe(404);
-  await expect(page.locator("h1")).toHaveText("I couldn’t find that page.");
+  await expect(page.locator("h1")).toHaveText("Nothing under this headline.");
   await expect(page.getByRole("link", { name: /Back to home/ })).toBeVisible();
   // Chromium reports the 404 document itself as a failed resource; nothing else may be logged.
   const others = consoleErrors.filter((text) => !text.includes("status of 404"));
@@ -336,7 +341,7 @@ test("/projects: a retired project says so, is in the status key, and shows only
 test("an unpublished project's URL is a 404", async ({ page, consoleErrors }) => {
   const response = await page.goto(`/projects/${draft.slug}`);
   expect(response?.status()).toBe(404);
-  await expect(page.locator("h1")).toHaveText("I couldn’t find that page.");
+  await expect(page.locator("h1")).toHaveText("Nothing under this headline.");
   const html = await page.content();
   expect(html).not.toContain(draft.title);
   expect(html).not.toContain(draft.marker);

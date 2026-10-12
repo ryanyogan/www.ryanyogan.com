@@ -324,10 +324,11 @@ test.describe("the agate arrives after the first paint", () => {
     await hydrated(page);
     const text = await lateText(page);
     expect(await text.evaluate((element) => element !== null), "the page has such text").toBe(true);
-    // Whether the first of it is in the window depends on the window.
+    // The first of it is the section row, under the masthead: below this window.
     const below = await text.evaluate(
       (element) => element!.getBoundingClientRect().top >= innerHeight,
     );
+    expect(below, "no agate text in the window").toBe(true);
     expect(await lateFaces(page), "before the file arrives").toBe(0);
 
     await lateFontsLoaded(page);

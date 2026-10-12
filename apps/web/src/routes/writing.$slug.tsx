@@ -74,15 +74,15 @@ function WritingDetail() {
 
   return (
     <main id="main" className="wrap">
-      <article>
-        <header className="row post-head">
-          <div className="col push">
-            <p className="crumbs">
+      <article className="story">
+        <header className="phead post-head">
+          <div>
+            <div className="kicker crumbs">
               <Link to="/writing">Writing</Link>
-            </p>
+            </div>
             <h1>{post.title}</h1>
             <p className="lede">{post.excerpt}</p>
-            <p className="small post-meta">
+            <p className="lab post-meta">
               <time dateTime={post.isoDate}>{post.date}</time>{" "}
               <span>
                 <span className="dot">&middot;</span> {post.minutes} min read
@@ -95,13 +95,13 @@ function WritingDetail() {
           </div>
         </header>
 
-        <div className="row post-body">
-          <Prose className="col push post" html={postHtml(slug)} />
+        <div className="post-body">
+          <Prose className="col post" html={postHtml(slug)} />
         </div>
       </article>
 
-      <nav aria-label="More writing" className="row post-end">
-        <div className="col push">
+      <nav aria-label="More writing" className="story post-end">
+        <div>
           <div className="post-nav">
             {newer && (
               <Link to="/writing/$slug" params={{ slug: newer.slug }}>
@@ -117,7 +117,9 @@ function WritingDetail() {
             )}
           </div>
           <p className="post-all">
-            <Link to="/writing">All writing</Link>
+            <Link to="/writing" className="cta">
+              <span>All writing</span>
+            </Link>
           </p>
         </div>
       </nav>

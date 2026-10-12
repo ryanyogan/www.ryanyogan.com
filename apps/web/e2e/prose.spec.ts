@@ -331,11 +331,10 @@ for (const theme of ["light", "dark"] as const) {
       expect(m.list.indent).toBeLessThanOrEqual(1.4);
       expect(m.list.gap).toBeCloseTo(0.35, 1);
 
-      // A quotation is body text beside a thin rule, not a pull quote.
+      // A quotation is body text beside a heavy rule, not a pull quote.
       expect(m.quote.size).toBeCloseTo(1, 2);
       expect(m.quote.style).toBe("solid");
-      expect(m.quote.rule).toBeGreaterThanOrEqual(1);
-      expect(m.quote.rule).toBeLessThanOrEqual(2);
+      expect(m.quote.rule).toBe(3);
 
       // Inline code: a little smaller, a faint tone, no border, and it may break anywhere.
       expect(m.inline.size).toBeGreaterThanOrEqual(0.8);
@@ -388,8 +387,8 @@ for (const theme of ["light", "dark"] as const) {
       expect(m.figure.parent).toBe("DIV");
       expect(m.figure.caption).toBe("The memory graph after six attempts.");
       expect(m.figure.alt).toBe("A drawing of a brain made of nodes and edges");
-      expect(m.figure.captionSize).toBeGreaterThanOrEqual(14);
-      expect(m.figure.captionSize).toBeLessThanOrEqual(15);
+      // The caption is agate: 12px, 11px on a phone.
+      expect(m.figure.captionSize).toBe(width <= 600 ? 11 : 12);
       expect(m.figure.width).toBeCloseTo(m.column.width, 0);
 
       // Headings: an id each (a repeat and the page's own "main" are stepped aside), a
