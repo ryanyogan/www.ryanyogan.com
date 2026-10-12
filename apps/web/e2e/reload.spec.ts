@@ -255,14 +255,17 @@ for (const [size, viewport] of [
         expect(measure.drawn.h1.join(), "the heading's font").toContain("(web)");
         expect(measure.shift, `layout shift, by ${measure.shifted.join(" ")}`).toBe(0);
         expect(measure.moved, "px the heading and first paragraph moved").toEqual({ h1: 0, p: 0 });
-        // Every serif face on the first screen is one of the three preloaded files
-        // (styles/fonts.ts): roman, bold and italic. No other weight, and no bold italic.
+        // Every face on the first screen is one of the four files the site ships
+        // (styles/fonts.css): the serif roman, bold and italic, which are preloaded, and the
+        // agate at 600. No other weight, no bold italic, and nothing a browser must fake.
         expect(
           measure.faces.filter(
             (face) =>
-              face.startsWith("Newsreader ") && !/ (400 (normal|italic)|700 normal)$/.test(face),
+              (face.startsWith("Newsreader ") &&
+                !/ (400 (normal|italic)|700 normal)$/.test(face)) ||
+              (face.startsWith("IBM Plex Sans Condensed ") && !face.endsWith(" 600 normal")),
           ),
-          "first-screen serif faces that are not preloaded",
+          "first-screen faces the site does not ship",
         ).toEqual([]);
       });
     }
