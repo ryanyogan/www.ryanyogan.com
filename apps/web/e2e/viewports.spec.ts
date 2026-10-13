@@ -270,7 +270,8 @@ test("at 320px the masthead is the name on one line and one row of sections, eac
 
   const nav = header.getByRole("navigation", { name: "Sections" });
   const items = nav.locator("a:visible");
-  await expect(items).toHaveText(["Front page", "Work", "Projects", "Writing", "Now"]);
+  // Front page is not in the row at this width: the name is the way home.
+  await expect(items).toHaveText(["Work", "Projects", "Writing", "Now"]);
   let left = 0;
   let top: number | undefined;
   for (const item of await items.all()) {

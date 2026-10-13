@@ -277,9 +277,11 @@
 
   /* Masthead, three bands: the folio, the nameplate between its two ears, the section index
      (components/Header.tsx). */
+  /* Three equal columns: where each starts does not depend on what its text measures, so
+     nothing in the band moves when the agate arrives. */
   .folio {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     align-items: center;
     gap: 0 16px;
     min-height: 38px;
@@ -298,6 +300,10 @@
   .folio > :last-child {
     justify-content: flex-end;
     gap: 14px;
+  }
+
+  .folio-date {
+    text-align: center;
   }
 
   .folio b {
@@ -520,10 +526,14 @@
     }
   }
 
+  /* No room for five words in a wider fallback face: the name above is the way home. */
   @media (max-width: 360px) {
-    .mast-nav {
-      font-size: 0.6875rem;
-      letter-spacing: 0.03em;
+    .mast-nav > div:first-child a:first-child {
+      display: none;
+    }
+
+    .mast-nav > div:first-child a:nth-child(2) {
+      justify-content: flex-start;
     }
   }
 
