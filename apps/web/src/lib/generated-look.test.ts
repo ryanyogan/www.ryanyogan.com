@@ -172,11 +172,13 @@ const ALLOWED = [
     ["routes/projects.index.tsx", 1, "the link to what I am open to"],
     ["routes/projects.$slug.tsx", 4, "previous and next project, which point a direction"],
     ["routes/__root.tsx", 1, "the 404 page's link home"],
+    ["components/Header.tsx", 1, "the right ear's link to the Now page"],
   ]),
   ...allow("middle-dot", [
     ["components/home/Hero.tsx", 1, "the kicker over the lead story"],
     ["components/home/OpenTo.tsx", 1, "the classifieds' section head"],
     ["components/Footer.tsx", 3, "the colophon: name, city, coordinates and the key hint"],
+    ["components/Header.tsx", 1, "the folio: volume and city"],
     ["routes/work.tsx", 1, "the kicker over the page's headline"],
     ["routes/projects.index.tsx", 1, "the kicker over the page's headline"],
     ["routes/now.tsx", 1, "the updated line"],

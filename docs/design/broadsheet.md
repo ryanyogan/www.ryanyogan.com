@@ -187,10 +187,15 @@ reads with colour removed.
 This spec and the prototype are the design as drawn. The site (`apps/web/src/styles/app.css`) is
 what ships, and where they differ the site is right:
 
-- There is no search: the nav is the four sections only, with no `|` and no Search item, and
-  `/` and ⌘K do nothing. `?` still opens the key help.
-- There is no double rule. Under the nav, under every section head and under a page head the
-  rule is the heavy one (3px solid), so the page has two rule weights, heavy and hairline.
+- The masthead is three bands, not the name over a nav (`components/Header.tsx`): a folio
+  (volume, city, the day, coordinates, the theme toggle), the nameplate between two ears (the
+  tagline at the left, a line about now at the right), and the section index, with Front page
+  first and GitHub, LinkedIn and RSS at its right. The page a reader is on has a 3px accent bar
+  under its word. Under 1000px the ears go and the tagline sits under the name; under 800px
+  the folio keeps volume, city and the toggle, and the index keeps the five sections.
+- There is no search, and no `|` or Search item in the index. `?` still opens the key help.
+- There are no heavy or double rules. Every rule is 1px: `--rule` where a section starts (ink
+  by day, `#8a8882` at night, where ink would be a white stripe) and `--hair` between items.
 - Type is the static cuts, not the variable font, so display sizes are a touch heavier.
 - The agate (IBM Plex Sans Condensed 600) is not preloaded: a first visit shows nav and labels in
   a metric-matched fallback, and the face is there from the next page load.

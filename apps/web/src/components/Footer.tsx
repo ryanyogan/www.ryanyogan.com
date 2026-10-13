@@ -1,9 +1,8 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { contactEmail, footerLinks } from "@repo/shared";
 import { openDialog } from "~/lib/keys";
-import { ThemeToggle } from "./ThemeToggle";
 
-/** The colophon: who and where under a heavy rule, then the links and the theme. */
+/** The colophon: who and where under a heavy rule, then the links. The theme is in the folio. */
 export function Footer() {
   // No shortcuts under /admin (see KeyboardLayer), so no hint about them there.
   const admin = useRouterState({
@@ -40,7 +39,6 @@ export function Footer() {
             ))}
             <a href="/rss.xml">RSS</a>
             <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
-            <ThemeToggle />
           </nav>
         </div>
       </div>

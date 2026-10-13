@@ -531,12 +531,15 @@ test("Home says the name before its h1, as the first words of the page's content
   const body = await html(request, "/");
   expect(attr(body, /<title>([^<]*)<\/title>/g)[0]).toMatch(/^Ryan Yogan\b/);
   expect(body.match(/<h1[\s>]/g)).toHaveLength(1);
-  // The h1 is a sentence without the name; the masthead above it is the name, and the first
-  // words of the page (after the link that skips to the content).
+  // The h1 is a sentence without the name; the masthead above it is the name. Only the folio
+  // (volume, city, the day, coordinates) and the left ear's three words come before it.
   const header = body.indexOf("<header");
   const above = body.slice(header, body.indexOf("<h1", header));
   expect(above).toMatch(/<a [^>]*class="mast-name[^"]*"[^>]*>Ryan Yogan<\/a>/);
-  expect(textOf(above.slice(above.indexOf(">") + 1)).startsWith("Ryan Yogan")).toBe(true);
+  const words = textOf(above.slice(above.indexOf(">") + 1));
+  expect(words).toMatch(
+    /^Vol\. 8 · Chicago, IL \w+, \w+ \d+, \d{4} 41\.88 N, 87\.63 W \| Engineering leader ?Agent builder ?Hockey dad ?Ryan Yogan/,
+  );
 });
 
 test('the profile links say rel="me" on every page, and are the JSON-LD sameAs', async ({

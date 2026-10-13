@@ -15,7 +15,7 @@
 /*
  * Broadsheet: a newspaper front page. Newsprint, near-black ink and one red, six colours per
  * edition (docs/design/broadsheet.md; the values are docs/design/broadsheet-tokens.css).
- * Two rule weights do the structuring: heavy and hairline. There are no
+ * Two rules do the structuring, both 1px: --rule where a section starts, --hair between items. There are no
  * backgrounds, tints, cards, shadows or rounded corners. Red is a kicker, never a button:
  * links are ink.
  * The theme toggle sets .dark or .light on <html>; with neither, the OS preference decides.
@@ -33,6 +33,9 @@
   --muted: #5c5a55;
   /* Hairlines and dotted leaders. */
   --hair: #d5d3ce;
+  /* The rule a section starts under: ink by day. At night ink is nearly white and a rule in
+     it is a bright stripe, so the night value is a grey (3.2:1 on the paper). */
+  --rule: var(--ink);
   /* Kickers, dates, the classified numbers, and one dot in each drawing. */
   --accent: #c8102e;
   /* The edge of a form control: 3:1 against paper (WCAG 1.4.11), which a hairline is not.
@@ -52,6 +55,7 @@
   --ink2: #d6d3cc;
   --muted: #a3a09a;
   --hair: #34332f;
+  --rule: #8a8882;
   --accent: #ff5a5f;
   --control-border: #6f6d68;
   --error: #e8998a;
@@ -65,6 +69,7 @@
     --ink2: #d6d3cc;
     --muted: #a3a09a;
     --hair: #34332f;
+    --rule: #8a8882;
     --accent: #ff5a5f;
     --control-border: #6f6d68;
     --error: #e8998a;
@@ -82,12 +87,11 @@
   --color-paper: var(--paper);
   --color-ink: var(--ink);
   --color-ink2: var(--ink2);
-  /* ink-soft and rule: the names the admin and the dialogs still use for ink2 and hair. */
+  /* ink-soft: the name the admin and the dialogs still use for ink2. */
   --color-ink-soft: var(--ink2);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-hair: var(--hair);
-  --color-rule: var(--hair);
   --color-error: var(--error);
 
   /* Serif: everything a reader reads (masthead, headlines, body, numbers). Sans is the
@@ -258,6 +262,8 @@
   .post-nav span,
   .now-art figcaption,
   .prose figcaption,
+  .folio,
+  .mast-ear,
   .mast-nav,
   .colophon,
   .kbd {
@@ -269,27 +275,117 @@
     text-transform: uppercase;
   }
 
-  /* Masthead: the name, the tagline, then the section index between two rules. Nothing
-     above the name. */
-  .mast-head {
-    padding: 36px 0 18px;
+  /* Masthead, three bands: the folio, the nameplate between its two ears, the section index
+     (components/Header.tsx). */
+  /* Three equal columns: where each starts does not depend on what its text measures, so
+     nothing in the band moves when the agate arrives. */
+  .folio {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: center;
+    gap: 0 16px;
+    min-height: 38px;
+    border-bottom: 1px solid var(--hair);
+    letter-spacing: 0.14em;
+    color: var(--muted);
+  }
+
+  .folio > :first-child,
+  .folio > :last-child {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .folio > :last-child {
+    justify-content: flex-end;
+    gap: 14px;
+  }
+
+  .folio-date {
     text-align: center;
   }
 
+  .folio b {
+    font-weight: inherit;
+    color: var(--ink);
+  }
+
+  .folio-sep {
+    color: var(--hair);
+  }
+
+  /* 44px to press, in a 38px band: the margins give back what the band does not have. */
+  .folio .theme-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin: -3px -13px -3px -10px;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .mast-head {
+    display: grid;
+    grid-template-columns: 250px minmax(0, 1fr) 250px;
+    align-items: center;
+    gap: 0 24px;
+    padding: 30px 0 22px;
+    text-align: center;
+  }
+
+  .mast-ear {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    letter-spacing: 0.16em;
+    text-align: left;
+  }
+
+  .mast-ear--right {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .mast-now {
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    font-weight: 400;
+    font-style: italic;
+    line-height: 1.4;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  /* 44px to press; the margins take back what that adds to the ear. */
+  .mast-ear a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin: -11px 0;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+
   /* Top-aligned: on the baseline, the line's height would follow the body face's metrics,
-     and the rows below would move by a pixel when the roman arrives. */
+     and the rows below would move by a pixel when the roman arrives. The size follows the
+     window between 1000px and 1200px, where the ears leave the name less room. */
   .mast-name {
     display: inline-block;
     vertical-align: top;
-    font-size: 5.75rem;
+    font-size: min(4.875rem, calc((100vw - 600px) / 7.6));
     line-height: 1;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.035em;
     text-transform: uppercase;
     white-space: nowrap;
   }
 
+  /* The tagline in one line: only where the ears are not. */
   .mast-tag {
+    display: none;
     margin-top: 10px;
     font-size: 1.125rem;
     font-style: italic;
@@ -298,47 +394,101 @@
 
   .mast-nav {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    gap: 0 34px;
-    border-top: 1px solid var(--ink);
-    border-bottom: 3px solid var(--ink);
-    padding: 2px 0;
+    flex-wrap: wrap;
+    gap: 0 24px;
+    min-height: 50px;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--hair);
     font-size: 0.8125rem;
     letter-spacing: 0.16em;
   }
 
-  /* A short word (Work, Now) is still 44px to press: the box is wider than the word by
-     what its margins take back, so the words keep their spacing. */
+  /* One row. With the reader's text size doubled the words go to a second one. */
+  .mast-nav > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 32px;
+  }
+
+  .mast-nav .mast-more {
+    gap: 0 22px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+
+  /* A short word (Work, Now) is still 44px to press. */
   .mast-nav a {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 68px;
-    padding: 0 8px;
-    margin: 0 -8px;
-    font: inherit;
-    letter-spacing: inherit;
-    text-transform: inherit;
+    min-width: 44px;
+    min-height: 50px;
+    border-block: 3px solid transparent;
+    padding: 0 2px;
+    white-space: nowrap;
     cursor: pointer;
   }
 
-  .mast-nav [aria-current="page"] span,
+  /* The page a reader is on: a red bar on the index's lower edge. */
+  .mast-nav [aria-current="page"] {
+    border-bottom-color: var(--accent);
+  }
+
   .colophon [aria-current="page"] {
     text-decoration: underline;
     text-underline-offset: 0.45em;
   }
 
-  @media (max-width: 900px) {
+  /* No room for the ears beside the name: one column, the tagline under the name. */
+  @media (max-width: 1000px) {
+    .mast-head {
+      display: block;
+    }
+
+    .mast-ear {
+      display: none;
+    }
+
+    .mast-tag {
+      display: block;
+    }
+
     .mast-name {
-      font-size: min(5.75rem, 11.5vw);
+      font-size: min(4.875rem, 9.5vw);
+    }
+  }
+
+  @media (max-width: 800px) {
+    .folio {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .folio > :first-child {
+      flex-wrap: wrap;
+      gap: 0 10px;
+    }
+
+    .folio-date,
+    .folio-geo,
+    .folio-sep,
+    .mast-nav .mast-more {
+      display: none;
+    }
+
+    .mast-nav > div:first-child {
+      flex: 1;
+      justify-content: space-between;
+      gap: 0;
     }
   }
 
   @media (max-width: 600px) {
     .mast-head {
-      padding-top: 28px;
+      padding: 24px 0 16px;
     }
 
     /* Narrower than 390px the name is smaller than 44px, and still 44px to press. */
@@ -347,46 +497,47 @@
       align-items: center;
       min-height: 44px;
       font-size: min(2.75rem, 11.29vw);
-      letter-spacing: 0.04em;
     }
 
     .mast-tag {
+      margin-top: 4px;
       font-size: 0.9375rem;
     }
 
     .mast-nav {
-      justify-content: space-between;
-      gap: 0;
-      padding: 0;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.12em;
     }
 
-    .mast-nav a {
-      min-width: 44px;
-      padding: 0;
-      margin: 0;
-    }
-
-    .mast-nav a:first-child {
+    .mast-nav > div:first-child a:first-child {
       justify-content: flex-start;
     }
 
-    .mast-nav a:last-child {
+    .mast-nav > div:first-child a:last-child {
       justify-content: flex-end;
     }
   }
 
   /* The narrowest phones: the row is set tighter, so that it is still one row in a wider
      fallback face than the one measured here (the agate is not there on a first visit). */
-  @media (max-width: 360px) {
+  @media (max-width: 400px) {
     .mast-nav {
-      flex-wrap: nowrap;
       font-size: 0.75rem;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.06em;
     }
   }
 
-  /* Colophon: a heavy rule, then one agate line. Every link is a 44px row. */
+  /* No room for five words in a wider fallback face: the name above is the way home. */
+  @media (max-width: 360px) {
+    .mast-nav > div:first-child a:first-child {
+      display: none;
+    }
+
+    .mast-nav > div:first-child a:nth-child(2) {
+      justify-content: flex-start;
+    }
+  }
+
+  /* Colophon: a rule, then one agate line. Every link is a 44px row. */
   .colophon {
     color: var(--muted);
   }
@@ -402,8 +553,8 @@
     align-items: center;
     gap: 0 24px;
     margin-top: 28px;
-    border-top: 3px solid var(--ink);
-    padding-top: 5px;
+    border-top: 1px solid var(--rule);
+    padding-top: 12px;
   }
 
   .colo > p,
@@ -438,12 +589,6 @@
     white-space: pre;
   }
 
-  .colo .theme-icon {
-    width: 44px;
-    padding: 0;
-    margin: 0 -13px 0 -4px;
-  }
-
   @media (min-width: 1024px) {
     .colo [data-testid="keys-hint"]:not([hidden]) {
       display: inline-flex;
@@ -457,11 +602,6 @@
 
     .colo nav {
       flex: 1 0 100%;
-    }
-
-    .colo nav .theme-icon {
-      order: 1;
-      margin-left: auto;
     }
 
     .colo nav a[href^="mailto"] {
@@ -499,9 +639,9 @@
     color: var(--accent);
   }
 
-  /* Section head: agate over a heavy rule. */
+  /* Section head: agate over a rule. */
   .sec-h {
-    border-bottom: 3px solid var(--ink);
+    border-bottom: 1px solid var(--rule);
     padding-bottom: 6px;
     font-size: 0.8125rem;
     letter-spacing: 0.16em;
@@ -700,7 +840,7 @@
   }
 
   .nums-box > div {
-    border-top: 3px solid var(--ink);
+    border-top: 1px solid var(--rule);
     padding-top: 10px;
   }
 
@@ -869,7 +1009,7 @@
   }
 
   .cls-box {
-    border: 1px solid var(--ink);
+    border: 1px solid var(--rule);
     padding: 20px 24px;
   }
 
@@ -1099,7 +1239,7 @@
     padding: 0;
     overflow: hidden;
     border: 1px solid var(--hair);
-    border-top: 3px solid var(--ink);
+    border-top: 1px solid var(--rule);
     background: var(--paper);
     color: var(--ink);
   }
@@ -1346,13 +1486,13 @@
   /* ---------- The inner pages (docs/design/broadsheet.md, section 5) ---------- */
 
   /* Page head: the section's name in red agate, the headline, the italic deck, then a
-     heavy rule. On Work and Writing a small drawing sits at its right in a wide window. */
+     rule. On Work and Writing a small drawing sits at its right in a wide window. */
   .phead {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 0 40px;
     align-items: end;
-    border-bottom: 3px solid var(--ink);
+    border-bottom: 1px solid var(--rule);
     padding: 34px 0 22px;
   }
 
@@ -1380,7 +1520,7 @@
     min-width: 44px;
   }
 
-  /* A section of a page: its head (agate over a heavy rule, an italic line under it) in
+  /* A section of a page: its head (agate over a rule, an italic line under it) in
      the first column, its content in the wide one, a hairline to close. */
   .sect {
     display: grid;
@@ -2132,12 +2272,12 @@
   margin-bottom: 0.5em;
 }
 
-/* A quotation: an italic passage beside a heavy rule, at the column's edge. */
+/* A quotation: an italic passage beside a rule, at the column's edge. */
 .prose blockquote {
   margin: 1.5em 0;
   padding: 0 0 0 16px;
   border: 0;
-  border-left: 3px solid var(--ink);
+  border-left: 1px solid var(--rule);
   font-style: italic;
   color: var(--ink2);
 }
