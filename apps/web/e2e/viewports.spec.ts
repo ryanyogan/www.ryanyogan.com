@@ -256,8 +256,8 @@ test("at 320px the masthead is the name on one line and one row of sections, eac
   await page.setViewportSize({ width: 320, height: 568 });
   await ready(page, "/");
   const header = page.locator("body > header");
-  // No menu and no search: the four sections are links, and there is no button.
-  await expect(header.locator("button")).toHaveCount(0);
+  // No menu and no search: the sections are links, and the only button is the theme's.
+  await expect(header.locator("button")).toHaveAccessibleName(/^Colour theme/);
 
   const name = header.getByRole("link", { name: "Ryan Yogan, home" });
   const wordmark = (await name.boundingBox())!;
@@ -270,7 +270,7 @@ test("at 320px the masthead is the name on one line and one row of sections, eac
 
   const nav = header.getByRole("navigation", { name: "Sections" });
   const items = nav.locator("a:visible");
-  await expect(items).toHaveCount(4);
+  await expect(items).toHaveText(["Front page", "Work", "Projects", "Writing", "Now"]);
   let left = 0;
   let top: number | undefined;
   for (const item of await items.all()) {

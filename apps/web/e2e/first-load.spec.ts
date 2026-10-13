@@ -309,8 +309,8 @@ for (const route of routes) {
 
 test.describe("the agate arrives after the first paint", () => {
   const post = "/writing/building-agent-memory-from-research-to-reality";
-  /** A window so short that it holds only the space above the masthead: no text at all. */
-  const NO_TEXT = 24;
+  /** A window so short that it holds only the space above the folio's line: no text at all. */
+  const NO_TEXT = 8;
 
   test("with none of its text in the window it is added, and is there when the reader scrolls to it", async ({
     page,
@@ -324,7 +324,7 @@ test.describe("the agate arrives after the first paint", () => {
     await hydrated(page);
     const text = await lateText(page);
     expect(await text.evaluate((element) => element !== null), "the page has such text").toBe(true);
-    // The first of it is the section row, under the masthead: below this window.
+    // The first of it is the folio, whose line starts 10px down: below this window.
     const below = await text.evaluate(
       (element) => element!.getBoundingClientRect().top >= innerHeight,
     );

@@ -208,11 +208,11 @@ function Help({ onClose }: { onClose: () => void }) {
       <p className="small mt-1.5">
         Optional. Everything here is also a link or a button on the page.
       </p>
-      <dl className="mt-4 border-t border-rule">
+      <dl className="mt-4 border-t border-hair">
         {helpRows.map((row) => (
           <div
             key={row.keys.join("-")}
-            className="grid grid-cols-[6.5rem_minmax(0,1fr)] items-baseline gap-x-4 border-b border-rule py-2"
+            className="grid grid-cols-[6.5rem_minmax(0,1fr)] items-baseline gap-x-4 border-b border-hair py-2"
           >
             <dt className="flex items-center gap-1.5">
               {row.keys.map((key, index) => (

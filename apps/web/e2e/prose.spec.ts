@@ -331,10 +331,10 @@ for (const theme of ["light", "dark"] as const) {
       expect(m.list.indent).toBeLessThanOrEqual(1.4);
       expect(m.list.gap).toBeCloseTo(0.35, 1);
 
-      // A quotation is body text beside a heavy rule, not a pull quote.
+      // A quotation is body text beside a 1px rule, not a pull quote.
       expect(m.quote.size).toBeCloseTo(1, 2);
       expect(m.quote.style).toBe("solid");
-      expect(m.quote.rule).toBe(3);
+      expect(m.quote.rule).toBe(1);
 
       // Inline code: a little smaller, a faint tone, no border, and it may break anywhere.
       expect(m.inline.size).toBeGreaterThanOrEqual(0.8);

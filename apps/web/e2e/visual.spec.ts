@@ -27,8 +27,10 @@ import { expect, test } from "./fixtures";
 const WIDTHS = [320, 393, 768, 1280];
 const HEIGHT = 900;
 /** The window while the page loads: too short to have any body text in it. See the test. */
-const LOADING_HEIGHT = 32;
+const LOADING_HEIGHT = 8;
 const POST = "lincoln-six-months-later";
+/** The day in the folio: the browser's clock is held here, and the page prints its day. */
+const TODAY = new Date("2026-10-12T18:00:00Z");
 /** What the stubbed /api/views answers: the real count grows with every test that opens a post. */
 const VIEWS = 1204;
 
@@ -117,9 +119,10 @@ for (const colorScheme of ["light", "dark"] as const) {
           //
           // The agate joins a page whenever none of its text is in the window, and otherwise
           // only if it beats the first frame, which a cached file does on some loads and not
-          // on others. So the page loads in a window that shows none of its text (the top of
-          // the page is the masthead's own space), and is given its real height afterwards:
+          // on others. So the page loads in a window that shows none of its text (the folio's
+          // line starts 10px down), and is given its real height afterwards:
           // always the faces themselves, as a returning reader has them, never the fallback.
+          await page.clock.setFixedTime(TODAY);
           await page.setViewportSize({ width, height: LOADING_HEIGHT });
           await page.goto(path);
           await page.waitForFunction(() => localStorage.getItem("fonts") !== null);

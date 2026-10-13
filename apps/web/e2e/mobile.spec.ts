@@ -1,8 +1,8 @@
 import { expect, test } from "./fixtures";
 
 // Runs only in the "mobile" project (390x844, touch) and the "webkit" project (iPhone 14): the
-// masthead's section row at phone width. There is no menu: the four sections are one row
-// under the name.
+// masthead's section row at phone width. There is no menu: Front page and the four sections
+// are one row under the name.
 
 test("the sections are one row of links under the masthead, with no menu to open", async ({
   page,
@@ -12,7 +12,7 @@ test("the sections are one row of links under the masthead, with no menu to open
   await expect(nav).toBeVisible();
   await expect(page.getByRole("button", { name: "Menu" })).toHaveCount(0);
   const links = nav.getByRole("link");
-  await expect(links).toHaveText(["Work", "Projects", "Writing", "Now"]);
+  await expect(links).toHaveText(["Front page", "Work", "Projects", "Writing", "Now"]);
   const boxes = await Promise.all(
     (await links.all()).map(async (item) => (await item.boundingBox())!),
   );
@@ -48,6 +48,6 @@ test("the section links navigate and mark the current page", async ({ page }) =>
 
 test("the theme toggle is reachable at phone width", async ({ page }) => {
   await page.goto("/projects");
-  // The toggle is in the colophon, at the foot of the page.
+  // The toggle is in the folio, at the head of the page.
   await expect(page.getByRole("button", { name: /^Colour theme/ })).toBeVisible();
 });

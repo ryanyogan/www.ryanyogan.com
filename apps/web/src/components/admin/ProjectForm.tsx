@@ -227,7 +227,7 @@ export function ProjectForm({
         <section
           aria-labelledby="adm-ai-h"
           data-testid="ai-draft"
-          className="mb-10 border-y border-rule py-3"
+          className="mb-10 border-y border-hair py-3"
         >
           <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
             <h2 id="adm-ai-h" className="h-m">
@@ -272,7 +272,7 @@ export function ProjectForm({
                 <div
                   key={field}
                   data-testid={`ai-field-${field}`}
-                  className="mt-6 grid grid-cols-1 gap-x-10 gap-y-4 border-t border-rule pt-4 md:grid-cols-2"
+                  className="mt-6 grid grid-cols-1 gap-x-10 gap-y-4 border-t border-hair pt-4 md:grid-cols-2"
                 >
                   <div className="min-w-0">
                     <p className="lab">Current {field}</p>
@@ -299,7 +299,7 @@ export function ProjectForm({
                   </div>
                 </div>
               ))}
-              <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-1 border-t border-rule pt-3">
+              <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-1 border-t border-hair pt-3">
                 <button type="button" className="adm-btn" onClick={() => useProposed(AI_FIELDS)}>
                   Use all
                 </button>
@@ -519,7 +519,7 @@ export function ProjectForm({
         </div>
       </div>
 
-      <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-rule pt-5">
+      <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-hair pt-5">
         <button type="submit" className="adm-btn adm-btn-primary" disabled={busy}>
           {mode === "create" ? "Create project" : "Save changes"}
         </button>

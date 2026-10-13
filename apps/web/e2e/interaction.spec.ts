@@ -40,11 +40,11 @@ test("Escape closes help and restores focus", async ({ page }) => {
   await expect(opener).toBeFocused();
 });
 
-test("there is no search: no button in the masthead, and / and Ctrl K open nothing", async ({
+test("there is no search: no such button in the masthead, and / and Ctrl K open nothing", async ({
   page,
 }) => {
   await page.goto("/");
-  await expect(page.locator("body > header button")).toHaveCount(0);
+  await expect(page.locator("body > header button")).toHaveAccessibleName(/^Colour theme/);
   // The keys answer once the page has hydrated: ? proves it, then the old ones are tried.
   const help = page.getByRole("dialog").filter({ has: page.locator("#kb-help-h") });
   await untilHydrated(async () => {

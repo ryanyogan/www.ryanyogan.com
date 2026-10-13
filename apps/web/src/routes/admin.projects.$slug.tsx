@@ -83,7 +83,7 @@ function GithubStats(props: {
   return (
     <div
       data-testid="github-stats"
-      className="small mt-5 flex flex-wrap items-center gap-x-5 gap-y-1 border-y border-rule py-1"
+      className="small mt-5 flex flex-wrap items-center gap-x-5 gap-y-1 border-y border-hair py-1"
     >
       <span className="break-all">GitHub: {props.repoFullName}</span>
       <span>Stars: {stars ?? "unknown"}</span>
